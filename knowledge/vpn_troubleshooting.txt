@@ -1,0 +1,23 @@
+
+Document Title: VPN Connection Troubleshooting
+Document ID: IT-SOP-001
+Category: Network Support
+Version: 1.0
+
+Purpose:
+Help employees troubleshoot basic VPN connection problems.
+
+Procedure:
+1. Check that the computer has an active internet connection.
+2. Confirm that the employee is using the organization's approved VPN client.
+3. Verify that the VPN server address is correct according to the organization's IT documentation.
+4. Check that the employee's account is active and authorized to use the VPN.
+5. Restart the VPN client and attempt to connect again.
+6. If the problem continues, record the error message and create an IT support ticket.
+
+Security Notes:
+- Never ask users to disclose their passwords.
+- Never disable security protections to bypass a VPN error.
+- Escalate suspected account compromise to the IT security team.
+
+Source: Sample procedure created for capstone testing.
