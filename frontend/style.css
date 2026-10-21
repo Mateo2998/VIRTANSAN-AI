@@ -1,0 +1,37 @@
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 30px;
+}
+
+#chat {
+    max-width: 700px;
+}
+
+#messages {
+    border: 1px solid #ccc;
+    padding: 15px;
+    min-height: 250px;
+    margin-bottom: 10px;
+    overflow-wrap: anywhere;
+}
+
+#chat-form {
+    display: flex;
+    gap: 5px;
+}
+
+#message-input {
+    flex: 1;
+    padding: 10px;
+}
+
+button {
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.source {
+    font-size: 12px;
+    color: #555;
+}

@@ -2,6 +2,8 @@
 import chromadb
 import requests
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 app = FastAPI(title="VIRTANSAN AI")
@@ -30,10 +32,7 @@ def create_embedding(text):
 
 @app.get("/")
 def home():
-    return {
-        "message": "VIRTANSAN AI backend is running!",
-        "project": "AI-Powered Enterprise Helpdesk"
-    }
+    return FileResponse("frontend/index.html")
 
 
 @app.get("/health")
@@ -105,3 +104,10 @@ def chat(request: ChatRequest):
             status_code=500,
             detail=f"An error occurred while processing your question: {error}"
         )
+
+
+app.mount(
+    "/static",
+    StaticFiles(directory="frontend"),
+    name="static"
+)

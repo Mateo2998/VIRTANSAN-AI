@@ -1,8 +1,6 @@
-
 Document Title: VPN Connection Troubleshooting
-Document ID: IT-SOP-001
+Document ID: IT-SupportProcedure-001
 Category: Network Support
-Version: 1.0
 
 Purpose:
 Help employees troubleshoot basic VPN connection problems.
@@ -20,4 +18,3 @@ Security Notes:
 - Never disable security protections to bypass a VPN error.
 - Escalate suspected account compromise to the IT security team.
 
-Source: Sample procedure created for capstone testing.
