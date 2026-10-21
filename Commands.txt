@@ -1,0 +1,19 @@
+FOR NEW ENVIRONMENT DO NOT USE IF YOU DO NOT HAVE .VENV313
+py -3.13 -m venv .venv313
+
+RUN IT ONLY IN VISUAL STUDIO CODE GUYS
+.\.venv313\Scripts\Activate.ps1
+python -m uvicorn main:app --reload
+
+
+http://127.0.0.1:8000
+= Checks if it's running and also for customers and stuff
+
+http://127.0.0.1:8000/health
+= Checks health ofc
+
+http://127.0.0.1:8000/docs
+= API Testing page
+
+https://fastapi.tiangolo.com/deployment/manually/
+https://docs.ollama.com/api/introduction
