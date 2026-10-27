@@ -1,0 +1,77 @@
+Document Title: Network Connectivity Troubleshooting
+Document ID: IT-SupportProcedure-002
+Category: Network Support
+
+PURPOSE
+Help employees troubleshoot common network connectivity problems, including no internet access, Wi-Fi connection failures, slow connections, and intermittent connectivity. Guide the employee through one relevant step at a time and use their answers to decide what to do next.
+
+GENERAL TROUBLESHOOTING RULES
+- Ask one clear question at a time.
+- Do not provide the entire troubleshooting procedure at once unless the employee explicitly requests the full procedure.
+- Remember the employee's answers and do not repeat checks they have already completed successfully.
+- Confirm whether the issue is resolved before continuing.
+- Do not assume that a problem is caused by the router, internet service provider, computer, or network configuration without evidence.
+- Do not invent Wi-Fi names, passwords, IP addresses, gateway addresses, DNS settings, or organizational network policies.
+- Do not ask employees to share Wi-Fi passwords or other secrets in chat.
+- If multiple employees or devices are affected, consider a wider network problem and recommend reporting it to IT.
+
+ISSUE 1: NO INTERNET ACCESS
+Step 1: Identify the problem. Ask whether the employee cannot access the internet at all or whether only a particular website or application is unavailable.
+Step 2: Check the connection. Ask whether the device is connected to the expected Wi-Fi network or, if using Ethernet, whether the network cable is connected securely at both ends.
+Step 3: Check other websites or services. Ask whether other known websites or applications work. If only one service fails, the problem may be limited to that service.
+Step 4: Check other devices. If practical, ask whether another authorized device on the same network can access the internet. Do not ask the employee to bypass organizational security controls.
+Step 5: Reconnect if appropriate. If the device is disconnected from Wi-Fi, ask the employee to reconnect to the correct authorized network. For Ethernet, check the cable connection without forcing or damaging the connector.
+Step 6: Restart only when appropriate. If the issue persists and no organizational instruction prohibits it, suggest restarting the affected computer. Do not instruct employees to restart shared network equipment or business-critical devices without IT authorization.
+Step 7: Escalate. If the device remains offline, collect the affected device, connection type, approximate start time, scope of the issue, and checks already completed. Recommend contacting IT support.
+
+ISSUE 2: CANNOT CONNECT TO WI-FI
+Step 1: Ask whether the Wi-Fi network is visible in the device's available network list.
+Step 2: If the network is visible, ask whether the device displays an error when connecting. Request the exact error message, but not any password or verification code.
+Step 3: Confirm that the employee is selecting the correct authorized network. Do not guess the network name or provide credentials that are not documented.
+Step 4: If the device appears disconnected, suggest turning the device's Wi-Fi connection off and back on, if permitted by organizational policy, then attempting to reconnect.
+Step 5: If the network is not visible, ask whether other authorized devices can see it in the same area. This helps determine whether the problem may be device-specific or affect a wider area.
+Step 6: Do not advise the employee to connect to an unknown or unsecured network as a workaround.
+Step 7: If the problem persists, recommend IT support and provide the error message, device, location or work area, and completed checks.
+
+ISSUE 3: SLOW OR INTERMITTENT CONNECTION
+Step 1: Ask whether the connection is consistently slow or frequently disconnects.
+Step 2: Ask whether the problem affects one application, one device, or multiple applications and devices.
+Step 3: Ask whether the problem occurs in a particular work area or at a particular time, if that information is relevant.
+Step 4: If the employee uses Wi-Fi, ask whether moving to an approved location with a stronger signal changes the connection. Do not suggest moving to an unauthorized network.
+Step 5: If permitted, suggest reconnecting to the approved network and checking whether the issue improves.
+Step 6: Do not promise that restarting a router, changing DNS settings, changing IP settings, or upgrading equipment will fix the problem. These actions require appropriate evidence and, where applicable, IT authorization.
+Step 7: If the connection remains slow or unstable, collect the approximate times, affected applications or devices, frequency of disconnections, and checks completed. Escalate to IT support.
+
+ISSUE 4: ONE WEBSITE OR APPLICATION CANNOT CONNECT
+Step 1: Ask whether other websites or applications work normally.
+Step 2: Ask for the name of the affected website or application and the exact error message, if available.
+Step 3: Ask whether the issue affects only the employee or also other authorized users, if known.
+Step 4: Do not assume that the entire network is down if other services work normally.
+Step 5: Do not recommend bypassing firewall rules, web filtering, VPN requirements, or other security controls.
+Step 6: If the issue continues, refer it to IT support or the application support team, depending on the organization's documented process.
+
+INFORMATION TO COLLECT BEFORE ESCALATION
+Collect only information necessary to troubleshoot the problem:
+- A short description of the problem.
+- The affected device and connection type, such as Wi-Fi or Ethernet.
+- Whether one device or multiple devices are affected, if known.
+- The approximate time the issue began.
+- The exact error message, if one appeared.
+- Troubleshooting steps already completed and their results.
+- Whether the problem is resolved or remains unresolved.
+Do not collect passwords, authentication codes, or unrelated personal information.
+
+ESCALATION RULES
+Recommend contacting IT support when basic troubleshooting does not resolve the problem, multiple users are affected, the network appears unavailable, or the issue requires configuration changes or access to network equipment.
+If the employee reports a suspected security incident, follow the organization's security incident reporting procedure instead of treating the issue as an ordinary connectivity problem.
+Do not claim that a support ticket has been created or that IT has been notified unless the system has actually performed that action and confirmed its success.
+
+CONVERSATION GUIDELINES
+- Be polite, calm, and conversational.
+- Ask one relevant question at a time.
+- Explain technical terms in simple language when asked.
+- Use previous answers to choose the next step.
+- Skip steps that have already been completed and confirmed.
+- If the employee says the connection is working again, acknowledge that the issue is resolved and stop troubleshooting.
+- If the employee introduces a different issue, handle it as a separate problem.
+- Never invent network configuration details or claim to have checked the actual network when no such diagnostic tool is available.

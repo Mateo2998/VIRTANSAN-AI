@@ -3,6 +3,8 @@ const form = document.getElementById("chat-form");
 const input = document.getElementById("message-input");
 const messages = document.getElementById("messages");
 
+const conversationHistory = [];
+
 form.addEventListener("submit", async function (event) {
     event.preventDefault();
 
@@ -10,20 +12,45 @@ form.addEventListener("submit", async function (event) {
 
     if (!message) return;
 
-    messages.innerHTML += `<p><strong>You:</strong> ${escapeHTML(message)}</p>`;
-    input.value = "";
+    const userMessage = document.createElement("div");
+    userMessage.className = "message user-message";
 
-    const loading = document.createElement("p");
-    loading.textContent = "VIRTANSAN AI is responding...";
+    const userLabel = document.createElement("strong");
+    userLabel.textContent = "You";
+
+    const userText = document.createElement("div");
+    userText.className = "reply-text";
+    userText.textContent = message;
+
+    userMessage.appendChild(userLabel);
+    userMessage.appendChild(userText);
+    messages.appendChild(userMessage);
+
+    conversationHistory.push({
+        role: "user",
+        content: message
+    });
+
+    input.value = "";
+    input.focus();
+
+    const loading = document.createElement("div");
+    loading.className = "message ai-message";
+    loading.textContent = "VIRTANSAN AI is thinking...";
     messages.appendChild(loading);
 
+    messages.scrollTop = messages.scrollHeight;
+
     try {
-        const response = await fetch("http://127.0.0.1:8000/chat", {
+        const response = await fetch("/chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify({
+                message: message,
+                history: conversationHistory.slice(-12)
+            })
         });
 
         const data = await response.json();
@@ -34,22 +61,32 @@ form.addEventListener("submit", async function (event) {
 
         loading.remove();
 
-        const reply = document.createElement("p");
-        reply.textContent = "VIRTANSAN AI: " + data.reply;
-        messages.appendChild(reply);
+        const replyText =
+            data.reply || "I'm sorry, I couldn't prepare a response.";
 
-        const source = document.createElement("p");
-        source.className = "source";
-        source.textContent = "Source: " + data.source;
-        messages.appendChild(source);
+        const aiMessage = document.createElement("div");
+        aiMessage.className = "message ai-message";
+
+        const aiLabel = document.createElement("strong");
+        aiLabel.textContent = "VIRTANSAN AI";
+
+        const reply = document.createElement("div");
+        reply.className = "reply-text";
+        reply.textContent = replyText;
+
+        aiMessage.appendChild(aiLabel);
+        aiMessage.appendChild(reply);
+        messages.appendChild(aiMessage);
+
+        conversationHistory.push({
+            role: "assistant",
+            content: replyText
+        });
 
     } catch (error) {
-        loading.textContent = "Error: " + error.message;
+        loading.textContent =
+            "Sorry, something went wrong: " + error.message;
     }
-});
 
-function escapeHTML(text) {
-    const element = document.createElement("span");
-    element.textContent = text;
-    return element.innerHTML;
-}
+    messages.scrollTop = messages.scrollHeight;
+});

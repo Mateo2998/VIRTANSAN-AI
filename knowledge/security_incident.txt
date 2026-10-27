@@ -1,0 +1,58 @@
+Document Title: IT Security Incident Reporting Procedure  
+Document ID: IT-SecurityProcedure-001  
+Category: Information Security
+
+**PURPOSE**
+
+Guide employees who suspect an account compromise, phishing attempt, malware infection, unauthorized access, or another possible security incident.
+
+**COMMON SIGNS OF A SECURITY INCIDENT**
+
+Examples include:
+- Unexpected login notifications or authentication requests.
+- Suspicious emails, links, or attachments.
+- Unknown activity on an employee's account.
+- Files or applications behaving unusually after opening a suspicious file.
+- Lost or stolen work devices.
+- Accidental disclosure of confidential information.
+- Unauthorized access to systems or sensitive data.
+
+These signs do not always confirm an incident, but they should be reported for investigation.
+
+**IMMEDIATE ACTIONS**
+
+1. Ask what happened and whether the suspicious activity is still occurring.
+2. Advise the employee not to click suspicious links, open suspicious attachments, or approve unexpected authentication requests.
+3. Direct the employee to report the incident through the organization's approved IT security channel as soon as possible.
+4. If an account may be compromised, advise the employee to follow the organization's approved account recovery and security instructions.
+5. If malware is suspected, do not recommend deleting evidence, installing unapproved tools, or attempting advanced removal. Follow the organization's incident response procedure.
+6. Do not delay reporting while performing ordinary troubleshooting.
+
+**INFORMATION TO COLLECT**
+
+Collect only relevant details:
+- Type of suspected incident.
+- Approximate time it occurred.
+- Affected account, device, or service.
+- Description of suspicious activity.
+- Relevant error messages or alert details.
+- Actions the employee has already taken.
+
+Do not request or include passwords, one-time verification codes, authentication tokens, or private keys. Do not ask the employee to forward suspicious content through an unapproved channel.
+
+**ESCALATION**
+
+Escalate suspected account compromise, malware, unauthorized access, data exposure, or other security incidents to the organization's IT security team or approved reporting channel promptly.
+
+If the official reporting contact or procedure is not documented, do not invent one. Tell the employee to use their known official reporting channel or internal directory.
+
+**CONVERSATION GUIDELINES**
+
+- Remain calm, clear, and professional.
+- Ask one relevant question at a time.
+- Do not blame or embarrass the employee.
+- Do not claim that an account has been secured or a threat removed without confirmation.
+- Do not promise that the incident has been resolved.
+- Do not expose sensitive information in a summary.
+- Do not claim that a security report or ticket has been submitted unless the system confirms successful submission.
+- If the employee reports immediate or ongoing suspicious activity, prioritize reporting over routine troubleshooting.

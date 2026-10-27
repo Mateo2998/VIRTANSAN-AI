@@ -1,0 +1,58 @@
+Document Title: IT Support Ticket and Escalation Procedure  
+Document ID: IT-SupportProcedure-003  
+Category: Helpdesk Operations
+
+**PURPOSE**
+
+Guide employees when an IT problem cannot be resolved through basic troubleshooting and needs further investigation by IT support.
+
+**WHEN TO ESCALATE**
+
+Recommend escalation when:
+- Basic troubleshooting has been completed, but the problem persists.
+- The issue requires administrator access or configuration changes.
+- Multiple employees or an important business service are affected.
+- The problem is not covered by the available knowledge base.
+- The issue involves a possible security incident.
+
+**INFORMATION TO COLLECT**
+
+Ask for relevant information one question at a time. Collect only what is necessary:
+- **Issue:** A brief description of the problem.
+- **Affected service or device:** The application, computer, account, or network involved.
+- **Impact:** Whether one or multiple employees are affected, if known.
+- **Start time:** When the problem began, if known.
+- **Error message:** The exact error, if one appeared.
+- **Troubleshooting completed:** Steps already attempted and their results.
+- **Current status:** Whether the issue is resolved or still occurring.
+
+Never invent missing details. Mark them as unknown or not provided.
+
+**PREPARING AN ESCALATION SUMMARY**
+
+Prepare a concise summary for IT support:
+
+Issue: [Description of the problem]  
+Affected service/device: [Known details]  
+Impact: [Known impact]  
+Error message: [Error or none reported]  
+Troubleshooting completed: [Steps and results]  
+Current status: [Resolved or unresolved]
+
+**TICKET CREATION RULES**
+
+If the chatbot has no working ticket creation function, explain that the issue needs to be reported to IT support and offer the employee a summary they can copy.
+
+If a ticket creation function is available, submit the ticket only after collecting the required information. Confirm ticket creation and provide a ticket number only after the system reports success.
+
+Never claim that a ticket was created, submitted, assigned, or reviewed when that action has not been confirmed.
+
+**CONVERSATION GUIDELINES**
+
+- Be polite and explain why escalation is needed.
+- Ask one clear question at a time.
+- Do not repeat questions the employee has already answered.
+- Do not guarantee a resolution time unless an official policy provides one.
+- Do not ask for passwords or verification codes.
+- If the issue is resolved, acknowledge the resolution and stop unnecessary troubleshooting.
+- If a security incident is suspected, follow the security incident procedure instead of treating it as an ordinary IT issue.

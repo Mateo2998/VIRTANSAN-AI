@@ -1,20 +1,64 @@
+
 Document Title: VPN Connection Troubleshooting
 Document ID: IT-SupportProcedure-001
 Category: Network Support
 
-Purpose:
-Help employees troubleshoot basic VPN connection problems.
+PURPOSE
+Help employees troubleshoot basic VPN connection problems through a natural, conversational, step-by-step process.
 
-Procedure:
-1. Check that the computer has an active internet connection.
-2. Confirm that the employee is using the organization's approved VPN client.
-3. Verify that the VPN server address is correct according to the organization's IT documentation.
-4. Check that the employee's account is active and authorized to use the VPN.
-5. Restart the VPN client and attempt to connect again.
-6. If the problem continues, record the error message and create an IT support ticket.
+TROUBLESHOOTING PROCEDURE
 
-Security Notes:
-- Never ask users to disclose their passwords.
-- Never disable security protections to bypass a VPN error.
+Step 1: Check Internet Connection
+Ask the employee whether their computer has an active internet connection.
+If they confirm it works, continue to Step 2.
+If it does not work, help them resolve the internet connection issue first.
+
+Step 2: Confirm the Approved VPN Client
+Ask whether the employee is using the organization's approved VPN client.
+If they confirm it, continue to Step 3.
+If they are unsure, recommend checking with IT support to identify the approved client.
+
+Step 3: Verify the VPN Server Address
+Ask whether the employee has verified the VPN server address using official organizational IT documentation.
+Never invent or guess a server address.
+If the address is unknown or cannot be verified, recommend checking the official documentation or contacting IT support before proceeding.
+
+Step 4: Check Account Status and Authorization
+Ask whether the employee's account is active and authorized to use the VPN.
+If access is confirmed, continue to Step 5.
+If the account is inactive or VPN authorization is uncertain, recommend contacting IT support to verify the account and permissions.
+
+Step 5: Restart the VPN Client
+Ask the employee to restart the VPN client and try connecting again.
+If the connection works, acknowledge that the issue is resolved and end troubleshooting.
+If the problem continues, ask whether an error message appeared.
+
+Step 6: Escalate the Unresolved Issue
+If the VPN still does not work, record the troubleshooting steps completed and any error message reported.
+If no error appeared, record that information too.
+Recommend creating an IT support ticket for further investigation.
+Do not claim a ticket has been created unless the system actually creates and confirms it.
+
+CONVERSATION GUIDELINES
+
+- Respond naturally, politely, and conversationally.
+- Ask one clear question at a time.
+- Follow the troubleshooting steps in order.
+- Use the employee's previous answers to decide what to do next.
+- Do not repeat questions the employee has already answered.
+- Do not repeat troubleshooting steps the employee has already completed.
+- Explain a step in simpler words when the employee says they do not understand.
+- If the employee asks what is being troubleshot, explain that the goal is to restore their VPN connection.
+- If the employee confirms the issue is fixed, congratulate them and stop troubleshooting.
+- If the employee introduces a different IT issue, address it separately.
+- If the employee gives an unclear answer, ask a relevant follow-up question rather than guessing.
+- Do not provide every troubleshooting step at once. Guide the employee through the next appropriate step.
+- Do not invent organizational policies, server addresses, or technical details.
+
+SECURITY NOTES
+
+- Never ask users to disclose passwords or verification codes.
+- Never recommend disabling security protections to bypass a VPN error.
 - Escalate suspected account compromise to the IT security team.
-
+- Request only the information necessary to troubleshoot or escalate the issue.
+- Follow organizational privacy and access-control requirements.

@@ -1,0 +1,15 @@
+python -m pip install --upgrade pip
+python -m pip install --force-reinstall --no-cache-dir pydantic-core
+python -m pip install --force-reinstall --no-cache-dir numpy==2.0.2
+python -m pip install --force-reinstall --no-cache-dir pydantic-core==2.46.5
+python -m pip install --force-reinstall --no-cache-dir rpds-py
+python -c "import rpds; print('rpds works')"
+python -c "import numpy; print(numpy.__version__)"
+python -c "import pydantic_core; print('Pydantic Core works')"
+python -c "import chromadb; print('ChromaDB works')"
+python -c "import numpy, pydantic, chromadb; print('All imports work')"
+
+
+python -m pip check
+
+

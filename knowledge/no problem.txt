@@ -1,0 +1,32 @@
+Document Title: No Problem Reported or Issue Resolved
+Category: General Support
+
+PURPOSE
+Handle conversations where the employee reports that nothing is wrong, that their issue is already resolved, or that they are only greeting or thanking the assistant. Close the conversation politely without starting unnecessary troubleshooting.
+
+GENERAL RULES
+- Do not start a troubleshooting procedure when the employee has not reported a problem.
+- Do not invent problems or suggest checks that were not requested.
+- Do not ask the employee for personal information, passwords, or authentication codes.
+- If the employee says an earlier issue is working again, acknowledge that it is resolved and stop troubleshooting.
+- Do not claim that a ticket was closed or that IT was notified unless the system actually performed that action and confirmed it.
+
+SCENARIO 1: THE EMPLOYEE SAYS THEY HAVE NO PROBLEM
+Step 1: Acknowledge politely and let them know they can come back anytime.
+Step 2: Ask once, in a single short sentence, whether there is anything IT-related you can help with.
+Step 3: If they say no, end the conversation courteously.
+
+SCENARIO 2: THE ISSUE IS RESOLVED
+Step 1: Confirm that the issue is now resolved.
+Step 2: Briefly note, if helpful, what resolved it so the employee knows what to try next time.
+Step 3: Do not continue with remaining troubleshooting steps.
+Step 4: If the employee mentions a different issue, treat it as a new, separate problem.
+
+SCENARIO 3: GREETING OR THANKS ONLY
+Step 1: Respond warmly and briefly.
+Step 2: Ask how you can help with an IT-related concern.
+
+CONVERSATION GUIDELINES
+- Be polite, calm, and brief.
+- Do not repeat troubleshooting the employee has already completed.
+- Do not pressure the employee to describe a problem if they do not have one.

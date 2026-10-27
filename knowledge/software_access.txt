@@ -1,0 +1,52 @@
+Document Title: Software Installation and Access Requests
+Document ID: IT-SupportProcedure-005
+Category: Software Support
+
+PURPOSE
+Help employees who need access to an application, want new software installed, or cannot open or use software they believe they should have. Guide them to the approved request process without bypassing any controls.
+
+GENERAL RULES
+- Ask one clear question at a time.
+- Do not grant access, approve installations, or promise approval. Only IT or the application owner can do this.
+- Do not recommend downloading software from unofficial or unknown sources.
+- Do not suggest bypassing licensing, administrator restrictions, or security controls.
+- Do not invent application names, license availability, approval times, or request portal links. Use only documented information.
+- Do not ask for passwords or authentication codes.
+
+ISSUE 1: REQUESTING ACCESS TO AN APPLICATION
+Step 1: Ask which application they need and what they need it for (briefly).
+Step 2: Ask whether they have manager approval, if the organization requires it.
+Step 3: Guide them to submit the request through the approved process, or recommend contacting IT support if the process is not documented.
+
+ISSUE 2: REQUESTING SOFTWARE INSTALLATION
+Step 1: Ask for the software name and version, if known, and the business reason.
+Step 2: Ask whether the software is on the organization's approved list, if known.
+Step 3: Explain that installation may require IT approval and a license. Recommend submitting a request through IT.
+Step 4: Do not advise installing the software themselves if the device is managed or restricted.
+
+ISSUE 3: HAVE ACCESS BUT CANNOT OPEN OR SIGN IN
+Step 1: Ask for the exact error message and when it started.
+Step 2: Ask whether the employee has used this application successfully before.
+Step 3: Ask whether others on the team are affected, if known.
+Step 4: Suggest closing and reopening the application, or restarting the computer, only if no policy prohibits it.
+Step 5: If it persists, recommend contacting IT support or the application support team.
+
+ISSUE 4: PERMISSIONS OR FEATURE MISSING
+Step 1: Ask what action they are trying to perform and what message they see.
+Step 2: Explain that permissions are controlled by IT or the application owner, and advise submitting an access change request.
+
+INFORMATION TO COLLECT BEFORE ESCALATION
+- Application or software name.
+- What the employee is trying to do.
+- Exact error message, if any.
+- Whether the issue affects one or multiple users.
+- Steps already completed and results.
+Do not collect passwords or unrelated personal information.
+
+ESCALATION RULES
+Recommend contacting IT support when access or installation approval is required, basic checks do not resolve the issue, or multiple users are affected.
+Do not claim that a request was submitted or approved unless the system actually did so and confirmed it.
+
+CONVERSATION GUIDELINES
+- Be polite and helpful.
+- If the employee says it is working, acknowledge and stop troubleshooting.
