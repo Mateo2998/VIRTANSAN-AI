@@ -4,37 +4,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIRTANSAN AI</title>
-    <link rel="stylesheet" href="/static/style.css?v=3">
+    <title>VIRTANSAN | Company Portal</title>
+    <link rel="stylesheet" href="/static/style.css?v=6">
+    <script src="/static/script.js?v=6" defer></script>
 </head>
 <body>
-    <h1>VIRTANSAN AI</h1>
-    <p>AI-Powered Enterprise Helpdesk</p>
 
-    <div id="chat">
-        <div id="messages" aria-live="polite">
-            <div class="message ai-message">
-                <strong>VIRTANSAN AI</strong>
-                <div class="reply-text">Hey there! 👋 Welcome! I'm VIRTANSAN AI.
+    <div class="topbar">
+        <div class="container topbar-inner">
+            <span>Company Portal · IT services and employee support</span>
+            <span class="status">
+                <span class="status-dot"></span>
+                Support assistant available
+            </span>
+        </div>
+    </div>
 
-I'm here to help you figure out IT problems and find solutions. Just tell me what's going on, and we'll work through it together.
+    <header class="site-header">
+        <nav class="container nav" aria-label="Main navigation">
+            <a class="brand" href="#home">
+                <span class="brand-mark">V</span>
+                <span>
+                    VIRTANSAN
+                    <small>COMPANY PORTAL</small>
+                </span>
+            </a>
 
-What's up? How can I help you today?</div>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#services">Services</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </div>
+
+            <button class="btn btn-outline" id="loginOpen" type="button">
+                Log in
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="container hero-grid">
+                <div class="hero-content">
+                    <div class="eyebrow">
+                        <span class="eyebrow-mark"></span>
+                        Technology that works for you
+                    </div>
+
+                    <h1>
+                        Work smarter with
+                        <span>connected</span> support.
+                    </h1>
+
+                    <p class="hero-copy">
+                        A central place for company updates, digital services,
+                        and IT support. Find the help you need and get back
+                        to what matters.
+                    </p>
+
+                    <div class="hero-actions">
+                        <button class="btn btn-primary" id="heroSupport" type="button">
+                            Get IT support →
+                        </button>
+
+                        <a class="btn btn-outline" href="#services">
+                            Explore services
+                        </a>
+                    </div>
+
+                    <div class="trust-row">
+                        <span><span class="check">✓</span> Employee-focused services</span>
+                        <span><span class="check">✓</span> Help when you need it</span>
+                    </div>
+                </div>
+
+                <div class="hero-visual" aria-label="Company technology illustration">
+                    <div class="orb">
+                        <div class="orb-core">V</div>
+                    </div>
+
+                    <div class="floating-card float-one">
+                        <span class="float-icon">⌘</span>
+                        <span>
+                            Digital workplace
+                            <small>Tools in one place</small>
+                        </span>
+                    </div>
+
+                    <div class="floating-card float-two">
+                        <span class="float-icon">✓</span>
+                        <span>
+                            IT support
+                            <small>Guidance and assistance</small>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="services">
+            <div class="container">
+                <div class="section-heading">
+                    <div class="section-kicker">What we provide</div>
+                    <h2>Everything you need to stay productive</h2>
+                    <p>
+                        Explore company services and find support for common
+                        workplace technology needs.
+                    </p>
+                </div>
+
+                <div class="features">
+                    <article class="feature-card">
+                        <div class="feature-icon">⌘</div>
+                        <h3>IT Helpdesk</h3>
+                        <p>
+                            Get guidance for company devices, network access,
+                            VPN connections, and common technical issues.
+                        </p>
+                    </article>
+
+                    <article class="feature-card">
+                        <div class="feature-icon">▣</div>
+                        <h3>Software &amp; Access</h3>
+                        <p>
+                            Learn how to request approved software and access
+                            the applications required for your role.
+                        </p>
+                    </article>
+
+                    <article class="feature-card">
+                        <div class="feature-icon">◈</div>
+                        <h3>Account Assistance</h3>
+                        <p>
+                            Find the correct process for account problems and
+                            submit requests for administrator review when needed.
+                        </p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="band" id="about">
+            <div class="container band-inner">
+                <div>
+                    <h2>Need a hand with something?</h2>
+                    <p>
+                        Start with the Support AI assistant for company IT
+                        questions. Requests requiring administrator action
+                        can follow the helpdesk process.
+                    </p>
+                </div>
+
+                <button class="btn band-button" id="bandSupport" type="button">
+                    Chat with Support AI →
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contact">
+        <div class="container footer-inner">
+            <div>
+                © <span id="year"></span> VIRTANSAN Company Portal. Internal use only.
+            </div>
+
+            <div class="footer-links">
+                <a href="#services">Services</a>
+                <a href="#about">About</a>
+                <a href="mailto:it-support@example.com">Contact IT</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating chatbot button -->
+    <button
+        class="chat-launcher"
+        id="chatToggle"
+        type="button"
+        aria-label="Open Support AI chat"
+        aria-expanded="false"
+        aria-controls="chatPanel"
+    >
+        <span class="chat-launcher-icon">✦</span>
+        <span>Support AI</span>
+    </button>
+
+    <!-- Chat window -->
+    <section
+        class="chat-panel"
+        id="chatPanel"
+        aria-label="Support AI chat"
+        aria-hidden="true"
+        inert
+    >
+        <div class="chat-head">
+            <div class="chat-head-left">
+                <div class="bot-avatar">✦</div>
+                <div>
+                    <strong>VIRTANSAN Support AI</strong>
+                    <small>
+                        <span class="status-dot"></span>
+                        Ready to help with company IT
+                    </small>
+                </div>
+            </div>
+
+            <button class="chat-close" id="chatClose" type="button" aria-label="Close chat">
+                ×
+            </button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages" aria-live="polite">
+            <div class="message bot">
+Hi! I'm the company's IT support assistant.
             </div>
         </div>
 
-        <form id="chat-form">
+        <form class="chat-form" id="chatForm">
             <input
+                id="chatInput"
                 type="text"
-                id="message-input"
-                placeholder="Tell me what's going on..."
-                required
+                placeholder="Describe your IT issue..."
                 autocomplete="off"
+                aria-label="Message Support AI"
+                required
             >
-            <button type="submit">Send</button>
+            <button class="send-btn" id="sendButton" type="submit" aria-label="Send message">
+                ➤
+            </button>
         </form>
+
+        <div class="chat-note">
+            Don't share passwords or sensitive personal information.
+        </div>
+    </section>
+
+    <!-- Login popup -->
+    <div
+        class="login-backdrop"
+        id="loginBackdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="loginTitle"
+        aria-hidden="true"
+        inert
+    >
+        <div class="login-card">
+            <button class="login-close" id="loginClose" type="button" aria-label="Close login">
+                ×
+            </button>
+
+            <div class="brand login-brand">
+                <span class="brand-mark">V</span>
+                <span>
+                    VIRTANSAN
+                    <small>COMPANY PORTAL</small>
+                </span>
+            </div>
+
+            <h2 id="loginTitle">Welcome back</h2>
+
+            <p id="loginDescription">
+                Sign in to access the company portal.
+            </p>
+
+            <button
+                class="btn btn-outline login-mode-button"
+                id="loginModeButton"
+                type="button"
+            >
+                Admin Login
+            </button>
+
+            <form id="loginForm">
+                <label class="form-field">
+                    <span id="loginEmailLabel">Company email</span>
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        placeholder="name@company.com"
+                        autocomplete="username"
+                        required
+                    >
+                </label>
+
+                <label class="form-field">
+                    <span>Password</span>
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </label>
+
+                <button class="btn btn-primary login-submit" id="loginSubmit" type="submit">
+                    Log in
+                </button>
+
+                <div class="login-message" id="loginMessage" role="status"></div>
+            </form>
+        </div>
     </div>
 
-    <script src="/static/script.js?v=3"></script>
 </body>
 </html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIRTANSAN | Company Portal</title>
+  <style>
+    :root {
+      --navy: #10233f;
+      --navy-deep: #0a1830;
+      --blue: #356df3;
+      --blue-light: #eaf0ff;
+      --ink: #18243a;
+      --muted: #66748a;
+      --line: #e4eaf2;
+      --surface: #ffffff;
+      --page: #f7f9fc;
+      --green: #16a36a;
+      --shadow: 0 18px 50px rgba(16, 35, 63, .12);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--page);
+      line-height: 1.6;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1140px, calc(100% - 44px)); margin: 0 auto; }
+    .topbar {
+      background: var(--navy-deep);
+      color: #dbe6fa;
+      font-size: 12px;
+      padding: 8px 0;
+    }
+    .topbar-inner { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .topbar .status { display: inline-flex; align-items: center; gap: 8px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #42d99a; display: inline-block; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(228,234,242,.9);
+    }
+    .nav { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 22px; }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; letter-spacing: .04em; }
+    .brand-mark {
+      width: 38px; height: 38px; display: grid; place-items: center; color: white;
+      border-radius: 12px; background: linear-gradient(135deg, #477bff, #244fd0);
+      box-shadow: 0 7px 18px rgba(53,109,243,.25); font-size: 17px;
+    }
+    .brand small { display: block; font-size: 10px; font-weight: 600; color: #8490a4; letter-spacing: .16em; margin-top: -3px; }
+    .nav-links { display: flex; align-items: center; gap: 30px; color: #526178; font-size: 14px; font-weight: 600; }
+    .nav-links a:hover { color: var(--blue); }
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      border: 1px solid transparent; border-radius: 11px; padding: 11px 17px;
+      font-weight: 700; font-size: 14px; transition: transform .18s, box-shadow .18s, background .18s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { color: #fff; background: var(--blue); box-shadow: 0 8px 18px rgba(53,109,243,.2); }
+    .btn-primary:hover { background: #2459df; box-shadow: 0 10px 24px rgba(53,109,243,.27); }
+    .btn-outline { background: white; border-color: #dce4ef; color: var(--navy); }
+    .btn-outline:hover { border-color: #aabce0; background: #f9fbff; }
+    .mobile-menu { display: none; }
+    .hero { overflow: hidden; position: relative; background: linear-gradient(115deg, #f6f9ff 0%, #eef3ff 56%, #f9fbff 100%); }
+    .hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
+    .hero::before { width: 520px; height: 520px; background: rgba(87,132,255,.09); right: -140px; top: -210px; }
+    .hero::after { width: 330px; height: 330px; border: 1px solid rgba(53,109,243,.13); right: 8%; bottom: -230px; }
+    .hero-grid { min-height: 540px; display: grid; grid-template-columns: 1.1fr .9fr; align-items: center; gap: 48px; padding-top: 54px; padding-bottom: 68px; position: relative; z-index: 1; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: #315fd0; font-weight: 800; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; background: #e6edff; border: 1px solid #d6e1ff; padding: 8px 12px; border-radius: 999px; }
+    .eyebrow-mark { width: 7px; height: 7px; border-radius: 2px; background: var(--blue); transform: rotate(45deg); }
+    h1 { font-size: clamp(38px, 5vw, 60px); line-height: 1.08; letter-spacing: -.045em; margin: 22px 0 20px; color: var(--navy-deep); max-width: 650px; }
+    h1 span { color: var(--blue); }
+    .hero-copy { max-width: 560px; font-size: 17px; color: #5d6b81; margin: 0 0 28px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .trust-row { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 31px; color: #738097; font-size: 12px; font-weight: 600; }
+    .trust-item { display: inline-flex; align-items: center; gap: 7px; }
+    .check { color: var(--green); font-weight: 900; font-size: 15px; }
+    .hero-visual { position: relative; min-height: 370px; display: grid; place-items: center; }
+    .orb { width: min(100%, 390px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 25%, #fff 0 7%, #dce7ff 28%, #b9ccff 54%, #eaf0ff 72%); position: relative; display: grid; place-items: center; box-shadow: inset -18px -24px 50px rgba(69,105,201,.12), 0 30px 65px rgba(49,86,172,.12); }
+    .orb::before { content: ""; position: absolute; inset: 22px; border: 1px solid rgba(53,109,243,.18); border-radius: 50%; }
+    .orb-core { width: 150px; height: 150px; display: grid; place-items: center; border-radius: 36px; background: linear-gradient(145deg, #477bff, #214ec8); color: white; font-size: 54px; font-weight: 800; transform: rotate(-7deg); box-shadow: 0 22px 45px rgba(37,83,208,.32); }
+    .floating-card { position: absolute; background: rgba(255,255,255,.95); border: 1px solid #e5ebf5; border-radius: 15px; padding: 13px 16px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 11px; font-size: 12px; font-weight: 800; color: #263750; }
+    .floating-card small { display: block; font-weight: 500; color: #8490a4; font-size: 10px; }
+    .float-icon { width: 34px; height: 34px; border-radius: 10px; background: #edf2ff; display: grid; place-items: center; color: var(--blue); font-size: 17px; }
+    .float-one { top: 42px; left: -5px; }
+    .float-two { bottom: 37px; right: -12px; }
+    .section { padding: 82px 0; }
+    .section-heading { max-width: 650px; margin: 0 auto 42px; text-align: center; }
+    .section-kicker { color: var(--blue); text-transform: uppercase; font-weight: 800; font-size: 11px; letter-spacing: .15em; }
+    h2 { color: var(--navy-deep); font-size: clamp(28px, 3vw, 38px); line-height: 1.2; letter-spacing: -.03em; margin: 10px 0 13px; }
+    .section-heading p { margin: 0; color: var(--muted); font-size: 15px; }
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .feature-card { background: white; border: 1px solid var(--line); border-radius: 18px; padding: 26px; transition: transform .2s, box-shadow .2s, border-color .2s; }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 16px 35px rgba(16,35,63,.07); border-color: #cad7f5; }
+    .feature-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 14px; color: var(--blue); background: var(--blue-light); font-size: 22px; margin-bottom: 19px; }
+    .feature-card h3 { font-size: 17px; color: var(--navy); margin: 0 0 9px; }
+    .feature-card p { color: var(--muted); font-size: 14px; margin: 0; }
+    .band { padding: 0 0 80px; }
+    .band-inner { border-radius: 24px; padding: 42px 48px; color: white; background: linear-gradient(115deg, #10233f, #1d3b70); display: flex; justify-content: space-between; align-items: center; gap: 30px; position: relative; overflow: hidden; }
+    .band-inner::after { content: ""; position: absolute; width: 260px; height: 260px; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; right: 20%; top: -150px; }
+    .band h2 { color: white; margin-top: 0; margin-bottom: 9px; font-size: 29px; }
+    .band p { margin: 0; color: #c5d2e8; max-width: 570px; font-size: 14px; }
+    .band .btn { position: relative; z-index: 1; flex-shrink: 0; background: white; color: var(--navy); }
+    footer { border-top: 1px solid var(--line); padding: 28px 0; background: white; color: #8290a4; font-size: 12px; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a:hover { color: var(--blue); }
+
+    /* Support AI launcher and chat panel */
+    .chat-launcher {
+      position: fixed; right: 26px; bottom: 24px; z-index: 30; border: 0; border-radius: 999px;
+      background: var(--blue); color: white; padding: 13px 19px 13px 14px; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 12px 32px rgba(40,91,220,.35); font-weight: 800; font-size: 14px;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .chat-launcher:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(40,91,220,.4); }
+    .chat-launcher-icon { width: 34px; height: 34px; display: grid; place-items: center; background: rgba(255,255,255,.18); border-radius: 50%; font-size: 18px; }
+    .chat-panel { position: fixed; right: 26px; bottom: 91px; z-index: 29; width: min(380px, calc(100vw - 28px)); height: min(520px, calc(100vh - 125px)); background: white; border: 1px solid #e1e7f0; border-radius: 20px; box-shadow: 0 25px 70px rgba(12,30,61,.22); display: none; flex-direction: column; overflow: hidden; }
+    .chat-panel.open { display: flex; animation: rise .18s ease-out; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .chat-head { background: var(--navy); color: white; padding: 17px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .chat-head-left { display: flex; align-items: center; gap: 10px; }
+    .bot-avatar { width: 39px; height: 39px; border-radius: 12px; display: grid; place-items: center; background: #356df3; font-weight: 900; }
+    .chat-head strong { display: block; font-size: 14px; }
+    .chat-head small { color: #b9c8e2; font-size: 11px; }
+    .chat-close { border: 0; color: white; background: transparent; font-size: 24px; line-height: 1; padding: 3px 7px; }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 17px 14px; display: flex; flex-direction: column; gap: 11px; background: #f7f9fc; }
+    .message { max-width: 88%; border-radius: 14px; padding: 10px 12px; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .message.bot { align-self: flex-start; background: white; color: #344158; border: 1px solid #e5eaf2; border-bottom-left-radius: 4px; }
+    .message.user { align-self: flex-end; color: white; background: var(--blue); border-bottom-right-radius: 4px; }
+    .chat-form { display: flex; gap: 8px; padding: 12px; background: white; border-top: 1px solid var(--line); }
+    .chat-form input { min-width: 0; flex: 1; border: 1px solid #dce4ef; border-radius: 11px; padding: 11px 12px; outline: none; font-size: 13px; }
+    .chat-form input:focus { border-color: #88a7ff; box-shadow: 0 0 0 3px rgba(53,109,243,.1); }
+    .send-btn { border: 0; border-radius: 11px; width: 44px; background: var(--blue); color: white; font-size: 18px; }
+    .chat-note { font-size: 10px; color: #8b97a8; text-align: center; padding: 0 12px 10px; background: white; }
+    .login-backdrop { position: fixed; inset: 0; background: rgba(8,22,44,.52); z-index: 50; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .login-backdrop.open { display: flex; }
+    .login-card { width: min(420px, 100%); background: white; border-radius: 20px; padding: 30px; box-shadow: 0 30px 80px rgba(0,0,0,.25); position: relative; }
+    .login-card h2 { font-size: 27px; margin: 14px 0 5px; }
+    .login-card p { color: var(--muted); font-size: 13px; margin: 0 0 22px; }
+    .login-close { position: absolute; top: 14px; right: 17px; border: 0; background: transparent; font-size: 24px; color: #7c899b; }
+    .form-field { display: block; margin-bottom: 15px; }
+    .form-field span { display: block; font-size: 12px; font-weight: 800; margin-bottom: 7px; color: #35435a; }
+    .form-field input { width: 100%; border: 1px solid #dce4ef; border-radius: 10px; padding: 12px; outline: none; }
+    .form-field input:focus { border-color: #88a7ff; box-shadow: 0 0 0 3px rgba(53,109,243,.1); }
+    .login-card .btn { width: 100%; margin-top: 5px; }
+    .login-message { min-height: 20px; margin-top: 12px; color: #b45309; font-size: 12px; }
+    @media (max-width: 820px) {
+      .nav-links { display: none; }
+      .mobile-menu { display: inline-flex; }
+      .hero-grid { grid-template-columns: 1fr; gap: 20px; padding-top: 52px; }
+      .hero-visual { min-height: 330px; }
+      .orb { width: 300px; }
+      .float-one { left: 4%; }
+      .float-two { right: 2%; }
+      .features { grid-template-columns: 1fr; }
+      .feature-card { padding: 23px; }
+      .band-inner { padding: 32px 26px; flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 480px) {
+      .container { width: min(100% - 28px, 1140px); }
+      .topbar-inner { justify-content: center; }
+      .nav { min-height: 68px; }
+      .brand { font-size: 13px; }
+      .brand-mark { width: 34px; height: 34px; }
+      .nav-actions { gap: 7px; }
+      .nav-actions .btn { padding: 9px 11px; font-size: 12px; }
+      .hero-grid { padding-top: 39px; padding-bottom: 48px; }
+      .hero-copy { font-size: 15px; }
+      .hero-visual { min-height: 290px; }
+      .orb { width: 255px; }
+      .orb-core { width: 115px; height: 115px; font-size: 42px; border-radius: 28px; }
+      .floating-card { padding: 10px 11px; }
+      .float-one { top: 14px; left: 0; }
+      .float-two { bottom: 16px; right: 0; }
+      .section { padding: 58px 0; }
+      .chat-launcher { right: 14px; bottom: 14px; }
+      .chat-panel { right: 14px; bottom: 80px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <span>Company Portal · IT services and employee support</span>
+      <span class="status"><i class="status-dot"></i> Support assistant available</span>
+    </div>
+  </div>
+
+  <header>
+    <nav class="container nav" aria-label="Main navigation">
+      <a class="brand" href="#home" aria-label="VIRTANSAN home">
+        <span class="brand-mark">V</span>
+        <span>VIRTANSAN<small>COMPANY PORTAL</small></span>
+      </a>
+      <div class="nav-links">
+        <a href="#home">Home</a>
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <button class="btn btn-outline" id="loginOpen" type="button"><span aria-hidden="true">↗</span> Log in</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow"><span class="eyebrow-mark"></span> Technology that works for you</div>
+          <h1>Work smarter with <span>connected</span> support.</h1>
+          <p class="hero-copy">A central place for company updates, digital services, and IT support. Find the help you need and get back to what matters.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button" id="heroSupport">Get IT support <span aria-hidden="true">→</span></button>
+            <a class="btn btn-outline" href="#services">Explore services</a>
+          </div>
+          <div class="trust-row">
+            <span class="trust-item"><span class="check">✓</span> Employee-focused services</span>
+            <span class="trust-item"><span class="check">✓</span> Help when you need it</span>
+          </div>
+        </div>
+        <div class="hero-visual" aria-label="Illustration representing connected company technology">
+          <div class="orb"><div class="orb-core">V</div></div>
+          <div class="floating-card float-one"><span class="float-icon">⌘</span><span>Digital workplace<small>Tools in one place</small></span></div>
+          <div class="floating-card float-two"><span class="float-icon">✓</span><span>IT support<small>Guidance and assistance</small></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="services">
+      <div class="container">
+        <div class="section-heading">
+          <div class="section-kicker">What we provide</div>
+          <h2>Everything you need to stay productive</h2>
+          <p>Explore company services and find support for common workplace technology needs.</p>
+        </div>
+        <div class="features">
+          <article class="feature-card">
+            <div class="feature-icon">⌘</div>
+            <h3>IT Helpdesk</h3>
+            <p>Get guidance for company devices, network access, VPN connections, and common technical issues.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon">▣</div>
+            <h3>Software & Access</h3>
+            <p>Learn how to request approved software and access the applications required for your role.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon">◈</div>
+            <h3>Account Assistance</h3>
+            <p>Find the correct process for account problems and submit requests for administrator review when needed.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="about">
+      <div class="container">
+        <div class="band-inner">
+          <div>
+            <h2>Need a hand with something?</h2>
+            <p>Start with the Support AI assistant for company IT questions. Requests that need administrator action can be directed through the helpdesk process.</p>
+          </div>
+          <button class="btn" type="button" id="bandSupport">Chat with Support AI <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact">
+    <div class="container footer-inner">
+      <div>© <span id="year"></span> VIRTANSAN Company Portal. Internal use only.</div>
+      <div class="footer-links"><a href="#services">Services</a><a href="#about">About</a><a href="mailto:it-support@example.com">Contact IT</a></div>
+    </div>
+  </footer>
+
+  <button class="chat-launcher" id="chatToggle" type="button" aria-label="Open Support AI chat" aria-expanded="false">
+    <span class="chat-launcher-icon">✦</span><span>Support AI</span>
+  </button>
+
+  <section class="chat-panel" id="chatPanel" aria-label="Support AI chat" aria-hidden="true">
+    <div class="chat-head">
+      <div class="chat-head-left">
+        <div class="bot-avatar">✦</div>
+        <div><strong>VIRTANSAN Support AI</strong><small><span class="status-dot"></span> Ready to help with company IT</small></div>
+      </div>
+      <button class="chat-close" id="chatClose" type="button" aria-label="Close chat">×</button>
+    </div>
+    <div class="chat-messages" id="chatMessages" aria-live="polite">
+      <div class="message bot">Hi! I'm the company IT support assistant. What company-related IT issue can I help you with today?</div>
+    </div>
+    <form class="chat-form" id="chatForm">
+      <input id="chatInput" type="text" placeholder="Describe your IT issue..." autocomplete="off" aria-label="Message Support AI" required>
+      <button class="send-btn" type="submit" aria-label="Send message">➤</button>
+    </form>
+    <div class="chat-note">Don't share passwords or sensitive personal information.</div>
+  </section>
+
+  <div class="login-backdrop" id="loginBackdrop" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="login-card">
+      <button class="login-close" id="loginClose" type="button" aria-label="Close login">×</button>
+      <div class="brand"><span class="brand-mark">V</span><span>VIRTANSAN<small>COMPANY PORTAL</small></span></div>
+      <h2 id="loginTitle">Welcome back</h2>
+      <p>Sign-in is a front-end preview. Connect this form to your authenticated backend before using real accounts.</p>
+      <form id="loginForm">
+        <label class="form-field"><span>Company email</span><input type="email" id="loginEmail" placeholder="name@company.com" autocomplete="username" required></label>
+        <label class="form-field"><span>Password</span><input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" required></label>
+        <button class="btn btn-primary" type="submit">Log in</button>
+        <div class="login-message" id="loginMessage" role="status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const chatToggle = document.getElementById('chatToggle');
+    const chatPanel = document.getElementById('chatPanel');
+    const chatClose = document.getElementById('chatClose');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const chatHistory = [];
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function openChat() {
+      chatPanel.classList.add('open');
+      chatPanel.setAttribute('aria-hidden', 'false');
+      chatToggle.setAttribute('aria-expanded', 'true');
+      chatInput.focus();
+    }
+    function closeChat() {
+      chatPanel.classList.remove('open');
+      chatPanel.setAttribute('aria-hidden', 'true');
+      chatToggle.setAttribute('aria-expanded', 'false');
+    }
+    function addMessage(text, who) {
+      const message = document.createElement('div');
+      message.className = 'message ' + who;
+      message.textContent = text;
+      chatMessages.appendChild(message);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return message;
+    }
+    chatToggle.addEventListener('click', () => chatPanel.classList.contains('open') ? closeChat() : openChat());
+    chatClose.addEventListener('click', closeChat);
+    document.getElementById('heroSupport').addEventListener('click', openChat);
+    document.getElementById('bandSupport').addEventListener('click', openChat);
+
+    chatForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+      addMessage(message, 'user');
+      chatInput.value = '';
+      chatInput.disabled = true;
+      const pending = addMessage('Thinking...', 'bot');
+
+      try {
+        // The site is designed to run through the FastAPI app at http://127.0.0.1:8000.
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, history: chatHistory })
+        });
+        if (!response.ok) throw new Error('The support service returned an error.');
+        const data = await response.json();
+        const reply = data.reply || data.response || 'I could not find a response. Please try again.';
+        pending.textContent = reply;
+        chatHistory.push({ role: 'user', content: message }, { role: 'assistant', content: reply });
+      } catch (error) {
+        pending.textContent = 'I could not connect to the Support AI service. Please make sure the AI-HAS FastAPI server is running, then try again.';
+      } finally {
+        chatInput.disabled = false;
+        chatInput.focus();
+      }
+    });
+
+    const loginBackdrop = document.getElementById('loginBackdrop');
+    const loginOpen = document.getElementById('loginOpen');
+    const loginClose = document.getElementById('loginClose');
+    function openLogin() {
+      loginBackdrop.classList.add('open');
+      document.getElementById('loginEmail').focus();
+    }
+    function closeLogin() {
+      loginBackdrop.classList.remove('open');
+      document.getElementById('loginMessage').textContent = '';
+    }
+    loginOpen.addEventListener('click', openLogin);
+    loginClose.addEventListener('click', closeLogin);
+    loginBackdrop.addEventListener('click', (event) => {
+      if (event.target === loginBackdrop) closeLogin();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeLogin();
+        closeChat();
+      }
+    });
+    document.getElementById('loginForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      document.getElementById('loginMessage').textContent =
+        'Login is not connected yet. Add backend authentication before using real employee accounts.';
+    });
+  </script>
+</body>
+</html>

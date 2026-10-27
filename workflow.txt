@@ -1,0 +1,28 @@
+Users provide the issue
+AI tries to resolve the issue without creating a ticket
+
+If issue is fixed = no ticket
+If issue still persist = ticket
+
+User will type "Create a ticket"
+AI will ask the user the issue of the ticket
+AI will ask the user to provide detail description if possible
+
+
+
+Automate Password reset = security risk
+Automate password reset approval
+
+AI will ask the user for his/her work email.
+User provides work email
+AI creates a ticket titled "(work email) password reset"
+
+AI: "Pending Approval. Wait within an hour for a password reset. Once approved, you will receive a temporary password in your work phone number or an admin will call you."
+
+Admin approves password reset
+
+
+
+Admin side:
+Admin will can view tickets
+Admin can decide if the issue has been completed or uncompleted or denied.

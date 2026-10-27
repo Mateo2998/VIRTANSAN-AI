@@ -1,17 +1,42 @@
 
+import os
+import hmac
 import chromadb
 import requests
+
 from typing import Literal
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from starlette.middleware.sessions import SessionMiddleware
+
 
 app = FastAPI(title="VIRTANSAN AI")
 
+# Admin credentials for the capstone prototype
+ADMIN_EMAIL = "admin@work.com"
+ADMIN_PASSWORD = "admin123"
+
+# Use a stable secret from your environment when possible.
+SESSION_SECRET = os.getenv(
+    "SESSION_SECRET",
+    "dev-only-change-this-session-secret"
+)
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET,
+    session_cookie="virtansan_session",
+    same_site="lax",
+    https_only=False
+)
+
+# ChromaDB
 client = chromadb.PersistentClient(path="./chroma_data")
 collection = client.get_or_create_collection(name="it_knowledge")
 
+# Ollama settings
 OLLAMA_URL = "http://localhost:11434/api/chat"
 EMBEDDING_URL = "http://localhost:11434/api/embeddings"
 CHAT_MODEL = "qwen2.5:7b"
@@ -34,6 +59,7 @@ PERSONAL_SCOPE_REPLY = (
 )
 
 
+# Request models
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str
@@ -44,6 +70,67 @@ class ChatRequest(BaseModel):
     history: list[ChatMessage] = Field(default_factory=list)
 
 
+class AdminLogin(BaseModel):
+    email: str = Field(min_length=1, max_length=254)
+    password: str = Field(min_length=1, max_length=200)
+
+
+# Admin authentication
+@app.post("/admin-login")
+def admin_login(credentials: AdminLogin, request: Request):
+    email_matches = hmac.compare_digest(
+        credentials.email.strip().lower(),
+        ADMIN_EMAIL.lower()
+    )
+
+    password_matches = hmac.compare_digest(
+        credentials.password,
+        ADMIN_PASSWORD
+    )
+
+    if not email_matches or not password_matches:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password."
+        )
+
+    request.session.clear()
+    request.session["is_admin"] = True
+
+    return {"message": "Login successful"}
+
+
+@app.post("/admin-logout")
+def admin_logout(request: Request):
+    request.session.clear()
+    return {"message": "Logged out successfully"}
+
+
+@app.get("/admin.html")
+def admin_dashboard(request: Request):
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/", status_code=303)
+
+    return FileResponse("admin.html")
+
+
+# Frontend homepage
+@app.get("/")
+def home():
+    return FileResponse("frontend/index.html")
+
+
+# Health check
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy",
+        "knowledge_base": collection.name,
+        "documents_indexed": collection.count()
+    }
+
+
+# Embeddings
 def create_embedding(text):
     response = requests.post(
         EMBEDDING_URL,
@@ -57,6 +144,7 @@ def create_embedding(text):
     return response.json()["embedding"]
 
 
+# Intent classification
 def classify_intent(message, history):
     recent_conversation = "\n".join(
         f"{item.role}: {item.content}"
@@ -127,6 +215,7 @@ Latest user message:
     return "UNCLEAR"
 
 
+# Company versus personal scope classification
 def classify_scope(message, history):
     recent_conversation = "\n".join(
         f"{item.role}: {item.content}"
@@ -196,6 +285,7 @@ Return only COMPANY, PERSONAL, or UNCLEAR.
     return "UNCLEAR"
 
 
+# Password support
 def is_password_related(text):
     text = text.lower()
 
@@ -303,20 +393,7 @@ def get_password_reply(message, history):
     return None
 
 
-@app.get("/")
-def home():
-    return FileResponse("frontend/index.html")
-
-
-@app.get("/health")
-def health():
-    return {
-        "status": "healthy",
-        "knowledge_base": collection.name,
-        "documents_indexed": collection.count()
-    }
-
-
+# AI chatbot endpoint
 @app.post("/chat")
 def chat(request: ChatRequest):
     message = request.message.strip()
@@ -403,7 +480,6 @@ def chat(request: ChatRequest):
                 "source": "Conversation Guide"
             }
 
-        # Enforce company scope before password handling or knowledge retrieval.
         scope = classify_scope(message, history)
 
         if scope == "PERSONAL":
@@ -431,7 +507,6 @@ def chat(request: ChatRequest):
             )
         )
 
-    # Only company-related issues can reach password support.
     password_context = any(
         item.role == "user" and is_password_related(item.content)
         for item in history
@@ -565,6 +640,7 @@ Knowledge-base reference:
         )
 
 
+# Serve CSS and JavaScript from the frontend folder
 app.mount(
     "/static",
     StaticFiles(directory="frontend"),
