@@ -1,0 +1,24 @@
+[
+  {
+    "id": "TKT-0001",
+    "title": "employee@work.com - Password Reset",
+    "description": "I forgot my company account password and need help resetting it.",
+    "email": "employee@work.com",
+    "category": "Password Reset",
+    "status": "Accepted",
+    "admin_note": "done",
+    "created_at": "2026-10-27T17:01:47.600047+00:00",
+    "updated_at": "2026-10-27T17:09:40.923406+00:00"
+  },
+  {
+    "id": "TKT-0002",
+    "title": "employee@work.com - Password Reset",
+    "description": "I forgot my company account password and need help resetting it.",
+    "email": "employee@work.com",
+    "category": "Password Reset",
+    "status": "Denied",
+    "admin_note": "",
+    "created_at": "2026-10-27T17:09:52.397575+00:00",
+    "updated_at": "2026-10-27T17:10:00.410457+00:00"
+  }
+]

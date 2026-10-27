@@ -1,10 +1,12 @@
-
 import os
 import hmac
+import json
+import threading
+from datetime import datetime, timezone
+from typing import Literal
+
 import chromadb
 import requests
-
-from typing import Literal
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,11 +16,73 @@ from starlette.middleware.sessions import SessionMiddleware
 
 app = FastAPI(title="VIRTANSAN AI")
 
-# Admin credentials for the capstone prototype
+
+# =========================
+# TICKET STORAGE
+# =========================
+
+TICKETS_FILE = os.path.join(os.path.dirname(__file__), "tickets.json")
+ticket_lock = threading.Lock()
+
+
+class TicketCreate(BaseModel):
+    title: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=5, max_length=3000)
+    email: str = Field(default="", max_length=254)
+    category: Literal["IT Support", "Password Reset"] = "IT Support"
+
+
+class TicketUpdate(BaseModel):
+    status: Literal[
+        "Pending Review",
+        "Pending Approval",
+        "Accepted",
+        "Approved",
+        "In Progress",
+        "Fixed",
+        "Cannot Fix",
+        "Denied"
+    ]
+    admin_note: str = Field(default="", max_length=2000)
+
+
+def read_tickets():
+    if not os.path.exists(TICKETS_FILE):
+        return []
+
+    with open(TICKETS_FILE, "r", encoding="utf-8") as file:
+        tickets = json.load(file)
+
+    if not isinstance(tickets, list):
+        raise ValueError("tickets.json must contain a JSON list.")
+
+    return tickets
+
+
+def write_tickets(tickets):
+    temporary_file = TICKETS_FILE + ".tmp"
+
+    with open(temporary_file, "w", encoding="utf-8") as file:
+        json.dump(tickets, file, indent=2, ensure_ascii=False)
+
+    os.replace(temporary_file, TICKETS_FILE)
+
+
+def require_admin(request: Request):
+    if not request.session.get("is_admin"):
+        raise HTTPException(
+            status_code=401,
+            detail="Admin login required."
+        )
+
+
+# =========================
+# ADMIN AUTHENTICATION
+# =========================
+
 ADMIN_EMAIL = "admin@work.com"
 ADMIN_PASSWORD = "admin123"
 
-# Use a stable secret from your environment when possible.
 SESSION_SECRET = os.getenv(
     "SESSION_SECRET",
     "dev-only-change-this-session-secret"
@@ -32,50 +96,10 @@ app.add_middleware(
     https_only=False
 )
 
-# ChromaDB
-client = chromadb.PersistentClient(path="./chroma_data")
-collection = client.get_or_create_collection(name="it_knowledge")
-
-# Ollama settings
-OLLAMA_URL = "http://localhost:11434/api/chat"
-EMBEDDING_URL = "http://localhost:11434/api/embeddings"
-CHAT_MODEL = "qwen2.5:7b"
-EMBEDDING_MODEL = "nomic-embed-text"
-
-OFF_TOPIC_REPLY = (
-    "I'm here to help with company-related IT questions. 😊\n\n"
-    "I can assist with company accounts, work devices, "
-    "software access, networking, and VPN troubleshooting.\n\n"
-    "Is there a company IT issue I can help you with?"
-)
-
-PERSONAL_SCOPE_REPLY = (
-    "I'm sorry you're experiencing that issue. 😊\n\n"
-    "VIRTANSAN AI only supports company-related IT issues, "
-    "so I can't troubleshoot personal accounts, games, "
-    "or devices.\n\n"
-    "I can help with company accounts, work devices, "
-    "software access, networking, and VPN issues."
-)
-
-
-# Request models
-class ChatMessage(BaseModel):
-    role: Literal["user", "assistant"]
-    content: str
-
-
-class ChatRequest(BaseModel):
-    message: str = Field(min_length=1, max_length=2000)
-    history: list[ChatMessage] = Field(default_factory=list)
-
-
 class AdminLogin(BaseModel):
     email: str = Field(min_length=1, max_length=254)
     password: str = Field(min_length=1, max_length=200)
 
-
-# Admin authentication
 @app.post("/admin-login")
 def admin_login(credentials: AdminLogin, request: Request):
     email_matches = hmac.compare_digest(
@@ -114,13 +138,234 @@ def admin_dashboard(request: Request):
     return FileResponse("admin.html")
 
 
-# Frontend homepage
+# =========================
+# TICKET API
+# =========================
+
+@app.post("/tickets")
+def create_ticket(ticket: TicketCreate):
+    email = ticket.email.strip()
+    title_input = ticket.title.strip()
+    description = ticket.description.strip()
+
+    if len(title_input) < 3:
+        raise HTTPException(
+            status_code=422,
+            detail="The ticket title must contain at least 3 characters."
+        )
+
+    if len(description) < 5:
+        raise HTTPException(
+            status_code=422,
+            detail="Please provide a more detailed description."
+        )
+
+    if ticket.category == "Password Reset" and not email:
+        raise HTTPException(
+            status_code=400,
+            detail="A work email is required for password-reset requests."
+        )
+
+    if ticket.category == "Password Reset":
+        title = f"{email} - Password Reset"
+        status = "Pending Approval"
+    else:
+        title = title_input
+        status = "Pending Review"
+
+    with ticket_lock:
+        try:
+            tickets = read_tickets()
+        except (json.JSONDecodeError, ValueError):
+            raise HTTPException(
+                status_code=500,
+                detail="Ticket storage is invalid. Please check tickets.json."
+            )
+        except OSError:
+            raise HTTPException(
+                status_code=500,
+                detail="Ticket storage could not be read."
+            )
+
+        existing_numbers = []
+
+        for item in tickets:
+            ticket_id = item.get("id", "")
+
+            if (
+                isinstance(ticket_id, str)
+                and ticket_id.startswith("TKT-")
+                and ticket_id[4:].isdigit()
+            ):
+                existing_numbers.append(int(ticket_id[4:]))
+
+        next_number = max(existing_numbers, default=0) + 1
+        new_ticket_id = f"TKT-{next_number:04d}"
+        now = datetime.now(timezone.utc).isoformat()
+
+        new_ticket = {
+            "id": new_ticket_id,
+            "title": title,
+            "description": description,
+            "email": email,
+            "category": ticket.category,
+            "status": status,
+            "admin_note": "",
+            "created_at": now,
+            "updated_at": now
+        }
+
+        tickets.append(new_ticket)
+
+        try:
+            write_tickets(tickets)
+        except OSError:
+            raise HTTPException(
+                status_code=500,
+                detail="The ticket could not be saved."
+            )
+
+    return {
+        "message": "Ticket created successfully.",
+        "ticket": new_ticket
+    }
+
+
+@app.get("/admin/tickets")
+def list_tickets(request: Request):
+    require_admin(request)
+
+    with ticket_lock:
+        try:
+            tickets = read_tickets()
+        except (json.JSONDecodeError, ValueError):
+            raise HTTPException(
+                status_code=500,
+                detail="Ticket storage is invalid. Please check tickets.json."
+            )
+        except OSError:
+            raise HTTPException(
+                status_code=500,
+                detail="Ticket storage could not be read."
+            )
+
+    return {"tickets": tickets}
+
+
+@app.patch("/admin/tickets/{ticket_id}")
+def update_ticket(
+    ticket_id: str,
+    update: TicketUpdate,
+    request: Request
+):
+    require_admin(request)
+
+    with ticket_lock:
+        try:
+            tickets = read_tickets()
+        except (json.JSONDecodeError, ValueError):
+            raise HTTPException(
+                status_code=500,
+                detail="Ticket storage is invalid. Please check tickets.json."
+            )
+        except OSError:
+            raise HTTPException(
+                status_code=500,
+                detail="Ticket storage could not be read."
+            )
+
+        for ticket in tickets:
+            if ticket.get("id") == ticket_id:
+                ticket["status"] = update.status
+                ticket["admin_note"] = update.admin_note.strip()
+                ticket["updated_at"] = datetime.now(
+                    timezone.utc
+                ).isoformat()
+
+                try:
+                    write_tickets(tickets)
+                except OSError:
+                    raise HTTPException(
+                        status_code=500,
+                        detail="The ticket update could not be saved."
+                    )
+
+                return {
+                    "message": "Ticket updated successfully.",
+                    "ticket": ticket
+                }
+
+    raise HTTPException(
+        status_code=404,
+        detail="Ticket not found."
+    )
+
+
+# =========================
+# CHROMADB
+# =========================
+
+client = chromadb.PersistentClient(path="./chroma_data")
+collection = client.get_or_create_collection(name="it_knowledge")
+
+
+# =========================
+# OLLAMA SETTINGS
+# =========================
+
+OLLAMA_URL = "http://localhost:11434/api/chat"
+EMBEDDING_URL = "http://localhost:11434/api/embeddings"
+CHAT_MODEL = "qwen2.5:7b"
+EMBEDDING_MODEL = "nomic-embed-text"
+
+
+OFF_TOPIC_REPLY = (
+    "I'm here to help with company-related IT questions. 😊\n\n"
+    "I can assist with company accounts, work devices, "
+    "software access, networking, and VPN troubleshooting.\n\n"
+    "Is there a company IT issue I can help you with?"
+)
+
+PERSONAL_SCOPE_REPLY = (
+    "I'm sorry you're experiencing that issue. 😊\n\n"
+    "VIRTANSAN AI only supports company-related IT issues, "
+    "so I can't troubleshoot personal accounts, games, "
+    "or devices.\n\n"
+    "I can help with company accounts, work devices, "
+    "software access, networking, and VPN issues."
+)
+
+
+# =========================
+# REQUEST MODELS
+# =========================
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+    history: list[ChatMessage] = Field(default_factory=list)
+
+
+
+
+
+# =========================
+# FRONTEND
+# =========================
+
 @app.get("/")
 def home():
     return FileResponse("frontend/index.html")
 
 
-# Health check
+# =========================
+# HEALTH CHECK
+# =========================
+
 @app.get("/health")
 def health():
     return {
@@ -130,7 +375,10 @@ def health():
     }
 
 
-# Embeddings
+# =========================
+# EMBEDDINGS
+# =========================
+
 def create_embedding(text):
     response = requests.post(
         EMBEDDING_URL,
@@ -140,11 +388,16 @@ def create_embedding(text):
         },
         timeout=120
     )
+
     response.raise_for_status()
+
     return response.json()["embedding"]
 
 
-# Intent classification
+# =========================
+# INTENT CLASSIFICATION
+# =========================
+
 def classify_intent(message, history):
     recent_conversation = "\n".join(
         f"{item.role}: {item.content}"
@@ -197,6 +450,7 @@ Latest user message:
         },
         timeout=120
     )
+
     response.raise_for_status()
 
     result = response.json()["message"]["content"].strip().upper()
@@ -215,7 +469,10 @@ Latest user message:
     return "UNCLEAR"
 
 
-# Company versus personal scope classification
+# =========================
+# COMPANY SCOPE CLASSIFICATION
+# =========================
+
 def classify_scope(message, history):
     recent_conversation = "\n".join(
         f"{item.role}: {item.content}"
@@ -275,6 +532,7 @@ Return only COMPANY, PERSONAL, or UNCLEAR.
         },
         timeout=120
     )
+
     response.raise_for_status()
 
     result = response.json()["message"]["content"].strip().upper()
@@ -285,7 +543,10 @@ Return only COMPANY, PERSONAL, or UNCLEAR.
     return "UNCLEAR"
 
 
-# Password support
+# =========================
+# PASSWORD SUPPORT
+# =========================
+
 def is_password_related(text):
     text = text.lower()
 
@@ -307,6 +568,7 @@ def get_password_reply(message, history):
     normalized = message.lower().strip().rstrip("!.,?")
 
     previous_assistant = ""
+
     for item in reversed(history):
         if item.role == "assistant":
             previous_assistant = item.content.lower()
@@ -393,7 +655,10 @@ def get_password_reply(message, history):
     return None
 
 
-# AI chatbot endpoint
+# =========================
+# AI CHATBOT
+# =========================
+
 @app.post("/chat")
 def chat(request: ChatRequest):
     message = request.message.strip()
@@ -612,6 +877,7 @@ Knowledge-base reference:
             },
             timeout=120
         )
+
         response.raise_for_status()
 
         result = response.json()
@@ -640,7 +906,10 @@ Knowledge-base reference:
         )
 
 
-# Serve CSS and JavaScript from the frontend folder
+# =========================
+# STATIC FRONTEND FILES
+# =========================
+
 app.mount(
     "/static",
     StaticFiles(directory="frontend"),
