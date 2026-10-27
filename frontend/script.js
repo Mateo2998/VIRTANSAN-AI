@@ -25,6 +25,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let loginMode = "employee";
 
+    // Store chatbot conversation history
+    let conversationHistory = [];
+
     // Display the current year
     const year = document.getElementById("year");
 
@@ -131,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     },
                     body: JSON.stringify({
                         message: message,
-                        history: []
+                        history: conversationHistory
                     })
                 });
 
@@ -143,10 +146,27 @@ document.addEventListener("DOMContentLoaded", function () {
                     );
                 }
 
+                const reply = data.reply || "No response was returned.";
+
                 if (loadingMessage) {
-                    loadingMessage.textContent =
-                        data.reply || "No response was returned.";
+                    loadingMessage.textContent = reply;
                 }
+
+                // Save the conversation for follow-up questions
+                conversationHistory.push(
+                    {
+                        role: "user",
+                        content: message
+                    },
+                    {
+                        role: "assistant",
+                        content: reply
+                    }
+                );
+
+                // Keep the latest 12 messages
+                conversationHistory = conversationHistory.slice(-12);
+
             } catch (error) {
                 if (loadingMessage) {
                     loadingMessage.textContent =
@@ -162,7 +182,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     sendButton.disabled = false;
                 }
 
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                if (chatMessages) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+
                 chatInput.focus();
             }
         });
@@ -245,8 +268,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 loginSubmit.textContent = "Log in";
             }
 
-            loginForm.reset();
-            loginMessage.textContent = "";
+            if (loginForm) {
+                loginForm.reset();
+            }
+
+            if (loginMessage) {
+                loginMessage.textContent = "";
+            }
         });
     }
 
@@ -300,7 +328,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Admin logout, if the admin page loads this script
+    // Admin logout
     const logoutButton = document.getElementById("logoutButton");
 
     if (logoutButton) {

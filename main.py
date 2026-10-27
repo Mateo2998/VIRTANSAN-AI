@@ -1,4 +1,5 @@
 import os
+import re
 import hmac
 import json
 import threading
@@ -14,16 +15,22 @@ from pydantic import BaseModel, Field
 from starlette.middleware.sessions import SessionMiddleware
 
 
+# ==========================================
+# APPLICATION SETTINGS
+# ==========================================
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+TICKETS_FILE = os.path.join(BASE_DIR, "tickets.json")
+CHROMA_DIR = os.path.join(BASE_DIR, "chroma_data")
+
 app = FastAPI(title="VIRTANSAN AI")
-
-
-# =========================
-# TICKET STORAGE
-# =========================
-
-TICKETS_FILE = os.path.join(os.path.dirname(__file__), "tickets.json")
 ticket_lock = threading.Lock()
 
+
+# ==========================================
+# TICKET MODELS
+# ==========================================
 
 class TicketCreate(BaseModel):
     title: str = Field(min_length=3, max_length=200)
@@ -41,10 +48,14 @@ class TicketUpdate(BaseModel):
         "In Progress",
         "Fixed",
         "Cannot Fix",
-        "Denied"
+        "Denied",
     ]
     admin_note: str = Field(default="", max_length=2000)
 
+
+# ==========================================
+# TICKET STORAGE
+# ==========================================
 
 def read_tickets():
     if not os.path.exists(TICKETS_FILE):
@@ -54,7 +65,7 @@ def read_tickets():
         tickets = json.load(file)
 
     if not isinstance(tickets, list):
-        raise ValueError("tickets.json must contain a JSON list.")
+        raise ValueError("Ticket storage must contain a JSON list.")
 
     return tickets
 
@@ -68,24 +79,16 @@ def write_tickets(tickets):
     os.replace(temporary_file, TICKETS_FILE)
 
 
-def require_admin(request: Request):
-    if not request.session.get("is_admin"):
-        raise HTTPException(
-            status_code=401,
-            detail="Admin login required."
-        )
-
-
-# =========================
+# ==========================================
 # ADMIN AUTHENTICATION
-# =========================
+# ==========================================
 
 ADMIN_EMAIL = "admin@work.com"
 ADMIN_PASSWORD = "admin123"
 
 SESSION_SECRET = os.getenv(
     "SESSION_SECRET",
-    "dev-only-change-this-session-secret"
+    "dev-only-change-this-session-secret",
 )
 
 app.add_middleware(
@@ -93,29 +96,39 @@ app.add_middleware(
     secret_key=SESSION_SECRET,
     session_cookie="virtansan_session",
     same_site="lax",
-    https_only=False
+    https_only=False,
 )
+
 
 class AdminLogin(BaseModel):
     email: str = Field(min_length=1, max_length=254)
     password: str = Field(min_length=1, max_length=200)
 
+
+def require_admin(request: Request):
+    if not request.session.get("is_admin"):
+        raise HTTPException(
+            status_code=401,
+            detail="Admin login required.",
+        )
+
+
 @app.post("/admin-login")
 def admin_login(credentials: AdminLogin, request: Request):
     email_matches = hmac.compare_digest(
         credentials.email.strip().lower(),
-        ADMIN_EMAIL.lower()
+        ADMIN_EMAIL.lower(),
     )
 
     password_matches = hmac.compare_digest(
         credentials.password,
-        ADMIN_PASSWORD
+        ADMIN_PASSWORD,
     )
 
     if not email_matches or not password_matches:
         raise HTTPException(
             status_code=401,
-            detail="Invalid email or password."
+            detail="Invalid email or password.",
         )
 
     request.session.clear()
@@ -135,35 +148,43 @@ def admin_dashboard(request: Request):
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/", status_code=303)
 
-    return FileResponse("admin.html")
+    admin_file = os.path.join(BASE_DIR, "admin.html")
+
+    if not os.path.exists(admin_file):
+        raise HTTPException(
+            status_code=404,
+            detail="Admin page was not found.",
+        )
+
+    return FileResponse(admin_file)
 
 
-# =========================
+# ==========================================
 # TICKET API
-# =========================
+# ==========================================
 
 @app.post("/tickets")
 def create_ticket(ticket: TicketCreate):
-    email = ticket.email.strip()
     title_input = ticket.title.strip()
     description = ticket.description.strip()
+    email = ticket.email.strip()
 
     if len(title_input) < 3:
         raise HTTPException(
             status_code=422,
-            detail="The ticket title must contain at least 3 characters."
+            detail="The ticket title must contain at least 3 characters.",
         )
 
     if len(description) < 5:
         raise HTTPException(
             status_code=422,
-            detail="Please provide a more detailed description."
+            detail="Please provide a more detailed description.",
         )
 
     if ticket.category == "Password Reset" and not email:
         raise HTTPException(
             status_code=400,
-            detail="A work email is required for password-reset requests."
+            detail="A work email is required for password-reset requests.",
         )
 
     if ticket.category == "Password Reset":
@@ -176,43 +197,38 @@ def create_ticket(ticket: TicketCreate):
     with ticket_lock:
         try:
             tickets = read_tickets()
-        except (json.JSONDecodeError, ValueError):
+        except (json.JSONDecodeError, ValueError, OSError):
             raise HTTPException(
                 status_code=500,
-                detail="Ticket storage is invalid. Please check tickets.json."
-            )
-        except OSError:
-            raise HTTPException(
-                status_code=500,
-                detail="Ticket storage could not be read."
+                detail="Ticket storage could not be read.",
             )
 
-        existing_numbers = []
+        ticket_numbers = []
 
-        for item in tickets:
-            ticket_id = item.get("id", "")
+        for existing_ticket in tickets:
+            ticket_id = existing_ticket.get("id", "")
 
             if (
                 isinstance(ticket_id, str)
                 and ticket_id.startswith("TKT-")
                 and ticket_id[4:].isdigit()
             ):
-                existing_numbers.append(int(ticket_id[4:]))
+                ticket_numbers.append(int(ticket_id[4:]))
 
-        next_number = max(existing_numbers, default=0) + 1
-        new_ticket_id = f"TKT-{next_number:04d}"
-        now = datetime.now(timezone.utc).isoformat()
+        next_number = max(ticket_numbers, default=0) + 1
+        ticket_id = f"TKT-{next_number:04d}"
+        current_time = datetime.now(timezone.utc).isoformat()
 
         new_ticket = {
-            "id": new_ticket_id,
+            "id": ticket_id,
             "title": title,
             "description": description,
             "email": email,
             "category": ticket.category,
             "status": status,
             "admin_note": "",
-            "created_at": now,
-            "updated_at": now
+            "created_at": current_time,
+            "updated_at": current_time,
         }
 
         tickets.append(new_ticket)
@@ -222,12 +238,12 @@ def create_ticket(ticket: TicketCreate):
         except OSError:
             raise HTTPException(
                 status_code=500,
-                detail="The ticket could not be saved."
+                detail="The ticket could not be saved.",
             )
 
     return {
         "message": "Ticket created successfully.",
-        "ticket": new_ticket
+        "ticket": new_ticket,
     }
 
 
@@ -238,15 +254,10 @@ def list_tickets(request: Request):
     with ticket_lock:
         try:
             tickets = read_tickets()
-        except (json.JSONDecodeError, ValueError):
+        except (json.JSONDecodeError, ValueError, OSError):
             raise HTTPException(
                 status_code=500,
-                detail="Ticket storage is invalid. Please check tickets.json."
-            )
-        except OSError:
-            raise HTTPException(
-                status_code=500,
-                detail="Ticket storage could not be read."
+                detail="Ticket storage could not be read.",
             )
 
     return {"tickets": tickets}
@@ -256,22 +267,17 @@ def list_tickets(request: Request):
 def update_ticket(
     ticket_id: str,
     update: TicketUpdate,
-    request: Request
+    request: Request,
 ):
     require_admin(request)
 
     with ticket_lock:
         try:
             tickets = read_tickets()
-        except (json.JSONDecodeError, ValueError):
+        except (json.JSONDecodeError, ValueError, OSError):
             raise HTTPException(
                 status_code=500,
-                detail="Ticket storage is invalid. Please check tickets.json."
-            )
-        except OSError:
-            raise HTTPException(
-                status_code=500,
-                detail="Ticket storage could not be read."
+                detail="Ticket storage could not be read.",
             )
 
         for ticket in tickets:
@@ -287,58 +293,61 @@ def update_ticket(
                 except OSError:
                     raise HTTPException(
                         status_code=500,
-                        detail="The ticket update could not be saved."
+                        detail="The ticket update could not be saved.",
                     )
 
                 return {
                     "message": "Ticket updated successfully.",
-                    "ticket": ticket
+                    "ticket": ticket,
                 }
 
     raise HTTPException(
         status_code=404,
-        detail="Ticket not found."
+        detail="Ticket not found.",
     )
 
 
-# =========================
+# ==========================================
 # CHROMADB
-# =========================
+# ==========================================
 
-client = chromadb.PersistentClient(path="./chroma_data")
-collection = client.get_or_create_collection(name="it_knowledge")
+client = chromadb.PersistentClient(path=CHROMA_DIR)
+
+collection = client.get_or_create_collection(
+    name="it_knowledge",
+)
 
 
-# =========================
+# ==========================================
 # OLLAMA SETTINGS
-# =========================
+# ==========================================
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 EMBEDDING_URL = "http://localhost:11434/api/embeddings"
+
 CHAT_MODEL = "qwen2.5:7b"
 EMBEDDING_MODEL = "nomic-embed-text"
 
 
 OFF_TOPIC_REPLY = (
     "I'm here to help with company-related IT questions. 😊\n\n"
-    "I can assist with company accounts, work devices, "
-    "software access, networking, and VPN troubleshooting.\n\n"
+    "I can assist with company accounts, work devices, software access, "
+    "networking, and VPN troubleshooting.\n\n"
     "Is there a company IT issue I can help you with?"
 )
 
 PERSONAL_SCOPE_REPLY = (
     "I'm sorry you're experiencing that issue. 😊\n\n"
-    "VIRTANSAN AI only supports company-related IT issues, "
-    "so I can't troubleshoot personal accounts, games, "
-    "or devices.\n\n"
-    "I can help with company accounts, work devices, "
-    "software access, networking, and VPN issues."
+    "VIRTANSAN AI only supports company-related IT issues, so I can't "
+    "troubleshoot personal accounts, games, or devices.\n\n"
+    "I can help with company accounts, work devices, software access, "
+    "networking, and VPN issues."
 )
 
 
-# =========================
-# REQUEST MODELS
-# =========================
+# ==========================================
+# CHAT MODELS
+# ==========================================
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
@@ -350,53 +359,265 @@ class ChatRequest(BaseModel):
     history: list[ChatMessage] = Field(default_factory=list)
 
 
+# ==========================================
+# MESSAGE HELPERS
+# ==========================================
+
+def normalize_message(message):
+    """
+    Make messages easier to compare.
+
+    Examples:
+    'No, I cannot!' -> 'no i cannot'
+    'No, I can't.' -> "no i can't"
+    'YES!!!' -> 'yes'
+    """
+    message = message.lower().strip()
+    message = re.sub(r"[^\w\s']", " ", message)
+    message = re.sub(r"\s+", " ", message)
+    return message.strip()
 
 
+def last_assistant_message(history):
+    for item in reversed(history):
+        if item.role == "assistant":
+            return item.content
 
-# =========================
+    return ""
+
+
+def is_short_follow_up(message):
+    normalized = normalize_message(message)
+
+    exact_answers = {
+        "yes",
+        "yeah",
+        "yep",
+        "yup",
+        "no",
+        "nope",
+        "okay",
+        "ok",
+        "sure",
+        "not yet",
+        "still not working",
+        "same issue",
+        "please do",
+        "that would help",
+        "yes please",
+        "no thanks",
+        "no thank you",
+        "not now",
+    }
+
+    if normalized in exact_answers:
+        return True
+
+    # Recognize answers such as:
+    # "yes, I can"
+    # "no, I cannot"
+    # "no, I can't"
+    # "yes, it works"
+    # "no, it doesn't"
+    answer_patterns = [
+        r"^(yes|yeah|yep|yup)\b",
+        r"^(no|nope)\b",
+        r"^(i can|i cannot|i can't)\b",
+        r"^(i do|i don't|i do not)\b",
+        r"^(it works|it does not|it doesn't)\b",
+        r"^(i have|i haven't|i have not)\b",
+        r"^(it is|it isn't|it is not)\b",
+        r"^(not working|still not working)\b",
+    ]
+
+    return any(
+        re.search(pattern, normalized)
+        for pattern in answer_patterns
+    )
+
+
+def is_answer_to_question(message):
+    """
+    Recognize a direct answer to a previous assistant question.
+    """
+    normalized = normalize_message(message)
+
+    if is_short_follow_up(message):
+        return True
+
+    answer_patterns = [
+        r"^(yes|yeah|yep|yup|no|nope)\b",
+        r"^(i can|i cannot|i can't)\b",
+        r"^(i do|i don't|i do not)\b",
+        r"^(it works|it doesn't|it does not)\b",
+        r"^(i have|i haven't|i have not)\b",
+        r"^(it is|it isn't|it is not)\b",
+    ]
+
+    return any(
+        re.search(pattern, normalized)
+        for pattern in answer_patterns
+    )
+
+
+def has_active_it_conversation(history):
+    """
+    Check whether the earlier conversation contains a company IT problem.
+    """
+    support_terms = (
+        "vpn",
+        "network",
+        "internet connection",
+        "access the internet",
+        "browse the internet",
+        "company account",
+        "work account",
+        "work laptop",
+        "work device",
+        "password",
+        "software access",
+        "troubleshoot",
+        "troubleshooting",
+        "it issue",
+        "error message",
+        "can't connect",
+        "cannot connect",
+        "not working",
+        "connection issue",
+        "connection problem",
+        "wifi",
+        "wi-fi",
+    )
+
+    for item in history:
+        if item.role != "user":
+            continue
+
+        content = item.content.lower()
+
+        if any(term in content for term in support_terms):
+            return True
+
+    return False
+
+
+def is_personal_issue(history):
+    personal_terms = (
+        "my personal laptop",
+        "personal laptop",
+        "my personal computer",
+        "personal computer",
+        "my home computer",
+        "personal vpn",
+        "my gaming account",
+        "my personal account",
+        "my personal email",
+        "my steam account",
+        "my roblox account",
+        "my epic games account",
+    )
+
+    for item in history:
+        if item.role != "user":
+            continue
+
+        content = item.content.lower()
+
+        if any(term in content for term in personal_terms):
+            return True
+
+    return False
+
+
+def build_contextual_search_query(message, history):
+    """
+    Search the knowledge base using the original IT problem.
+
+    For example, when the user says "no, I cannot", search using the
+    earlier VPN issue rather than the words "no, I cannot".
+    """
+    user_messages = []
+
+    for item in history:
+        if item.role != "user":
+            continue
+
+        content = item.content.strip()
+
+        if not content:
+            continue
+
+        if is_short_follow_up(content):
+            continue
+
+        user_messages.append(content)
+
+    if not is_short_follow_up(message):
+        user_messages.append(message.strip())
+
+    if user_messages:
+        return " ".join(user_messages[-4:])
+
+    return message.strip()
+
+
+# ==========================================
 # FRONTEND
-# =========================
+# ==========================================
 
 @app.get("/")
 def home():
-    return FileResponse("frontend/index.html")
+    index_file = os.path.join(FRONTEND_DIR, "index.html")
+
+    if not os.path.exists(index_file):
+        raise HTTPException(
+            status_code=404,
+            detail="Frontend index.html was not found.",
+        )
+
+    return FileResponse(index_file)
 
 
-# =========================
+# ==========================================
 # HEALTH CHECK
-# =========================
+# ==========================================
 
 @app.get("/health")
 def health():
     return {
         "status": "healthy",
         "knowledge_base": collection.name,
-        "documents_indexed": collection.count()
+        "documents_indexed": collection.count(),
     }
 
 
-# =========================
-# EMBEDDINGS
-# =========================
+# ==========================================
+# EMBEDDING FUNCTION
+# ==========================================
 
 def create_embedding(text):
     response = requests.post(
         EMBEDDING_URL,
         json={
             "model": EMBEDDING_MODEL,
-            "prompt": text
+            "prompt": text,
         },
-        timeout=120
+        timeout=120,
     )
 
     response.raise_for_status()
 
-    return response.json()["embedding"]
+    data = response.json()
+
+    if "embedding" not in data:
+        raise ValueError("Ollama did not return an embedding.")
+
+    return data["embedding"]
 
 
-# =========================
+# ==========================================
 # INTENT CLASSIFICATION
-# =========================
+# ==========================================
 
 def classify_intent(message, history):
     recent_conversation = "\n".join(
@@ -407,34 +628,35 @@ def classify_intent(message, history):
     prompt = f"""
 You are an intent classifier for an enterprise IT helpdesk.
 
-Classify the latest message into exactly one category.
+Classify the latest user message into exactly one category.
 
-IT_RELATED: The user is asking about a technical problem or
-IT support issue.
+IT_RELATED:
+The user has an IT problem or is answering a question during an ongoing
+IT support conversation.
 
-SMALL_TALK: A greeting, thanks, goodbye, or simple social comment
-that is not part of an ongoing support issue.
+SMALL_TALK:
+A greeting or social comment unrelated to an ongoing support issue.
 
-NO_PROBLEM: The user clearly says they have no issue or no longer
-need help. Do not use this category for "no" answering a question.
+NO_PROBLEM:
+The user clearly says they do not have a problem or no longer need help.
+Do not use this category when the user answers a question with "no".
 
-UNCLEAR: The user has not explained what they need and context
-does not clarify their meaning.
+UNCLEAR:
+The request is unclear and the conversation does not explain it.
 
-OFF_TOPIC: A request unrelated to IT, such as recipes, entertainment,
-or travel planning.
+OFF_TOPIC:
+The user requests something unrelated to company IT.
 
-Use conversation history to understand short replies.
+Use the conversation history to understand the latest message.
+For example, "no, I cannot" after being asked whether the user can access
+the internet during VPN troubleshooting is IT_RELATED.
 
-A greeting combined with an IT problem is IT_RELATED.
-A personal technical problem may be IT_RELATED here, but its company
-scope must be checked separately.
 Return only one category name.
 
-Recent conversation:
+Conversation:
 {recent_conversation}
 
-Latest user message:
+Latest message:
 {message}
 """
 
@@ -446,9 +668,9 @@ Latest user message:
                 {"role": "user", "content": prompt}
             ],
             "stream": False,
-            "options": {"temperature": 0}
+            "options": {"temperature": 0},
         },
-        timeout=120
+        timeout=120,
     )
 
     response.raise_for_status()
@@ -460,7 +682,7 @@ Latest user message:
         "SMALL_TALK",
         "NO_PROBLEM",
         "UNCLEAR",
-        "OFF_TOPIC"
+        "OFF_TOPIC",
     }
 
     if result in allowed_categories:
@@ -469,9 +691,9 @@ Latest user message:
     return "UNCLEAR"
 
 
-# =========================
+# ==========================================
 # COMPANY SCOPE CLASSIFICATION
-# =========================
+# ==========================================
 
 def classify_scope(message, history):
     recent_conversation = "\n".join(
@@ -480,44 +702,40 @@ def classify_scope(message, history):
     )
 
     prompt = f"""
-You classify requests for an enterprise IT helpdesk.
+You classify requests for a company IT helpdesk.
 
 Return exactly one category:
 
-COMPANY: The issue clearly concerns an organization's account,
-work device, company application, company network, work VPN,
-or another company IT service.
+COMPANY:
+The problem concerns a company account, work device, company application,
+company network, work VPN, or another company IT service.
 
-PERSONAL: The issue clearly concerns a personal account, personal
-device, gaming account, entertainment service, or other personal
-technology unrelated to company operations.
+PERSONAL:
+The problem clearly concerns a personal account, personal device,
+gaming account, entertainment service, or technology unrelated to work.
 
-UNCLEAR: It is not clear whether the issue concerns company IT
-or personal technology.
+UNCLEAR:
+The company or personal scope cannot be determined.
 
 Rules:
 - Only company-related IT issues may be troubleshot.
-- Technical or cybersecurity-related does not automatically mean COMPANY.
+- A technical issue is not automatically a company issue.
 - Personal Steam, Epic Games, Roblox, social media, and personal email
-  accounts are PERSONAL unless the user clearly establishes that the
-  issue concerns an organization-owned account or company operations.
-- A hacked personal account is PERSONAL.
-- Do not assume "my account" means a company account.
-- A company-related issue mentioned earlier does not make a new,
-  clearly personal issue a company issue.
-- Use conversation history only when it genuinely clarifies the scope.
-- If the user says "my company account", "work laptop", "company VPN",
-  or clearly identifies a company service, classify it as COMPANY.
-- If the message is ambiguous, return UNCLEAR.
-- Do not provide troubleshooting instructions. Only classify the scope.
-
-Recent conversation:
-{recent_conversation}
-
-Latest user message:
-{message}
+  issues are PERSONAL unless company use is clearly established.
+- Do not assume that "my account" means a company account.
+- Use conversation history to understand short answers.
+- If the user identified a company VPN and is answering a troubleshooting
+  question about that VPN, classify the answer as COMPANY.
+- If the user identified a personal issue, classify it as PERSONAL.
+- If the scope is genuinely unclear, return UNCLEAR.
 
 Return only COMPANY, PERSONAL, or UNCLEAR.
+
+Conversation:
+{recent_conversation}
+
+Latest message:
+{message}
 """
 
     response = requests.post(
@@ -528,9 +746,9 @@ Return only COMPANY, PERSONAL, or UNCLEAR.
                 {"role": "user", "content": prompt}
             ],
             "stream": False,
-            "options": {"temperature": 0}
+            "options": {"temperature": 0},
         },
-        timeout=120
+        timeout=120,
     )
 
     response.raise_for_status()
@@ -543,9 +761,9 @@ Return only COMPANY, PERSONAL, or UNCLEAR.
     return "UNCLEAR"
 
 
-# =========================
+# ==========================================
 # PASSWORD SUPPORT
-# =========================
+# ==========================================
 
 def is_password_related(text):
     text = text.lower()
@@ -558,37 +776,41 @@ def is_password_related(text):
         "cannot remember my pass",
         "work account",
         "reset my pass",
-        "reset pass"
+        "reset pass",
     ]
 
     return any(term in text for term in terms)
 
 
 def get_password_reply(message, history):
-    normalized = message.lower().strip().rstrip("!.,?")
-
-    previous_assistant = ""
-
-    for item in reversed(history):
-        if item.role == "assistant":
-            previous_assistant = item.content.lower()
-            break
+    normalized = normalize_message(message)
+    previous_assistant = last_assistant_message(history).lower()
 
     affirmative = {
-        "yes", "yes please", "yes, please", "sure",
-        "okay", "ok", "yep", "yeah", "please do",
-        "that would help"
+        "yes",
+        "yes please",
+        "yeah",
+        "yep",
+        "yup",
+        "sure",
+        "okay",
+        "ok",
+        "please do",
+        "that would help",
     }
 
     negative = {
-        "no", "no thanks", "not now", "no thank you"
+        "no",
+        "no thanks",
+        "no thank you",
+        "not now",
     }
 
     if normalized in negative:
         return (
-            "That's okay. 😊 You can use your organization's "
-            "official password-reset option whenever you're ready. "
-            "If you can't access it, contact your IT support team."
+            "That's okay. 😊 You can use your organization's official "
+            "password-reset option whenever you're ready. If you can't "
+            "access it, contact your IT support team."
         )
 
     if normalized in affirmative:
@@ -596,18 +818,16 @@ def get_password_reply(message, history):
             "would you like" in previous_assistant
             or "like me to walk you through" in previous_assistant
             or "if you'd like" in previous_assistant
-            or "would you like me to" in previous_assistant
         ):
             return (
-                "Sure! 😊 Here's how to reset your work password:\n\n"
+                "Sure! 😊 Here's the general process for resetting your "
+                "work password:\n\n"
                 "1. Open your organization's usual work sign-in page.\n"
                 "2. Select **Forgot password?** or the equivalent option.\n"
-                "3. Follow the verification steps shown by your organization.\n"
+                "3. Follow the verification steps provided by your organization.\n"
                 "4. Create a new password and try signing in again.\n\n"
-                "If you don't see a reset option, or your account is "
-                "locked, contact your IT support team. I don't know "
-                "your organization's exact reset link, so I won't guess. "
-                "Never share your password or verification codes here."
+                "If you don't see a reset option, contact your IT support "
+                "team. Never share your password or verification codes here."
             )
 
         if (
@@ -615,49 +835,52 @@ def get_password_reply(message, history):
             or "which application" in previous_assistant
         ):
             return (
-                "I can help with that. 😊 Which sign-in system do you "
-                "use for work—for example, Microsoft 365, Google "
-                "Workspace, or another company system?"
+                "Which sign-in system do you use for work—for example, "
+                "Microsoft 365, Google Workspace, or another company system?"
             )
 
     if normalized in {
-        "what", "what?", "huh",
-        "i don't understand", "i dont understand"
+        "what",
+        "huh",
+        "i don't understand",
+        "i dont understand",
     }:
         return (
-            "Sorry for the confusion. 😊 Since you forgot your work "
-            "password, we'll use your organization's official reset "
-            "process. I can guide you through the general steps, but "
-            "your IT team may be needed if your company manages resets."
+            "Sorry for the confusion. 😊 I can guide you through the general "
+            "work-password reset process, but your IT team may need to help "
+            "if your company manages password resets."
         )
 
-    if "work account" in normalized or "my work account" in normalized:
+    if "work account" in normalized:
         return (
-            "Got it—it's your work account. 😊 Would you like me to "
-            "walk you through the general password-reset steps?"
+            "Got it—it's your work account. 😊 Would you like me to walk "
+            "you through the general password-reset steps?"
         )
 
-    if (
-        "forgot my password" in normalized
-        or "forgot password" in normalized
-        or "forgotten password" in normalized
-        or "can't remember my password" in normalized
-        or "cannot remember my password" in normalized
-        or "reset my password" in normalized
-        or "reset password" in normalized
+    if any(
+        phrase in normalized
+        for phrase in (
+            "forgot my password",
+            "forgot password",
+            "forgotten password",
+            "can't remember my password",
+            "cannot remember my password",
+            "reset my password",
+            "reset password",
+        )
     ):
         return (
-            "No worries! 😊 Is this your work account, or are you "
-            "trying to sign in to a specific application? Please "
-            "don't share your password or verification codes here."
+            "No worries! 😊 Is this your work account, or are you trying "
+            "to sign in to a specific application? Please don't share "
+            "your password or verification codes here."
         )
 
     return None
 
 
-# =========================
-# AI CHATBOT
-# =========================
+# ==========================================
+# CHAT ENDPOINT
+# ==========================================
 
 @app.post("/chat")
 def chat(request: ChatRequest):
@@ -666,11 +889,13 @@ def chat(request: ChatRequest):
     if not message:
         raise HTTPException(
             status_code=400,
-            detail="Please enter a message."
+            detail="Please enter a message.",
         )
 
     history = request.history[-12:]
 
+    # Avoid duplicating the latest user message if the frontend sends it
+    # in both "message" and "history".
     if (
         history
         and history[-1].role == "user"
@@ -678,62 +903,89 @@ def chat(request: ChatRequest):
     ):
         history = history[:-1]
 
-    normalized = message.lower().strip().rstrip("!.,?")
+    normalized = normalize_message(message)
 
     greetings = {
-        "hi", "hello", "hey", "hiya", "howdy",
-        "good morning", "good afternoon", "good evening"
+        "hi",
+        "hello",
+        "hey",
+        "hiya",
+        "howdy",
+        "good morning",
+        "good afternoon",
+        "good evening",
     }
 
     help_messages = {
-        "help", "what can you do", "what can you help me with",
-        "what can you help me do", "what do you do",
-        "how do i use you", "how can you help me"
+        "help",
+        "what can you do",
+        "what can you help me with",
+        "what can you help me do",
+        "what do you do",
+        "how do i use you",
+        "how can you help me",
     }
 
     if not history and normalized in greetings:
         return {
             "reply": (
                 "Hey there! 😊 Welcome to VIRTANSAN AI.\n\n"
-                "I'm your friendly company IT assistant. Tell me "
-                "what's happening with a company IT service, and "
-                "I'll help you work through it."
+                "I'm your company IT assistant. Tell me what's happening "
+                "with a company IT service, and I'll help you work through it."
             ),
-            "source": "Introduction Guide"
+            "source": "Introduction Guide",
         }
 
     if not history and normalized in help_messages:
         return {
             "reply": (
                 "Of course! 😊 I can help with company account issues, "
-                "work devices, software access, networking, VPN "
-                "connections, and other company IT problems."
+                "work devices, software access, networking, VPN connections, "
+                "and other company IT problems."
             ),
-            "source": "Introduction Guide"
+            "source": "Introduction Guide",
         }
 
+    # ======================================
+    # FIXED FOLLOW-UP DETECTION
+    # ======================================
+
+    previous_assistant = last_assistant_message(history)
+    previous_question = "?" in previous_assistant
+    ongoing_it_issue = has_active_it_conversation(history)
+
+    # This recognizes "no, I cannot" and similar answers.
+    # When answering an IT troubleshooting question, continue the same issue.
+    is_it_follow_up = (
+        is_answer_to_question(message)
+        and previous_question
+        and ongoing_it_issue
+    )
+
     try:
-        intent = classify_intent(message, history)
+        if is_it_follow_up:
+            intent = "IT_RELATED"
+        else:
+            intent = classify_intent(message, history)
 
         if intent == "OFF_TOPIC":
             return {
                 "reply": OFF_TOPIC_REPLY,
-                "source": "Scope Guard"
+                "source": "Scope Guard",
             }
 
         if intent == "NO_PROBLEM":
             return {
                 "reply": "I'm here whenever you need company IT assistance.",
-                "source": "Conversation Guide"
+                "source": "Conversation Guide",
             }
 
         if intent == "SMALL_TALK":
             return {
                 "reply": (
-                    "I'm here whenever you need "
-                    "help with a company IT issue."
+                    "I'm here whenever you need help with a company IT issue."
                 ),
-                "source": "Conversation Guide"
+                "source": "Conversation Guide",
             }
 
         if intent == "UNCLEAR":
@@ -742,25 +994,33 @@ def chat(request: ChatRequest):
                     "Could you tell me a little more about what you need "
                     "help with? 😊"
                 ),
-                "source": "Conversation Guide"
+                "source": "Conversation Guide",
             }
 
-        scope = classify_scope(message, history)
+        # If the earlier conversation established a company IT problem,
+        # use that context instead of classifying "no, I cannot" by itself.
+        if is_it_follow_up:
+            if is_personal_issue(history):
+                scope = "PERSONAL"
+            else:
+                scope = "COMPANY"
+        else:
+            scope = classify_scope(message, history)
 
         if scope == "PERSONAL":
             return {
                 "reply": PERSONAL_SCOPE_REPLY,
-                "source": "Company Scope Guard"
+                "source": "Company Scope Guard",
             }
 
         if scope == "UNCLEAR":
             return {
                 "reply": (
                     "I can help with company-related IT issues. 😊 "
-                    "Is this problem related to a company account, "
-                    "work device, application, or network service?"
+                    "Is this problem related to a company account, work "
+                    "device, application, or network service?"
                 ),
-                "source": "Company Scope Guard"
+                "source": "Company Scope Guard",
             }
 
     except requests.RequestException:
@@ -769,8 +1029,12 @@ def chat(request: ChatRequest):
             detail=(
                 "I couldn't connect to the local AI service. "
                 "Please check that Ollama is running and try again."
-            )
+            ),
         )
+
+    # ======================================
+    # PASSWORD SUPPORT
+    # ======================================
 
     password_context = any(
         item.role == "user" and is_password_related(item.content)
@@ -783,15 +1047,20 @@ def chat(request: ChatRequest):
         if password_reply:
             return {
                 "reply": password_reply,
-                "source": "Password Support Guide"
+                "source": "Password Support Guide",
             }
 
+    # ======================================
+    # CONTEXTUAL KNOWLEDGE-BASE SEARCH
+    # ======================================
+
     try:
-        embedding = create_embedding(message)
+        search_query = build_contextual_search_query(message, history)
+        embedding = create_embedding(search_query)
 
         results = collection.query(
             query_embeddings=[embedding],
-            n_results=1
+            n_results=1,
         )
 
         documents = results.get("documents", [[]])[0]
@@ -799,11 +1068,11 @@ def chat(request: ChatRequest):
 
         if documents and documents[0]:
             knowledge = documents[0]
-            source = (
-                metadatas[0].get("source", "Unknown")
-                if metadatas and metadatas[0]
-                else "Unknown"
-            )
+
+            if metadatas and metadatas[0]:
+                source = metadatas[0].get("source", "Unknown")
+            else:
+                source = "Unknown"
         else:
             knowledge = ""
             source = "No relevant source found"
@@ -811,57 +1080,68 @@ def chat(request: ChatRequest):
         if not knowledge:
             return {
                 "reply": (
-                    "I couldn't find enough information in my knowledge "
-                    "base to answer confidently. Could you explain the "
-                    "company IT issue in a little more detail? Your IT "
-                    "support team may need to help with company-specific "
-                    "settings."
+                    "I couldn't find enough information in my knowledge base "
+                    "to answer confidently. Could you explain the company IT "
+                    "issue in a little more detail? Your IT support team may "
+                    "need to help with company-specific settings."
                 ),
-                "source": source
+                "source": source,
             }
 
+        # ======================================
+        # AI RESPONSE
+        # ======================================
+
         system_prompt = f"""
-You are VIRTANSAN AI, a friendly enterprise IT helpdesk assistant.
+You are VIRTANSAN AI, a friendly company IT helpdesk assistant.
 
-SCOPE RESTRICTION:
-You ONLY support company-related IT issues.
-Never troubleshoot personal accounts, personal gaming services,
-personal devices, or technology unrelated to company operations.
-A technical or cybersecurity-related topic is not automatically
-a company IT issue.
-Do not provide troubleshooting instructions for personal issues.
-If the request is outside company IT scope, politely decline and
-redirect the user to company-related IT support.
+YOUR SCOPE:
+You only support company-related IT issues, including company VPN,
+company network connectivity, work accounts, work devices, and company
+software access.
 
-RESPONSE RULES:
-- Use the conversation to understand follow-up messages.
-- Do not restart the conversation or repeat questions already answered.
-- Use the knowledge-base reference when relevant.
-- Do not copy the entire knowledge-base document.
-- Give concise, simple, relevant answers.
-- Do not invent company policies, links, server addresses, or procedures.
-- Never ask for passwords or verification codes.
-- If information is missing, ask one clear follow-up question.
-- If the knowledge base does not support an answer, say so.
-- Never claim a ticket was created or an action completed unless confirmed.
+Do not troubleshoot personal accounts, personal gaming services, personal
+devices, or technology unrelated to company operations.
 
-Knowledge-base reference:
+CONVERSATION RULES:
+1. Read the conversation history before answering.
+2. Treat "yes", "no", "no, I cannot", "yes, I can", and similar messages
+   as answers to the previous question when appropriate.
+3. Continue troubleshooting from the last step. Do not restart the process.
+4. Do not repeat a question the user has already answered.
+5. If the user says they cannot access the internet during VPN troubleshooting,
+   help them troubleshoot their general internet connection first.
+6. If the user confirms they can access the internet, continue to the next
+   VPN troubleshooting step supported by the knowledge base.
+7. Ask only one clear question at a time.
+8. Give simple, practical instructions.
+9. Do not invent company policies, URLs, server addresses, or procedures.
+10. Never ask the user to share passwords or verification codes.
+11. Do not claim that a ticket was created or an action was completed unless
+    the application actually confirms it.
+12. If the knowledge base does not contain the needed information, say so
+    and recommend contacting the IT support team.
+
+KNOWLEDGE-BASE REFERENCE:
 {knowledge}
 """
 
         ollama_messages = [
-            {"role": "system", "content": system_prompt}
+            {
+                "role": "system",
+                "content": system_prompt,
+            }
         ]
 
         for item in history[-8:]:
             ollama_messages.append({
                 "role": item.role,
-                "content": item.content
+                "content": item.content,
             })
 
         ollama_messages.append({
             "role": "user",
-            "content": message
+            "content": message,
         })
 
         response = requests.post(
@@ -871,20 +1151,27 @@ Knowledge-base reference:
                 "messages": ollama_messages,
                 "stream": False,
                 "options": {
-                    "temperature": 0.3,
-                    "num_predict": 250
-                }
+                    "temperature": 0.2,
+                    "num_predict": 300,
+                },
             },
-            timeout=120
+            timeout=120,
         )
 
         response.raise_for_status()
 
         result = response.json()
+        reply = result.get("message", {}).get("content", "").strip()
+
+        if not reply:
+            raise HTTPException(
+                status_code=502,
+                detail="The AI service returned an empty response.",
+            )
 
         return {
-            "reply": result["message"]["content"].strip(),
-            "source": source
+            "reply": reply,
+            "source": source,
         }
 
     except requests.RequestException:
@@ -893,8 +1180,11 @@ Knowledge-base reference:
             detail=(
                 "I couldn't connect to the local AI service. "
                 "Please check that Ollama is running and try again."
-            )
+            ),
         )
+
+    except HTTPException:
+        raise
 
     except Exception:
         raise HTTPException(
@@ -902,16 +1192,16 @@ Knowledge-base reference:
             detail=(
                 "Something went wrong while preparing my response. "
                 "Please try again."
-            )
+            ),
         )
 
 
-# =========================
+# ==========================================
 # STATIC FRONTEND FILES
-# =========================
+# ==========================================
 
 app.mount(
     "/static",
-    StaticFiles(directory="frontend"),
-    name="static"
+    StaticFiles(directory=FRONTEND_DIR),
+    name="static",
 )
