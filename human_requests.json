@@ -1,0 +1,239 @@
+{
+  "conv-1793169726699-xk23qnda": {
+    "conversation_id": "conv-1793169726699-xk23qnda",
+    "status": "completed",
+    "history": [
+      {
+        "role": "user",
+        "content": "hi"
+      },
+      {
+        "role": "assistant",
+        "content": "Hey there! 😊 Welcome to VIRTANSAN AI.\n\nI'm your company IT assistant. Tell me what's happening with a company IT service, and I'll help you work through it."
+      },
+      {
+        "role": "user",
+        "content": "i want a human assistant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [
+      {
+        "id": "msg-1793169808608",
+        "message": "hello",
+        "sender": "admin",
+        "created_at": "2026-10-28T06:43:28.608045+00:00"
+      },
+      {
+        "id": "msg-1793169814468",
+        "message": "hi",
+        "sender": "user",
+        "created_at": "2026-10-28T06:43:34.468744+00:00"
+      },
+      {
+        "id": "msg-1793169819679",
+        "message": "what do you need?",
+        "sender": "admin",
+        "created_at": "2026-10-28T06:43:39.679262+00:00"
+      },
+      {
+        "id": "msg-1793169825786",
+        "message": "i need help",
+        "sender": "user",
+        "created_at": "2026-10-28T06:43:45.786982+00:00"
+      },
+      {
+        "id": "msg-1793169828767",
+        "message": "no",
+        "sender": "admin",
+        "created_at": "2026-10-28T06:43:48.767582+00:00"
+      }
+    ],
+    "created_at": "2026-10-28T06:43:22.490283+00:00",
+    "updated_at": "2026-10-28T06:43:50.330199+00:00",
+    "message": "This human-support conversation has been marked as completed."
+  },
+  "conv-1793170443741-mddqojh0": {
+    "conversation_id": "conv-1793170443741-mddqojh0",
+    "status": "completed",
+    "history": [
+      {
+        "role": "user",
+        "content": "microsoft word"
+      },
+      {
+        "role": "assistant",
+        "content": "Okay, I understand. Have you tried closing and reopening Microsoft Word to see if that resolves the issue?"
+      },
+      {
+        "role": "user",
+        "content": "i want to learn how to cook chicken"
+      },
+      {
+        "role": "assistant",
+        "content": "I'm here to help with company-related IT questions. 😊\n\nI can assist with company accounts, work devices, software access, networking, and VPN troubleshooting.\n\nIs there a company IT issue I can help you with?"
+      },
+      {
+        "role": "user",
+        "content": "how to fix my car"
+      },
+      {
+        "role": "assistant",
+        "content": "I'm here to help with company-related IT questions. 😊\n\nI can assist with company accounts, work devices, software access, networking, and VPN troubleshooting.\n\nIs there a company IT issue I can help you with?"
+      },
+      {
+        "role": "user",
+        "content": "i request a human assistant please"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      },
+      {
+        "role": "user",
+        "content": "i want a human to assist me"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      },
+      {
+        "role": "user",
+        "content": "i need a human"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [
+      {
+        "id": "msg-1793170726659",
+        "message": "hello",
+        "sender": "user",
+        "created_at": "2026-10-28T06:58:46.659578+00:00"
+      },
+      {
+        "id": "msg-1793170732287",
+        "message": "hi what do you need?",
+        "sender": "admin",
+        "created_at": "2026-10-28T06:58:52.287672+00:00"
+      },
+      {
+        "id": "msg-1793170738250",
+        "message": "nothing!",
+        "sender": "user",
+        "created_at": "2026-10-28T06:58:58.250947+00:00"
+      },
+      {
+        "id": "msg-1793170742031",
+        "message": "okay",
+        "sender": "admin",
+        "created_at": "2026-10-28T06:59:02.031662+00:00"
+      }
+    ],
+    "created_at": "2026-10-28T06:58:36.297712+00:00",
+    "updated_at": "2026-10-28T06:59:06.197841+00:00",
+    "message": "This human-support conversation has been marked as completed."
+  },
+  "conv-1793171414514-8pv4cw7p": {
+    "conversation_id": "conv-1793171414514-8pv4cw7p",
+    "status": "declined",
+    "history": [
+      {
+        "role": "user",
+        "content": "hello i need human assistant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      },
+      {
+        "role": "user",
+        "content": "i need a human"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [],
+    "created_at": "2026-10-28T07:10:41.418778+00:00",
+    "updated_at": "2026-10-28T07:10:52.261764+00:00",
+    "message": "Sorry, no human agent is available right now. You can request human support again or continue with the AI assistant."
+  },
+  "conv-1793171457879-rwzt15ju": {
+    "conversation_id": "conv-1793171457879-rwzt15ju",
+    "status": "completed",
+    "history": [
+      {
+        "role": "user",
+        "content": "i want a human assistant please"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [
+      {
+        "id": "msg-1793171490130",
+        "message": "hello",
+        "sender": "user",
+        "created_at": "2026-10-28T07:11:30.130815+00:00"
+      },
+      {
+        "id": "msg-1793171495071",
+        "message": "hello!",
+        "sender": "admin",
+        "created_at": "2026-10-28T07:11:35.071153+00:00"
+      },
+      {
+        "id": "msg-1793171503691",
+        "message": "hi",
+        "sender": "user",
+        "created_at": "2026-10-28T07:11:43.691510+00:00"
+      }
+    ],
+    "created_at": "2026-10-28T07:11:16.404183+00:00",
+    "updated_at": "2026-10-28T07:12:02.585312+00:00",
+    "message": "This human-support conversation has been marked as completed."
+  },
+  "conv-1793172247765-o0cm75dm": {
+    "conversation_id": "conv-1793172247765-o0cm75dm",
+    "status": "declined",
+    "history": [
+      {
+        "role": "user",
+        "content": "i want a human assistant please"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      },
+      {
+        "role": "user",
+        "content": "i need a human assistant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      },
+      {
+        "role": "user",
+        "content": "human"
+      },
+      {
+        "role": "assistant",
+        "content": "I'm here to help with company-related IT questions. 😊\n\nI can assist with company accounts, work devices, software access, networking, and VPN troubleshooting.\n\nIs there a company IT issue I can help you with?"
+      }
+    ],
+    "messages": [],
+    "created_at": "2026-10-28T07:25:21.899116+00:00",
+    "updated_at": "2026-10-28T07:25:28.757461+00:00",
+    "message": "Sorry, no human agent is available right now. You can request human support again or continue with the AI assistant."
+  }
+}

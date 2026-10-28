@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIRTANSAN | Company Portal</title>
-    <link rel="stylesheet" href="/static/style.css?v=6">
-    <script src="/static/script.js?v=6" defer></script>
+    <link rel="stylesheet" href="/static/style.css?v=8">
+    <script src="/static/script.js?v=8" defer></script>
 </head>
 <body>
 
@@ -177,7 +177,6 @@
         </div>
     </footer>
 
-    <!-- Floating chatbot button -->
     <button
         class="chat-launcher"
         id="chatToggle"
@@ -190,7 +189,6 @@
         <span>Support AI</span>
     </button>
 
-    <!-- Chat window -->
     <section
         class="chat-panel"
         id="chatPanel"
@@ -210,7 +208,12 @@
                 </div>
             </div>
 
-            <button class="chat-close" id="chatClose" type="button" aria-label="Close chat">
+            <button
+                class="chat-close"
+                id="chatClose"
+                type="button"
+                aria-label="Close chat"
+            >
                 ×
             </button>
         </div>
@@ -219,6 +222,23 @@
             <div class="message bot">
 Hi! I'm the company's IT support assistant.
             </div>
+        </div>
+
+        <div id="humanSupportArea" style="display: none; padding: 8px 12px;">
+            <button
+                class="btn btn-outline"
+                id="humanSupportButton"
+                type="button"
+                style="width: auto; min-height: 30px; padding: 5px 10px; font-size: 11px;"
+            >
+                Request Human Support
+            </button>
+
+            <div
+                id="humanSupportStatus"
+                role="status"
+                style="font-size: 12px; margin-top: 5px;"
+            ></div>
         </div>
 
         <form class="chat-form" id="chatForm">
@@ -230,7 +250,13 @@ Hi! I'm the company's IT support assistant.
                 aria-label="Message Support AI"
                 required
             >
-            <button class="send-btn" id="sendButton" type="submit" aria-label="Send message">
+
+            <button
+                class="send-btn"
+                id="sendButton"
+                type="submit"
+                aria-label="Send message"
+            >
                 ➤
             </button>
         </form>
@@ -240,7 +266,6 @@ Hi! I'm the company's IT support assistant.
         </div>
     </section>
 
-    <!-- Login popup -->
     <div
         class="login-backdrop"
         id="loginBackdrop"
@@ -251,7 +276,12 @@ Hi! I'm the company's IT support assistant.
         inert
     >
         <div class="login-card">
-            <button class="login-close" id="loginClose" type="button" aria-label="Close login">
+            <button
+                class="login-close"
+                id="loginClose"
+                type="button"
+                aria-label="Close login"
+            >
                 ×
             </button>
 
@@ -300,7 +330,11 @@ Hi! I'm the company's IT support assistant.
                     >
                 </label>
 
-                <button class="btn btn-primary login-submit" id="loginSubmit" type="submit">
+                <button
+                    class="btn btn-primary login-submit"
+                    id="loginSubmit"
+                    type="submit"
+                >
                     Log in
                 </button>
 

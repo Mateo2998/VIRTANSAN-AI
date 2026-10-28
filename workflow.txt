@@ -1,3 +1,5 @@
+Ticketing System:
+
 Users provide the issue
 AI tries to resolve the issue without creating a ticket
 
@@ -6,23 +8,26 @@ If issue still persist = ticket
 
 User will type "Create a ticket"
 AI will ask the user the issue of the ticket
-AI will ask the user to provide detail description if possible
+AI will ask the user to provide a short and detailed description if possible
+
+AI will provide the user the link to a form where the user will fill out to submit a ticket.
 
 
+Automating Password Reset using AI? (Unsure)
 
 Automate Password reset = security risk
 Automate password reset approval
 
 AI will ask the user for his/her work email.
 User provides work email
-AI creates a ticket titled "(work email) password reset"
+AI creates a ticket titled "(work email) - Password Reset"
 
-AI: "Pending Approval. Wait within an hour for a password reset. Once approved, you will receive a temporary password in your work phone number or an admin will call you."
+AI: "Pending Approval. Wait within an hour for a password reset. Once approved, you will receive a temporary password in your work phone number or an admin will call you. Thanks"
+
+- Imaginary
 
 Admin approves password reset
 
+Admin will send a temporary password (imaginary).
 
 
-Admin side:
-Admin will can view tickets
-Admin can decide if the issue has been completed or uncompleted or denied.

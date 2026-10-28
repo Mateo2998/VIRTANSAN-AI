@@ -1,3 +1,4 @@
+
 import os
 import re
 import hmac
@@ -22,10 +23,12 @@ from starlette.middleware.sessions import SessionMiddleware
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 TICKETS_FILE = os.path.join(BASE_DIR, "tickets.json")
+HUMAN_REQUESTS_FILE = os.path.join(BASE_DIR, "human_requests.json")
 CHROMA_DIR = os.path.join(BASE_DIR, "chroma_data")
 
 app = FastAPI(title="VIRTANSAN AI")
 ticket_lock = threading.Lock()
+human_lock = threading.Lock()
 
 
 # ==========================================
@@ -308,6 +311,342 @@ def update_ticket(
 
 
 # ==========================================
+# CHAT MODELS
+# ==========================================
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+    history: list[ChatMessage] = Field(default_factory=list)
+    conversation_id: str | None = Field(default=None, max_length=120)
+
+
+class HumanSupportRequest(BaseModel):
+    conversation_id: str = Field(min_length=1, max_length=120)
+    history: list[ChatMessage] = Field(default_factory=list)
+
+
+class HumanMessageRequest(BaseModel):
+    conversation_id: str = Field(min_length=1, max_length=120)
+    message: str = Field(min_length=1, max_length=4000)
+
+
+class HumanRequestStatusUpdate(BaseModel):
+    status: Literal["accepted", "declined", "completed"]
+
+
+# ==========================================
+# HUMAN ASSISTANT DETECTION
+# ==========================================
+
+def wants_human_assistance(message: str) -> bool:
+    patterns = [
+        r"\bhuman reviewer\b",
+        r"\bhuman assistant\b",
+        r"\bhuman support\b",
+        r"\bhuman agent\b",
+        r"\blive agent\b",
+        r"\breal person\b",
+        r"\breal human\b",
+        r"\btalk to (?:a )?human\b",
+        r"\bspeak to (?:a )?human\b",
+        r"\bcontact (?:a )?human\b",
+        r"\brequest (?:a )?human\b",
+        r"\btalk to (?:a )?person\b",
+        r"\bspeak to (?:a )?person\b",
+        r"\btalk to someone\b",
+        r"\bspeak to someone\b",
+        r"\bneed (?:a )?human\b",
+        r"\bwant (?:a )?human\b",
+        r"\bneed (?:a )?human assistant\b",
+        r"\bwant (?:a )?human assistant\b",
+        r"\bconnect me with (?:a )?human\b",
+        r"\bconnect me to (?:a )?person\b",
+        r"\bcustomer service representative\b",
+        r"\bsupport representative\b",
+    ]
+
+    return any(
+        re.search(pattern, message, re.IGNORECASE)
+        for pattern in patterns
+    )
+
+
+HUMAN_SUPPORT_REPLY = (
+    "Of course! 😊 Click the 'Request Human Support' button below "
+    "to request assistance from a human support representative. "
+    "Your request will only be submitted when you click the button."
+)
+
+
+# ==========================================
+# HUMAN SUPPORT HANDOFF STORAGE AND API
+# ==========================================
+
+def read_human_requests():
+    if not os.path.exists(HUMAN_REQUESTS_FILE):
+        return {}
+
+    with open(HUMAN_REQUESTS_FILE, "r", encoding="utf-8") as file:
+        data = json.load(file)
+
+    if not isinstance(data, dict):
+        raise ValueError("Human-support storage must contain a JSON object.")
+
+    return data
+
+
+def write_human_requests(requests_data):
+    temporary_file = HUMAN_REQUESTS_FILE + ".tmp"
+
+    with open(temporary_file, "w", encoding="utf-8") as file:
+        json.dump(requests_data, file, indent=2, ensure_ascii=False)
+
+    os.replace(temporary_file, HUMAN_REQUESTS_FILE)
+
+
+def get_human_request(conversation_id):
+    try:
+        requests_data = read_human_requests()
+    except (json.JSONDecodeError, ValueError, OSError):
+        raise HTTPException(
+            status_code=500,
+            detail="Human-support storage could not be read.",
+        )
+
+    return requests_data.get(conversation_id)
+
+
+def save_human_request(conversation_id, item):
+    try:
+        requests_data = read_human_requests()
+    except (json.JSONDecodeError, ValueError, OSError):
+        raise HTTPException(
+            status_code=500,
+            detail="Human-support storage could not be read.",
+        )
+
+    requests_data[conversation_id] = item
+
+    try:
+        write_human_requests(requests_data)
+    except OSError:
+        raise HTTPException(
+            status_code=500,
+            detail="The human-support request could not be saved.",
+        )
+
+
+@app.post("/human/request")
+def request_human_support(payload: HumanSupportRequest):
+    conversation_id = payload.conversation_id.strip()
+
+    if not conversation_id:
+        raise HTTPException(
+            status_code=400,
+            detail="A conversation ID is required.",
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    with human_lock:
+        existing = get_human_request(conversation_id)
+
+        if existing and existing.get("status") in {"pending", "accepted"}:
+            return {
+                "message": "A human-support request is already active.",
+                "status": existing.get("status"),
+                "conversation_id": conversation_id,
+            }
+
+        item = {
+            "conversation_id": conversation_id,
+            "status": "pending",
+            "history": [
+                entry.model_dump()
+                for entry in payload.history[-20:]
+            ],
+            "messages": [],
+            "created_at": now,
+            "updated_at": now,
+        }
+
+        save_human_request(conversation_id, item)
+
+    return {
+        "message": "Human-support request submitted.",
+        "status": "pending",
+        "conversation_id": conversation_id,
+    }
+
+
+@app.get("/human/status/{conversation_id}")
+def human_support_status(conversation_id: str):
+    with human_lock:
+        item = get_human_request(conversation_id)
+
+    if not item:
+        return {
+            "conversation_id": conversation_id,
+            "status": "none",
+            "messages": [],
+        }
+
+    return {
+        "conversation_id": conversation_id,
+        "status": item.get("status", "pending"),
+        "messages": item.get("messages", []),
+        "message": item.get("message", ""),
+    }
+
+
+@app.post("/human/message")
+def user_human_message(payload: HumanMessageRequest):
+    message = payload.message.strip()
+
+    if not message:
+        raise HTTPException(
+            status_code=400,
+            detail="Please enter a message.",
+        )
+
+    with human_lock:
+        item = get_human_request(payload.conversation_id)
+
+        if not item:
+            raise HTTPException(
+                status_code=404,
+                detail="Human-support request not found.",
+            )
+
+        if item.get("status") != "accepted":
+            raise HTTPException(
+                status_code=409,
+                detail="A human agent has not accepted this request.",
+            )
+
+        now = datetime.now(timezone.utc).isoformat()
+
+        item.setdefault("messages", []).append({
+            "id": f"msg-{int(datetime.now(timezone.utc).timestamp() * 1000)}",
+            "message": message,
+            "sender": "user",
+            "created_at": now,
+        })
+
+        item["updated_at"] = now
+
+        save_human_request(payload.conversation_id, item)
+
+    return {"success": True}
+
+
+@app.get("/admin/human-requests")
+def list_human_support_requests(request: Request):
+    require_admin(request)
+
+    with human_lock:
+        try:
+            requests_data = read_human_requests()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Human-support storage could not be read.",
+            )
+
+    return {"requests": list(requests_data.values())}
+
+
+@app.patch("/admin/human-requests/{conversation_id}")
+def update_human_support_request(
+    conversation_id: str,
+    update: HumanRequestStatusUpdate,
+    request: Request,
+):
+    require_admin(request)
+
+    with human_lock:
+        item = get_human_request(conversation_id)
+
+        if not item:
+            raise HTTPException(
+                status_code=404,
+                detail="Human-support request not found.",
+            )
+
+        item["status"] = update.status
+        item["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        if update.status == "declined":
+            item["message"] = (
+                "Sorry, no human agent is available right now. "
+                "You can request human support again or continue "
+                "with the AI assistant."
+            )
+        elif update.status == "completed":
+            item["message"] = (
+                "This human-support conversation has been marked as completed."
+            )
+
+        save_human_request(conversation_id, item)
+
+    return {
+        "message": "Human-support request updated.",
+        "request": item,
+    }
+
+
+@app.post("/admin/human-message")
+def admin_human_message(
+    payload: HumanMessageRequest,
+    request: Request,
+):
+    require_admin(request)
+
+    message = payload.message.strip()
+
+    if not message:
+        raise HTTPException(
+            status_code=400,
+            detail="Please enter a message.",
+        )
+
+    with human_lock:
+        item = get_human_request(payload.conversation_id)
+
+        if not item:
+            raise HTTPException(
+                status_code=404,
+                detail="Human-support request not found.",
+            )
+
+        if item.get("status") != "accepted":
+            raise HTTPException(
+                status_code=409,
+                detail="Accept the request before replying.",
+            )
+
+        now = datetime.now(timezone.utc).isoformat()
+
+        item.setdefault("messages", []).append({
+            "id": f"msg-{int(datetime.now(timezone.utc).timestamp() * 1000)}",
+            "message": message,
+            "sender": "admin",
+            "created_at": now,
+        })
+
+        item["updated_at"] = now
+
+        save_human_request(payload.conversation_id, item)
+
+    return {"message": "Reply sent to the user."}
+
+
+# ==========================================
 # CHROMADB
 # ==========================================
 
@@ -346,32 +685,10 @@ PERSONAL_SCOPE_REPLY = (
 
 
 # ==========================================
-# CHAT MODELS
-# ==========================================
-
-class ChatMessage(BaseModel):
-    role: Literal["user", "assistant"]
-    content: str
-
-
-class ChatRequest(BaseModel):
-    message: str = Field(min_length=1, max_length=2000)
-    history: list[ChatMessage] = Field(default_factory=list)
-
-
-# ==========================================
 # MESSAGE HELPERS
 # ==========================================
 
 def normalize_message(message):
-    """
-    Make messages easier to compare.
-
-    Examples:
-    'No, I cannot!' -> 'no i cannot'
-    'No, I can't.' -> "no i can't"
-    'YES!!!' -> 'yes'
-    """
     message = message.lower().strip()
     message = re.sub(r"[^\w\s']", " ", message)
     message = re.sub(r"\s+", " ", message)
@@ -390,35 +707,15 @@ def is_short_follow_up(message):
     normalized = normalize_message(message)
 
     exact_answers = {
-        "yes",
-        "yeah",
-        "yep",
-        "yup",
-        "no",
-        "nope",
-        "okay",
-        "ok",
-        "sure",
-        "not yet",
-        "still not working",
-        "same issue",
-        "please do",
-        "that would help",
-        "yes please",
-        "no thanks",
-        "no thank you",
-        "not now",
+        "yes", "yeah", "yep", "yup", "no", "nope",
+        "okay", "ok", "sure", "not yet", "still not working",
+        "same issue", "please do", "that would help",
+        "yes please", "no thanks", "no thank you", "not now",
     }
 
     if normalized in exact_answers:
         return True
 
-    # Recognize answers such as:
-    # "yes, I can"
-    # "no, I cannot"
-    # "no, I can't"
-    # "yes, it works"
-    # "no, it doesn't"
     answer_patterns = [
         r"^(yes|yeah|yep|yup)\b",
         r"^(no|nope)\b",
@@ -437,9 +734,6 @@ def is_short_follow_up(message):
 
 
 def is_answer_to_question(message):
-    """
-    Recognize a direct answer to a previous assistant question.
-    """
     normalized = normalize_message(message)
 
     if is_short_follow_up(message):
@@ -461,32 +755,15 @@ def is_answer_to_question(message):
 
 
 def has_active_it_conversation(history):
-    """
-    Check whether the earlier conversation contains a company IT problem.
-    """
     support_terms = (
-        "vpn",
-        "network",
-        "internet connection",
-        "access the internet",
-        "browse the internet",
-        "company account",
-        "work account",
-        "work laptop",
-        "work device",
-        "password",
-        "software access",
-        "troubleshoot",
-        "troubleshooting",
-        "it issue",
-        "error message",
-        "can't connect",
-        "cannot connect",
-        "not working",
-        "connection issue",
-        "connection problem",
-        "wifi",
-        "wi-fi",
+        "vpn", "network", "internet connection",
+        "access the internet", "browse the internet",
+        "company account", "work account", "work laptop",
+        "work device", "password", "software access",
+        "troubleshoot", "troubleshooting", "it issue",
+        "error message", "can't connect", "cannot connect",
+        "not working", "connection issue", "connection problem",
+        "wifi", "wi-fi",
     )
 
     for item in history:
@@ -503,18 +780,12 @@ def has_active_it_conversation(history):
 
 def is_personal_issue(history):
     personal_terms = (
-        "my personal laptop",
-        "personal laptop",
-        "my personal computer",
-        "personal computer",
-        "my home computer",
-        "personal vpn",
-        "my gaming account",
-        "my personal account",
-        "my personal email",
-        "my steam account",
-        "my roblox account",
-        "my epic games account",
+        "my personal laptop", "personal laptop",
+        "my personal computer", "personal computer",
+        "my home computer", "personal vpn",
+        "my gaming account", "my personal account",
+        "my personal email", "my steam account",
+        "my roblox account", "my epic games account",
     )
 
     for item in history:
@@ -530,12 +801,6 @@ def is_personal_issue(history):
 
 
 def build_contextual_search_query(message, history):
-    """
-    Search the knowledge base using the original IT problem.
-
-    For example, when the user says "no, I cannot", search using the
-    earlier VPN issue rather than the words "no, I cannot".
-    """
     user_messages = []
 
     for item in history:
@@ -544,10 +809,7 @@ def build_contextual_search_query(message, history):
 
         content = item.content.strip()
 
-        if not content:
-            continue
-
-        if is_short_follow_up(content):
+        if not content or is_short_follow_up(content):
             continue
 
         user_messages.append(content)
@@ -664,9 +926,7 @@ Latest message:
         OLLAMA_URL,
         json={
             "model": CHAT_MODEL,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
+            "messages": [{"role": "user", "content": prompt}],
             "stream": False,
             "options": {"temperature": 0},
         },
@@ -678,11 +938,8 @@ Latest message:
     result = response.json()["message"]["content"].strip().upper()
 
     allowed_categories = {
-        "IT_RELATED",
-        "SMALL_TALK",
-        "NO_PROBLEM",
-        "UNCLEAR",
-        "OFF_TOPIC",
+        "IT_RELATED", "SMALL_TALK", "NO_PROBLEM",
+        "UNCLEAR", "OFF_TOPIC",
     }
 
     if result in allowed_categories:
@@ -742,9 +999,7 @@ Latest message:
         OLLAMA_URL,
         json={
             "model": CHAT_MODEL,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
+            "messages": [{"role": "user", "content": prompt}],
             "stream": False,
             "options": {"temperature": 0},
         },
@@ -787,23 +1042,12 @@ def get_password_reply(message, history):
     previous_assistant = last_assistant_message(history).lower()
 
     affirmative = {
-        "yes",
-        "yes please",
-        "yeah",
-        "yep",
-        "yup",
-        "sure",
-        "okay",
-        "ok",
-        "please do",
-        "that would help",
+        "yes", "yes please", "yeah", "yep", "yup",
+        "sure", "okay", "ok", "please do", "that would help",
     }
 
     negative = {
-        "no",
-        "no thanks",
-        "no thank you",
-        "not now",
+        "no", "no thanks", "no thank you", "not now",
     }
 
     if normalized in negative:
@@ -840,10 +1084,7 @@ def get_password_reply(message, history):
             )
 
     if normalized in {
-        "what",
-        "huh",
-        "i don't understand",
-        "i dont understand",
+        "what", "huh", "i don't understand", "i dont understand",
     }:
         return (
             "Sorry for the confusion. 😊 I can guide you through the general "
@@ -860,12 +1101,9 @@ def get_password_reply(message, history):
     if any(
         phrase in normalized
         for phrase in (
-            "forgot my password",
-            "forgot password",
-            "forgotten password",
-            "can't remember my password",
-            "cannot remember my password",
-            "reset my password",
+            "forgot my password", "forgot password",
+            "forgotten password", "can't remember my password",
+            "cannot remember my password", "reset my password",
             "reset password",
         )
     ):
@@ -892,6 +1130,7 @@ def chat(request: ChatRequest):
             detail="Please enter a message.",
         )
 
+    # Prepare conversation history before checking the user's intent.
     history = request.history[-12:]
 
     # Avoid duplicating the latest user message if the frontend sends it
@@ -903,27 +1142,48 @@ def chat(request: ChatRequest):
     ):
         history = history[:-1]
 
+    # ======================================
+    # HUMAN ASSISTANT DETECTION
+    # ======================================
+    # This must happen before intent classification and RAG retrieval.
+    # It tells the user to click the button but does NOT submit a request.
+
+    if wants_human_assistance(message):
+        return {
+            "reply": HUMAN_SUPPORT_REPLY,
+            "source": "Human Support Guide",
+        }
+
+    # Keep the AI from responding while a human-support request is pending
+    # or an agent has accepted and is handling the conversation.
+    if request.conversation_id:
+        with human_lock:
+            human_item = get_human_request(
+                request.conversation_id.strip()
+            )
+
+        if human_item and human_item.get("status") in {
+            "pending", "accepted",
+        }:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "Human support is handling this conversation. "
+                    "Please wait for the human agent."
+                ),
+            )
+
     normalized = normalize_message(message)
 
     greetings = {
-        "hi",
-        "hello",
-        "hey",
-        "hiya",
-        "howdy",
-        "good morning",
-        "good afternoon",
-        "good evening",
+        "hi", "hello", "hey", "hiya", "howdy",
+        "good morning", "good afternoon", "good evening",
     }
 
     help_messages = {
-        "help",
-        "what can you do",
-        "what can you help me with",
-        "what can you help me do",
-        "what do you do",
-        "how do i use you",
-        "how can you help me",
+        "help", "what can you do", "what can you help me with",
+        "what can you help me do", "what do you do",
+        "how do i use you", "how can you help me",
     }
 
     if not history and normalized in greetings:
@@ -954,8 +1214,6 @@ def chat(request: ChatRequest):
     previous_question = "?" in previous_assistant
     ongoing_it_issue = has_active_it_conversation(history)
 
-    # This recognizes "no, I cannot" and similar answers.
-    # When answering an IT troubleshooting question, continue the same issue.
     is_it_follow_up = (
         is_answer_to_question(message)
         and previous_question
@@ -997,8 +1255,6 @@ def chat(request: ChatRequest):
                 "source": "Conversation Guide",
             }
 
-        # If the earlier conversation established a company IT problem,
-        # use that context instead of classifying "no, I cannot" by itself.
         if is_it_follow_up:
             if is_personal_issue(history):
                 scope = "PERSONAL"
