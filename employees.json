@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "27bdd76466a2eae7698082c8dabcbeaa",
+    "name": "Matthew",
+    "email": "matthew@work.com",
+    "role": "employee",
+    "password_hash": "pbkdf2_sha256$600000$b0ece542485f35cd306a7512d799a327$71f1d45558a1f071f92710d00f027097d839839f7e7b05bc68a7079ea54eef93",
+    "created_at": "2026-10-28T08:37:32.801764+00:00"
+  }
+]

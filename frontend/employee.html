@@ -1,0 +1,1400 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VIRTANSAN AI Employee Dashboard">
+    <title>Employee Dashboard | VIRTANSAN AI</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body { background: #f4f6fb; color: #263247; }
+        .layout { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: 235px;
+            background: #172554;
+            color: white;
+            padding: 28px 18px;
+            flex-shrink: 0;
+        }
+
+        .brand { font-size: 21px; font-weight: bold; margin: 0 8px 8px; }
+        .brand-subtitle { color: #b9c7e8; font-size: 12px; margin: 0 8px 35px; }
+        .menu-label { color: #9eafd6; font-size: 11px; margin: 25px 10px 12px; letter-spacing: 1px; }
+
+        .menu-item {
+            display: block;
+            padding: 13px 12px;
+            margin-bottom: 7px;
+            border-radius: 8px;
+            color: #dce5ff;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .menu-item:hover, .menu-item.active { background: #304987; color: white; }
+
+        .sidebar-footer {
+            margin-top: 45px;
+            padding: 15px 10px;
+            border-top: 1px solid #35436b;
+            color: #b9c7e8;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .main { flex: 1; min-width: 0; }
+
+        .topbar {
+            background: white;
+            border-bottom: 1px solid #e5e9f2;
+            padding: 22px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topbar h2 { font-size: 21px; }
+        .topbar p { margin-top: 5px; font-size: 13px; color: #778196; }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .profile-chip {
+            background: #eef2ff;
+            color: #304987;
+            padding: 10px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .content { padding: 30px; max-width: 1450px; }
+        .welcome { margin-bottom: 25px; }
+        .welcome h1 { font-size: 27px; margin-bottom: 8px; }
+        .welcome p { color: #778196; font-size: 14px; line-height: 1.6; }
+        .section-title { font-size: 18px; margin-bottom: 7px; }
+        .section-description { color: #778196; font-size: 13px; line-height: 1.6; margin-bottom: 18px; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e7eaf2;
+            border-radius: 12px;
+            padding: 21px;
+            box-shadow: 0 3px 12px rgba(24, 39, 75, 0.03);
+            min-width: 0;
+        }
+
+        .stat-icon {
+            display: inline-flex;
+            width: 42px;
+            height: 42px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #eef2ff;
+            font-size: 21px;
+            margin-bottom: 16px;
+        }
+
+        .stat-label { color: #778196; font-size: 13px; margin-bottom: 9px; }
+        .stat-value { font-size: 23px; font-weight: bold; margin-bottom: 8px; }
+        .stat-note { font-size: 12px; color: #778196; line-height: 1.5; }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 22px;
+            margin-bottom: 25px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            padding: 16px 0;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .list-item:last-child { border-bottom: none; }
+
+        .list-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: #eef2ff;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .list-content { flex: 1; min-width: 0; }
+        .list-content h4 { font-size: 14px; margin-bottom: 6px; }
+        .list-content p { color: #778196; font-size: 12px; line-height: 1.6; }
+
+        .status {
+            display: inline-block;
+            padding: 5px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .status-blue { color: #304987; background: #eef2ff; }
+        .status-green { color: #176b42; background: #e9f8ef; }
+        .status-orange { color: #945b10; background: #fff3df; }
+
+        .progress {
+            width: 100%;
+            height: 7px;
+            background: #edf0f5;
+            border-radius: 10px;
+            margin: 10px 0 6px;
+            overflow: hidden;
+        }
+
+        .progress-bar { height: 100%; border-radius: 10px; background: #526fd0; }
+
+        .account-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        .profile-row { padding: 15px 0; border-bottom: 1px solid #edf0f5; }
+        .profile-row:last-child { border-bottom: none; }
+        .profile-label { font-size: 12px; color: #778196; margin-bottom: 7px; }
+        .profile-value { font-size: 14px; overflow-wrap: anywhere; }
+
+        .form-group { margin-bottom: 17px; }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d9deea;
+            border-radius: 7px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #526fd0;
+            box-shadow: 0 0 0 3px #526fd01c;
+        }
+
+        .primary-button {
+            border: none;
+            background: #304987;
+            color: white;
+            padding: 12px 17px;
+            border-radius: 7px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .primary-button:hover { background: #23396f; }
+        .primary-button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .logout-button {
+            border: 1px solid #e4bcbc;
+            background: white;
+            color: #a12828;
+            padding: 10px 14px;
+            border-radius: 7px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .logout-button:hover { background: #fff0f0; }
+        .logout-button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .message {
+            display: none;
+            padding: 12px;
+            border-radius: 7px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .message.error, .message.success { display: block; }
+        .message.error { color: #a12828; background: #fff0f0; }
+        .message.success { color: #176b42; background: #e9f8ef; }
+
+        .bottom-note {
+            color: #8992a5;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 28px;
+            padding-bottom: 20px;
+        }
+
+        /* CHATBOT */
+
+        .chat-toggle {
+            position: fixed;
+            right: 25px;
+            bottom: 25px;
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            background: #304987;
+            color: white;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(23, 37, 84, 0.3);
+            z-index: 1000;
+        }
+
+        .chat-toggle:hover { background: #23396f; }
+
+        .chat-panel {
+            display: none;
+            position: fixed;
+            right: 25px;
+            bottom: 98px;
+            width: 370px;
+            max-width: calc(100vw - 30px);
+            height: 540px;
+            max-height: calc(100vh - 125px);
+            background: white;
+            border: 1px solid #e1e6f0;
+            border-radius: 14px;
+            box-shadow: 0 8px 35px rgba(24, 39, 75, 0.2);
+            z-index: 999;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .chat-panel.open { display: flex; }
+
+        .chat-header {
+            background: #172554;
+            color: white;
+            padding: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .chat-header h3 { font-size: 16px; margin-bottom: 5px; }
+        .chat-header p { font-size: 11px; color: #c6d2f0; }
+
+        .chat-close {
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            max-width: 88%;
+            padding: 11px 13px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .bot-message { align-self: flex-start; background: #f0f3fa; color: #263247; }
+        .user-message { align-self: flex-end; background: #304987; color: white; }
+
+        .chat-status {
+            padding: 0 15px 8px;
+            font-size: 11px;
+            color: #778196;
+        }
+
+        .human-support-area {
+            display: none;
+            padding: 9px 12px;
+            border-top: 1px solid #edf0f5;
+            background: #fafbfe;
+            flex-shrink: 0;
+        }
+
+        .human-support-area.visible { display: block; }
+
+        .human-support-button {
+            border: 1px solid #304987;
+            background: white;
+            color: #304987;
+            padding: 8px 11px;
+            border-radius: 7px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .human-support-button:hover { background: #eef2ff; }
+        .human-support-button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .human-support-status {
+            margin-top: 6px;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #778196;
+            white-space: pre-wrap;
+        }
+
+        .chat-form {
+            padding: 12px;
+            border-top: 1px solid #e7eaf2;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .chat-form textarea {
+            flex: 1;
+            min-width: 0;
+            min-height: 42px;
+            max-height: 100px;
+            resize: vertical;
+            padding: 11px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .chat-form button { min-height: 42px; padding: 10px 13px; }
+
+        .chat-note {
+            padding: 0 12px 10px;
+            text-align: center;
+            color: #8992a5;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 1100px) {
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 800px) {
+            .sidebar { width: 190px; }
+            .content { padding: 24px 20px; }
+            .account-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .layout { display: block; }
+            .sidebar { width: 100%; padding: 18px; }
+            .brand-subtitle { margin-bottom: 15px; }
+            .menu-label, .sidebar-footer { display: none; }
+            .topbar { padding: 18px; align-items: flex-start; }
+            .topbar h2 { font-size: 18px; }
+            .topbar-actions { flex-direction: column; align-items: flex-end; }
+            .content { padding: 22px 15px; }
+            .welcome h1 { font-size: 23px; }
+            .profile-chip { font-size: 11px; }
+            .stats-grid { gap: 12px; }
+            .card { padding: 17px; }
+            .chat-toggle { right: 16px; bottom: 16px; width: 56px; height: 56px; }
+            .chat-panel {
+                right: 10px;
+                bottom: 82px;
+                width: calc(100vw - 20px);
+                max-width: none;
+                height: min(540px, calc(100vh - 105px));
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand">VIRTANSAN AI</div>
+            <div class="brand-subtitle">Enterprise Helpdesk</div>
+
+            <div class="menu-label">WORKSPACE</div>
+            <a href="#dashboard" class="menu-item active">▦ &nbsp; Dashboard</a>
+            <a href="#schedule" class="menu-item">▣ &nbsp; My Schedule</a>
+            <a href="#tasks" class="menu-item">☑ &nbsp; My Tasks</a>
+            <a href="#finance" class="menu-item">▤ &nbsp; Finance Overview</a>
+
+            <div class="menu-label">ACCOUNT</div>
+            <a href="#account" class="menu-item">♙ &nbsp; My Profile</a>
+            <a href="#security" class="menu-item">⚿ &nbsp; Security</a>
+
+            <div class="sidebar-footer">
+                Employee Portal<br>
+                Powered by VIRTANSAN AI
+            </div>
+        </aside>
+
+        <main class="main" id="dashboard">
+            <header class="topbar">
+                <div>
+                    <h2>Employee Dashboard</h2>
+                    <p>Your workspace at a glance.</p>
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="profile-chip">● Employee Account</div>
+                    <button type="button" class="logout-button" id="logoutButton">
+                        Logout
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <section class="welcome">
+                    <h1 id="welcomeHeading">Good day!</h1>
+                    <p>Here is an overview of your workday and activities.</p>
+                </section>
+
+                <section class="stats-grid">
+                    <div class="card">
+                        <div class="stat-icon">▣</div>
+                        <div class="stat-label">Today's Meetings</div>
+                        <div class="stat-value">3</div>
+                        <p class="stat-note">Meetings scheduled today</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="stat-icon">☑</div>
+                        <div class="stat-label">Tasks To Complete</div>
+                        <div class="stat-value">5</div>
+                        <p class="stat-note">Tasks on your work list</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="stat-icon">▤</div>
+                        <div class="stat-label">Monthly Expenses</div>
+                        <div class="stat-value">₱8,450</div>
+                        <p class="stat-note">Illustrative monthly total</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="stat-icon">◷</div>
+                        <div class="stat-label">Leave Balance</div>
+                        <div class="stat-value">8 Days</div>
+                        <p class="stat-note">Illustrative remaining leave</p>
+                    </div>
+                </section>
+
+                <section class="workspace-grid">
+                    <div class="card" id="schedule">
+                        <h3 class="section-title">Today's Schedule</h3>
+                        <p class="section-description">Your meetings and planned activities.</p>
+
+                        <div class="list-item">
+                            <div class="list-icon">▣</div>
+                            <div class="list-content">
+                                <h4>Team Stand-up Meeting</h4>
+                                <p>9:00 AM – 9:30 AM</p>
+                                <p>Discuss team progress and priorities.</p>
+                            </div>
+                            <span class="status status-green">Completed</span>
+                        </div>
+
+                        <div class="list-item">
+                            <div class="list-icon">👥</div>
+                            <div class="list-content">
+                                <h4>Department Meeting</h4>
+                                <p>11:00 AM – 12:00 PM</p>
+                                <p>Weekly department updates.</p>
+                            </div>
+                            <span class="status status-blue">Meeting</span>
+                        </div>
+
+                        <div class="list-item">
+                            <div class="list-icon">▤</div>
+                            <div class="list-content">
+                                <h4>Project Review</h4>
+                                <p>2:00 PM – 3:00 PM</p>
+                                <p>Review project progress and deliverables.</p>
+                            </div>
+                            <span class="status status-orange">Upcoming</span>
+                        </div>
+                    </div>
+
+                    <div class="card" id="tasks">
+                        <h3 class="section-title">My Tasks</h3>
+                        <p class="section-description">A sample overview of work priorities.</p>
+
+                        <div class="list-item">
+                            <div class="list-content">
+                                <h4>Prepare weekly report</h4>
+                                <p>Due today</p>
+                            </div>
+                            <span class="status status-orange">High</span>
+                        </div>
+
+                        <div class="list-item">
+                            <div class="list-content">
+                                <h4>Review project documents</h4>
+                                <p>Due tomorrow</p>
+                            </div>
+                            <span class="status status-blue">Normal</span>
+                        </div>
+
+                        <div class="list-item">
+                            <div class="list-content">
+                                <h4>Update team documentation</h4>
+                                <p>Due Friday</p>
+                            </div>
+                            <span class="status status-blue">Normal</span>
+                        </div>
+
+                        <div style="margin-top:18px;">
+                            <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;">
+                                <span>Weekly progress</span>
+                                <strong>65%</strong>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" style="width:65%;"></div>
+                            </div>
+                            <p class="stat-note">Illustrative task completion</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="workspace-grid">
+                    <div class="card" id="finance">
+                        <h3 class="section-title">Finance Overview</h3>
+                        <p class="section-description">A sample overview of expenses and reimbursements.</p>
+
+                        <div class="list-item">
+                            <div class="list-icon">₱</div>
+                            <div class="list-content">
+                                <h4>Monthly Expense Summary</h4>
+                                <p>Sample expenses for the current month</p>
+                            </div>
+                            <strong>₱8,450</strong>
+                        </div>
+
+                        <div class="list-item">
+                            <div class="list-icon">▤</div>
+                            <div class="list-content">
+                                <h4>Reimbursement</h4>
+                                <p>Illustrative reimbursement status</p>
+                            </div>
+                            <span class="status status-orange">Pending</span>
+                        </div>
+
+                        <div class="list-item">
+                            <div class="list-icon">▣</div>
+                            <div class="list-content">
+                                <h4>Next Payroll</h4>
+                                <p>Upcoming payroll date</p>
+                            </div>
+                            <span class="status status-blue">Upcoming</span>
+                        </div>
+
+                        <p class="stat-note" style="margin-top:12px;">
+                            Sample figures for dashboard appearance only.
+                        </p>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="section-title">Company Announcements</h3>
+                        <p class="section-description">General workplace updates.</p>
+
+                        <div class="list-item">
+                            <div class="list-icon">📢</div>
+                            <div class="list-content">
+                                <h4>Monthly Town Hall</h4>
+                                <p>Company updates and team announcements.</p>
+                                <p style="margin-top:6px;">October 30</p>
+                            </div>
+                        </div>
+
+                        <div class="list-item">
+                            <div class="list-icon">📅</div>
+                            <div class="list-content">
+                                <h4>Team Planning Session</h4>
+                                <p>Prepare upcoming priorities and objectives.</p>
+                                <p style="margin-top:6px;">November 2</p>
+                            </div>
+                        </div>
+
+                        <div class="list-item">
+                            <div class="list-icon">★</div>
+                            <div class="list-content">
+                                <h4>Employee Recognition</h4>
+                                <p>Celebrating team contributions and achievements.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="account-grid">
+                    <div class="card" id="account">
+                        <h3 class="section-title">My Profile</h3>
+                        <p class="section-description">Your employee account information.</p>
+
+                        <div class="profile-row">
+                            <div class="profile-label">Full Name</div>
+                            <div class="profile-value" id="employeeName">Loading...</div>
+                        </div>
+
+                        <div class="profile-row">
+                            <div class="profile-label">Work Email</div>
+                            <div class="profile-value" id="employeeEmail">Loading...</div>
+                        </div>
+
+                        <div class="profile-row">
+                            <div class="profile-label">Account Type</div>
+                            <div class="profile-value">Employee</div>
+                        </div>
+
+                        <div class="profile-row">
+                            <div class="profile-label">Account Status</div>
+                            <div class="profile-value">Active</div>
+                        </div>
+                    </div>
+
+                    <div class="card" id="security">
+                        <h3 class="section-title">Change Password</h3>
+                        <p class="section-description">
+                            Verify your current password before choosing a new one.
+                        </p>
+
+                        <form id="passwordForm">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" id="currentPassword"
+                                       autocomplete="current-password" maxlength="200" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword"
+                                       autocomplete="new-password" minlength="8"
+                                       maxlength="200" required>
+                                <p class="stat-note" style="margin-top:7px;">
+                                    Use at least 8 characters.
+                                </p>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" id="confirmPassword"
+                                       autocomplete="new-password" minlength="8"
+                                       maxlength="200" required>
+                            </div>
+
+                            <div id="passwordMessage" class="message"
+                                 role="status" aria-live="polite"></div>
+
+                            <button type="submit" class="primary-button">
+                                Update Password
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <p class="bottom-note">VIRTANSAN AI · Employee Portal</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- CHAT BUTTON -->
+    <button type="button" class="chat-toggle" id="chatToggle"
+            aria-label="Open Support AI chat" aria-expanded="false"
+            title="Chat with Support AI">✦</button>
+
+    <!-- CHAT WINDOW -->
+    <section class="chat-panel" id="chatPanel"
+             aria-label="VIRTANSAN Support AI chat" aria-hidden="true">
+
+        <div class="chat-header">
+            <div>
+                <h3>VIRTANSAN Support AI</h3>
+                <p>Ready to help with company IT</p>
+            </div>
+            <button type="button" class="chat-close" id="chatClose"
+                    aria-label="Close chat">×</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages"
+             role="log" aria-live="polite" aria-relevant="additions">
+            <div class="chat-message bot-message">Hi! I'm the company's IT support assistant.
+
+Ask me about VPN troubleshooting, software access, or other IT problems. How can I help you?</div>
+        </div>
+
+        <!-- Hidden until the employee asks for human support -->
+        <div class="human-support-area" id="humanSupportArea">
+            <button type="button" class="human-support-button"
+                    id="humanSupportButton">
+                Request Human Support
+            </button>
+
+            <div class="human-support-status" id="humanSupportStatus"
+                 role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="chat-status" id="chatStatus" role="status" aria-live="polite"></div>
+
+        <form class="chat-form" id="chatForm">
+            <textarea id="chatInput" placeholder="Describe your IT issue..."
+                      aria-label="Message Support AI" maxlength="2000"
+                      rows="1" required></textarea>
+            <button type="submit" class="primary-button" id="sendButton">Send</button>
+        </form>
+
+        <div class="chat-note">
+            Don't share passwords or sensitive personal information.
+        </div>
+    </section>
+
+    <script>
+        // LOAD EMPLOYEE PROFILE
+
+        async function loadEmployeeProfile() {
+            try {
+                const response = await fetch("/employee/me", {
+                    credentials: "same-origin"
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = "/";
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error("Could not load employee information.");
+                }
+
+                const employee = await response.json();
+                const name = employee.full_name || employee.name || "Employee";
+
+                document.getElementById("employeeName").textContent = name;
+                document.getElementById("employeeEmail").textContent =
+                    employee.email || "Not available";
+
+                document.getElementById("welcomeHeading").textContent =
+                    "Good day, " + name + "!";
+
+            } catch (error) {
+                document.getElementById("employeeName").textContent = "Unable to load";
+                document.getElementById("employeeEmail").textContent = "Unable to load";
+            }
+        }
+
+        loadEmployeeProfile();
+
+
+        // LOGOUT
+
+        document.getElementById("logoutButton").addEventListener("click", async function () {
+            if (!confirm("Are you sure you want to log out?")) {
+                return;
+            }
+
+            const button = document.getElementById("logoutButton");
+            button.disabled = true;
+            button.textContent = "Logging out...";
+
+            try {
+                const response = await fetch("/employee/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin"
+                });
+
+                if (response.ok) {
+                    window.location.replace("/");
+                    return;
+                }
+
+                const result = await response.json().catch(() => ({}));
+                throw new Error(result.detail || "Unable to log out.");
+
+            } catch (error) {
+                alert(error.message || "Could not connect to the server.");
+                button.disabled = false;
+                button.textContent = "Logout";
+            }
+        });
+
+
+        // CHANGE PASSWORD
+
+        const passwordForm = document.getElementById("passwordForm");
+        const passwordMessage = document.getElementById("passwordMessage");
+
+        function showPasswordMessage(text, type) {
+            passwordMessage.textContent = text;
+            passwordMessage.className = "message " + type;
+        }
+
+        passwordForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const currentPassword = document.getElementById("currentPassword").value;
+            const newPassword = document.getElementById("newPassword").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+
+            if (newPassword.length < 8) {
+                showPasswordMessage("Your new password must be at least 8 characters.", "error");
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showPasswordMessage("The new passwords do not match.", "error");
+                return;
+            }
+
+            if (currentPassword === newPassword) {
+                showPasswordMessage(
+                    "Your new password must be different from your current password.",
+                    "error"
+                );
+                return;
+            }
+
+            const button = passwordForm.querySelector("button");
+            button.disabled = true;
+            button.textContent = "Updating...";
+
+            try {
+                const response = await fetch("/employee/change-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.detail || "Unable to change your password.");
+                }
+
+                showPasswordMessage(
+                    result.message || "Your password has been changed successfully.",
+                    "success"
+                );
+
+                passwordForm.reset();
+
+            } catch (error) {
+                showPasswordMessage(
+                    error.message || "Could not connect to the server. Please try again.",
+                    "error"
+                );
+            } finally {
+                button.disabled = false;
+                button.textContent = "Update Password";
+            }
+        });
+
+
+        // CHATBOT ELEMENTS
+
+        const chatToggle = document.getElementById("chatToggle");
+        const chatPanel = document.getElementById("chatPanel");
+        const chatClose = document.getElementById("chatClose");
+        const chatForm = document.getElementById("chatForm");
+        const chatInput = document.getElementById("chatInput");
+        const chatMessages = document.getElementById("chatMessages");
+        const chatStatus = document.getElementById("chatStatus");
+        const sendButton = document.getElementById("sendButton");
+
+        const humanSupportArea = document.getElementById("humanSupportArea");
+        const humanSupportButton = document.getElementById("humanSupportButton");
+        const humanSupportStatus = document.getElementById("humanSupportStatus");
+
+        let chatIsBusy = false;
+        let conversationHistory = [];
+
+        // Keep the same conversation ID across page reloads.
+        let conversationId = localStorage.getItem("aihas_conversation_id");
+
+        if (!conversationId) {
+            conversationId =
+                "conv-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+
+            localStorage.setItem("aihas_conversation_id", conversationId);
+        }
+
+        let humanRequestStatus = null;
+        let humanPollTimer = null;
+        let humanMessagesShown = new Set();
+
+
+        // DETECT EXPLICIT HUMAN-SUPPORT REQUESTS
+
+        function wantsHumanSupport(message) {
+            return /\b(human|real person|live agent|human agent|human assistant|human support|talk to someone|speak to someone|talk to a person|speak to a person|customer service|support agent|real agent|talk to human|speak to human|contact a human|request human|person to help me|speak with someone|talk with someone)\b/i.test(message);
+        }
+
+
+        // OPEN AND CLOSE CHAT
+
+        function openChat() {
+            chatPanel.classList.add("open");
+            chatPanel.setAttribute("aria-hidden", "false");
+            chatToggle.setAttribute("aria-expanded", "true");
+            chatToggle.textContent = "×";
+            chatInput.focus();
+
+            if (humanRequestStatus && humanRequestStatus !== "none") {
+                checkHumanSupportStatus();
+            }
+        }
+
+        function closeChat() {
+            chatPanel.classList.remove("open");
+            chatPanel.setAttribute("aria-hidden", "true");
+            chatToggle.setAttribute("aria-expanded", "false");
+            chatToggle.textContent = "✦";
+        }
+
+        chatToggle.addEventListener("click", function () {
+            if (chatPanel.classList.contains("open")) {
+                closeChat();
+            } else {
+                openChat();
+            }
+        });
+
+        chatClose.addEventListener("click", closeChat);
+
+
+        // CHAT MESSAGE DISPLAY
+        // The RAG source filename is deliberately not displayed.
+
+        function addChatMessage(text, sender) {
+            const message = document.createElement("div");
+
+            message.className = "chat-message " +
+                (sender === "user" ? "user-message" : "bot-message");
+
+            message.textContent = text;
+            chatMessages.appendChild(message);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showHumanSupportArea() {
+            humanSupportArea.classList.add("visible");
+        }
+
+        function setHumanStatus(text) {
+            humanSupportStatus.textContent = text;
+        }
+
+        async function readApiResponse(response) {
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = "/";
+                    throw new Error("Your session has expired.");
+                }
+
+                throw new Error(
+                    result.detail || result.message || "The request could not be completed."
+                );
+            }
+
+            return result;
+        }
+
+
+        // REQUEST HUMAN ASSISTANCE
+
+        humanSupportButton.addEventListener("click", async function () {
+            if (
+                humanRequestStatus === "pending" ||
+                humanRequestStatus === "accepted" ||
+                humanRequestStatus === "in_progress"
+            ) {
+                setHumanStatus("You already have an active human support request.");
+                return;
+            }
+
+            humanSupportButton.disabled = true;
+            humanSupportButton.textContent = "Requesting...";
+            setHumanStatus("Sending your request to the IT administrator...");
+
+            try {
+                const response = await fetch("/human/request", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        conversation_id: conversationId,
+                        history: conversationHistory
+                    })
+                });
+
+                const result = await readApiResponse(response);
+
+                humanRequestStatus = String(result.status || "pending").toLowerCase();
+
+                showHumanSupportArea();
+                updateHumanSupportDisplay(result);
+                startHumanStatusPolling();
+
+                addChatMessage(
+                    "Your request for human assistance has been submitted.",
+                    "bot"
+                );
+
+            } catch (error) {
+                setHumanStatus(error.message || "Could not submit the support request.");
+                humanSupportButton.disabled = false;
+                humanSupportButton.textContent = "Request Human Support";
+            }
+        });
+
+
+        // DISPLAY HUMAN SUPPORT STATUS AND MESSAGES
+
+        function updateHumanSupportDisplay(result) {
+            const status = String(
+                result.status || humanRequestStatus || "pending"
+            ).toLowerCase();
+
+            humanRequestStatus = status;
+
+            const statusText = {
+                none: "No human support request is active.",
+                pending: "Status: Waiting for an IT administrator to respond.",
+                accepted: "Status: Your request has been accepted. You can message the administrator.",
+                in_progress: "Status: IT support is working on your request.",
+                declined: "Status: Your request was declined.",
+                completed: "Status: Your support request has been completed.",
+                closed: "Status: Your support request is closed."
+            };
+
+            setHumanStatus(
+                statusText[status] ||
+                ("Status: " + status.replace(/_/g, " "))
+            );
+
+            if (
+                status === "pending" ||
+                status === "accepted" ||
+                status === "in_progress"
+            ) {
+                humanSupportButton.textContent = "Human Support Requested";
+                humanSupportButton.disabled = true;
+            } else {
+                humanSupportButton.textContent = "Request Human Support";
+                humanSupportButton.disabled = false;
+            }
+
+            const messages = Array.isArray(result.messages) ? result.messages : [];
+
+            messages.forEach(function (item, index) {
+                const text = typeof item === "string"
+                    ? item
+                    : item.message || item.content || item.text || "";
+
+                if (!text) {
+                    return;
+                }
+
+                const key = String(
+                    item.id || item.message_id ||
+                    (item.sender || item.role || "message") + ":" + index + ":" + text
+                );
+
+                if (humanMessagesShown.has(key)) {
+                    return;
+                }
+
+                humanMessagesShown.add(key);
+
+                const sender = String(
+                    item.sender || item.role || item.from || ""
+                ).toLowerCase();
+
+                if (
+                    sender === "employee" ||
+                    sender === "user"
+                ) {
+                    return;
+                }
+
+                addChatMessage("IT Administrator: " + text, "bot");
+            });
+        }
+
+
+        // CHECK HUMAN SUPPORT STATUS
+
+        async function checkHumanSupportStatus() {
+            try {
+                const response = await fetch(
+                    "/human/status/" + encodeURIComponent(conversationId),
+                    {
+                        method: "GET",
+                        credentials: "same-origin"
+                    }
+                );
+
+                const result = await readApiResponse(response);
+
+                // Reveal the support area only if the employee previously
+                // requested human support in this chat.
+                if (humanSupportArea.classList.contains("visible")) {
+                    updateHumanSupportDisplay(result);
+                }
+
+                if (
+                    humanRequestStatus === "completed" ||
+                    humanRequestStatus === "declined" ||
+                    humanRequestStatus === "closed" ||
+                    humanRequestStatus === "none"
+                ) {
+                    stopHumanStatusPolling();
+                }
+
+            } catch (error) {
+                if (humanSupportArea.classList.contains("visible")) {
+                    setHumanStatus(
+                        "Unable to refresh request status. " +
+                        (error.message || "Please try again.")
+                    );
+                }
+            }
+        }
+
+        function startHumanStatusPolling() {
+            stopHumanStatusPolling();
+            checkHumanSupportStatus();
+
+            humanPollTimer = setInterval(function () {
+                checkHumanSupportStatus();
+            }, 4000);
+        }
+
+        function stopHumanStatusPolling() {
+            if (humanPollTimer) {
+                clearInterval(humanPollTimer);
+                humanPollTimer = null;
+            }
+        }
+
+
+        // SEND MESSAGE TO HUMAN ADMINISTRATOR
+
+        async function sendHumanMessage(message) {
+            const response = await fetch("/human/message", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    conversation_id: conversationId,
+                    message: message
+                })
+            });
+
+            return await readApiResponse(response);
+        }
+
+
+        // SEND CHAT MESSAGE
+
+        chatForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const message = chatInput.value.trim();
+
+            if (!message || chatIsBusy) {
+                return;
+            }
+
+            chatIsBusy = true;
+            addChatMessage(message, "user");
+            chatInput.value = "";
+
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+            sendButton.textContent = "...";
+            chatStatus.textContent = "";
+
+            // Only reveal the human-support option if the employee asks
+            // to speak to a human or requests human assistance.
+            if (wantsHumanSupport(message)) {
+                showHumanSupportArea();
+                setHumanStatus(
+                    "You can request an IT administrator using the button below."
+                );
+            }
+
+            // Keep the full history for the human-support request.
+            conversationHistory.push({
+                role: "user",
+                content: message
+            });
+
+            try {
+                // Refresh status when a support request has already been made.
+                if (humanSupportArea.classList.contains("visible")) {
+                    try {
+                        const statusResponse = await fetch(
+                            "/human/status/" + encodeURIComponent(conversationId),
+                            {
+                                method: "GET",
+                                credentials: "same-origin"
+                            }
+                        );
+
+                        if (statusResponse.ok) {
+                            const statusResult = await statusResponse.json();
+                            updateHumanSupportDisplay(statusResult);
+                        }
+                    } catch (statusError) {
+                        // Continue with the last known status if status refresh fails.
+                    }
+                }
+
+                // If the human administrator accepted the request,
+                // send the employee's message to the human conversation.
+                if (
+                    humanSupportArea.classList.contains("visible") &&
+                    (
+                        humanRequestStatus === "accepted" ||
+                        humanRequestStatus === "in_progress"
+                    )
+                ) {
+                    chatStatus.textContent = "Sending message to IT support...";
+
+                    await sendHumanMessage(message);
+
+                    chatStatus.textContent = "";
+                    setHumanStatus("Your message was sent to the IT administrator.");
+
+                    await checkHumanSupportStatus();
+                    return;
+                }
+
+                // If the request is still waiting, tell the employee.
+                if (
+                    humanSupportArea.classList.contains("visible") &&
+                    humanRequestStatus === "pending"
+                ) {
+                    addChatMessage(
+                        "Your human-support request is still waiting for an IT administrator. You can continue asking the AI for help while you wait.",
+                        "bot"
+                    );
+
+                    chatStatus.textContent = "";
+                    return;
+                }
+
+                // Otherwise, send the message to the AI helpdesk.
+                chatStatus.textContent = "Support AI is preparing a response...";
+
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        message: message,
+                        history: conversationHistory.slice(-12),
+                        conversation_id: conversationId
+                    })
+                });
+
+                const result = await readApiResponse(response);
+
+                const reply = result.reply || result.response ||
+                    "The AI returned an empty response.";
+
+                // Do not display result.source or any source filename.
+                addChatMessage(reply, "bot");
+
+                conversationHistory.push({
+                    role: "assistant",
+                    content: reply
+                });
+
+                conversationHistory = conversationHistory.slice(-12);
+                chatStatus.textContent = "";
+
+            } catch (error) {
+                addChatMessage(
+                    "Sorry, I could not complete that request. Please try again.",
+                    "bot"
+                );
+
+                chatStatus.textContent = error.message || "Message failed.";
+
+            } finally {
+                chatIsBusy = false;
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                sendButton.textContent = "Send";
+                chatInput.focus();
+            }
+        });
+
+
+        // ENTER TO SEND; SHIFT+ENTER FOR A NEW LINE
+
+        chatInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+
+                if (!sendButton.disabled) {
+                    chatForm.requestSubmit();
+                }
+            }
+        });
+
+        // IMPORTANT:
+        // There is intentionally no click handler that automatically reveals
+        // the human-support button when the chat is opened.
+    </script>
+</body>
+</html>

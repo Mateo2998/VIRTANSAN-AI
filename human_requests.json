@@ -235,5 +235,48 @@
     "created_at": "2026-10-28T07:25:21.899116+00:00",
     "updated_at": "2026-10-28T07:25:28.757461+00:00",
     "message": "Sorry, no human agent is available right now. You can request human support again or continue with the AI assistant."
+  },
+  "conv-1793179997262-hk6p1qi4": {
+    "conversation_id": "conv-1793179997262-hk6p1qi4",
+    "status": "completed",
+    "history": [
+      {
+        "role": "user",
+        "content": "i need human assisstant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [
+      {
+        "id": "msg-1793180299801",
+        "message": "yo",
+        "sender": "admin",
+        "created_at": "2026-10-28T09:38:19.801197+00:00"
+      },
+      {
+        "id": "msg-1793180305464",
+        "message": "hi",
+        "sender": "user",
+        "created_at": "2026-10-28T09:38:25.464092+00:00"
+      },
+      {
+        "id": "msg-1793180310830",
+        "message": "bye",
+        "sender": "admin",
+        "created_at": "2026-10-28T09:38:30.830829+00:00"
+      },
+      {
+        "id": "msg-1793180314367",
+        "message": "bye",
+        "sender": "user",
+        "created_at": "2026-10-28T09:38:34.367022+00:00"
+      }
+    ],
+    "created_at": "2026-10-28T09:38:04.719861+00:00",
+    "updated_at": "2026-10-28T09:38:37.590017+00:00",
+    "message": "This human-support conversation has been marked as completed."
   }
 }

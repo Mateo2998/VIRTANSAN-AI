@@ -4,67 +4,175 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIRTANSAN AI - Admin Dashboard</title>
+
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; font-family: Arial, sans-serif; background: #f4f6f9; color: #202938; }
-        header { background: #172b4d; color: white; padding: 18px 25px; display: flex; justify-content: space-between; align-items: center; }
-        header h2, header p { margin: 0; } header p { margin-top: 5px; font-size: 13px; color: #d5deec; }
+        header { background: #172b4d; color: white; padding: 18px 25px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        header h2, header p { margin: 0; }
+        header p { margin-top: 5px; font-size: 13px; color: #d5deec; }
         main { max-width: 1250px; margin: 25px auto; padding: 0 16px; }
-        button, input, select, textarea { font: inherit; } button { cursor: pointer; border: 0; border-radius: 5px; padding: 10px 13px; }
-        button:disabled { opacity: .5; cursor: not-allowed; } .logout { background: white; color: #172b4d; }
-        .primary { background: #2459a9; color: white; } .success { background: #18794e; color: white; }
-        .danger { background: #b42318; color: white; } .neutral { background: #e9edf3; color: #29384c; }
+        button, input, select, textarea { font: inherit; }
+        button { cursor: pointer; border: 0; border-radius: 5px; padding: 10px 13px; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        .logout { background: white; color: #172b4d; }
+        .primary { background: #2459a9; color: white; }
+        .success { background: #18794e; color: white; }
+        .danger { background: #b42318; color: white; }
+        .neutral { background: #e9edf3; color: #29384c; }
         .heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
-        .heading h1 { margin-bottom: 6px; } .muted { color: #687386; font-size: 14px; }
+        .heading h1 { margin-bottom: 6px; }
+        .muted { color: #687386; font-size: 14px; }
         .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
         .stat, .panel { background: white; border: 1px solid #e0e5ec; border-radius: 8px; }
-        .stat { padding: 18px; } .stat-label { color: #687386; font-size: 13px; }
-        .stat-number { font-size: 28px; font-weight: bold; margin-top: 9px; } .panel { overflow: hidden; margin-bottom: 22px; }
-        .panel-heading { padding: 17px 20px; border-bottom: 1px solid #e0e5ec; } .panel-heading h2 { margin: 0; font-size: 18px; }
+        .stat { padding: 18px; }
+        .stat-label { color: #687386; font-size: 13px; }
+        .stat-number { font-size: 28px; font-weight: bold; margin-top: 9px; }
+        .panel { overflow: hidden; margin-bottom: 22px; }
+        .panel-heading { padding: 17px 20px; border-bottom: 1px solid #e0e5ec; }
+        .panel-heading h2 { margin: 0; font-size: 18px; }
         .toolbar { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px 20px; }
         input, select, textarea { border: 1px solid #cbd3df; border-radius: 5px; padding: 10px; }
-        #searchInput { flex: 1; min-width: 180px; } .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; } th, td { padding: 13px 15px; border-bottom: 1px solid #edf0f4; font-size: 13px; }
-        th { background: #fafbfc; color: #687386; } .status { display: inline-block; border-radius: 20px; padding: 5px 8px; background: #edf0f4; font-size: 12px; }
+        input:focus, select:focus, textarea:focus { outline: 2px solid #b8cdf5; border-color: #2459a9; }
+        #searchInput, #employeeSearch { flex: 1; min-width: 180px; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 13px 15px; border-bottom: 1px solid #edf0f4; font-size: 13px; }
+        th { background: #fafbfc; color: #687386; }
+        .status { display: inline-block; border-radius: 20px; padding: 5px 8px; background: #edf0f4; font-size: 12px; }
         .pending, .pending-review, .pending-approval { background: #fff0ce; color: #875800; }
-        .accepted, .in-progress { background: #e0edff; color: #2056a3; } .fixed, .completed { background: #d9f5e6; color: #176b43; }
-        .declined, .cannot-fix, .denied { background: #ffe3e3; color: #9b2525; } .view { background: #e6efff; color: #2056a3; }
-        .message { padding: 12px 20px; font-size: 13px; white-space: pre-wrap; } .empty { padding: 25px; color: #687386; text-align: center; }
+        .accepted, .in-progress { background: #e0edff; color: #2056a3; }
+        .fixed, .completed, .active-status { background: #d9f5e6; color: #176b43; }
+        .declined, .cannot-fix, .denied { background: #ffe3e3; color: #9b2525; }
+        .view { background: #e6efff; color: #2056a3; }
+        .message { padding: 12px 20px; font-size: 13px; white-space: pre-wrap; }
+        .message.error { color: #9b2525; background: #fff0f0; }
+        .message.success-message { color: #176b43; background: #e9f8ef; }
+        .empty { padding: 25px; color: #687386; text-align: center; }
         .human-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); min-height: 300px; }
-        .request-list { border-right: 1px solid #e0e5ec; } .request-item { padding: 14px; border-bottom: 1px solid #edf0f4; cursor: pointer; overflow-wrap: anywhere; }
-        .request-item:hover, .request-item.selected { background: #eaf1ff; } .request-item strong, .request-item small { display: block; margin-bottom: 6px; }
-        .request-item small { color: #687386; } .conversation { padding: 16px; min-width: 0; } .conversation h3 { margin-top: 0; overflow-wrap: anywhere; }
+        .request-list { border-right: 1px solid #e0e5ec; }
+        .request-item { padding: 14px; border-bottom: 1px solid #edf0f4; cursor: pointer; overflow-wrap: anywhere; }
+        .request-item:hover, .request-item.selected { background: #eaf1ff; }
+        .request-item strong, .request-item small { display: block; margin-bottom: 6px; }
+        .request-item small { color: #687386; }
+        .conversation { padding: 16px; min-width: 0; }
+        .conversation h3 { margin-top: 0; overflow-wrap: anywhere; }
         .chat-messages { min-height: 150px; max-height: 340px; overflow-y: auto; border: 1px solid #e0e5ec; border-radius: 6px; padding: 10px; margin: 12px 0; }
         .chat-line { padding: 9px; border-radius: 5px; margin-bottom: 8px; background: #f2f5f9; white-space: pre-wrap; overflow-wrap: anywhere; }
-        .chat-line.admin { background: #e0edff; } .chat-line.user { background: #edf8ef; } .chat-line.system { color: #687386; font-style: italic; }
-        .chat-form { display: flex; gap: 8px; } .chat-form input { flex: 1; min-width: 0; } .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+        .chat-line.admin { background: #e0edff; }
+        .chat-line.user { background: #edf8ef; }
+        .chat-line.system { color: #687386; font-style: italic; }
+        .chat-form { display: flex; gap: 8px; }
+        .chat-form input { flex: 1; min-width: 0; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
         .modal { display: none; position: fixed; inset: 0; background: #0008; padding: 20px; overflow-y: auto; z-index: 5; }
-        .modal.open { display: flex; justify-content: center; align-items: flex-start; } .modal-card { width: 100%; max-width: 600px; margin: 25px auto; padding: 22px; background: white; border-radius: 8px; }
-        .modal-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; } .modal-top h2 { margin: 0; }
-        .detail { margin: 16px 0; } .detail-label { color: #687386; font-size: 12px; margin-bottom: 5px; }
-        .detail-value { white-space: pre-wrap; overflow-wrap: anywhere; } #adminNote { width: 100%; min-height: 90px; margin-top: 8px; }
-        @media (max-width: 750px) { .stats { grid-template-columns: repeat(2, 1fr); } .human-layout { grid-template-columns: 1fr; } .request-list { border-right: 0; border-bottom: 1px solid #e0e5ec; } }
-        @media (max-width: 420px) { header { padding: 14px; } .stats { gap: 8px; } .stat { padding: 12px; } .stat-number { font-size: 23px; } main { padding: 0 10px; } }
+        .modal.open { display: flex; justify-content: center; align-items: flex-start; }
+        .modal-card { width: 100%; max-width: 600px; margin: 25px auto; padding: 22px; background: white; border-radius: 8px; }
+        .modal-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+        .modal-top h2 { margin: 0; }
+        .detail { margin: 16px 0; }
+        .detail-label { color: #687386; font-size: 12px; margin-bottom: 5px; }
+        .detail-value { white-space: pre-wrap; overflow-wrap: anywhere; }
+        #adminNote { width: 100%; min-height: 90px; margin-top: 8px; }
+        .employee-form { padding: 20px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 7px; }
+        .form-group input { width: 100%; }
+        .form-help { color: #687386; font-size: 12px; line-height: 1.5; margin-top: 6px; }
+        .form-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        @media (max-width: 750px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .human-layout { grid-template-columns: 1fr; }
+            .request-list { border-right: 0; border-bottom: 1px solid #e0e5ec; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 420px) {
+            header { padding: 14px; }
+            .stats { gap: 8px; }
+            .stat { padding: 12px; }
+            .stat-number { font-size: 23px; }
+            main { padding: 0 10px; }
+        }
     </style>
 </head>
 <body>
 <header>
-    <div><h2>VIRTANSAN AI</h2><p>Enterprise Helpdesk Administration</p></div>
+    <div>
+        <h2>VIRTANSAN AI</h2>
+        <p>Enterprise Helpdesk Administration</p>
+    </div>
     <button class="logout" id="logoutButton">Log Out</button>
 </header>
+
 <main>
     <div class="heading">
-        <div><h1>Admin Dashboard</h1><div class="muted">Review IT tickets and respond to human assistance requests.</div></div>
+        <div>
+            <h1>Admin Dashboard</h1>
+            <div class="muted">Manage employees, IT tickets, and human assistance requests.</div>
+        </div>
         <button class="neutral" id="refreshButton">Refresh Dashboard</button>
     </div>
+
     <section class="stats">
         <div class="stat"><div class="stat-label">Total Tickets</div><div class="stat-number" id="totalCount">—</div></div>
         <div class="stat"><div class="stat-label">Pending Review</div><div class="stat-number" id="pendingCount">—</div></div>
         <div class="stat"><div class="stat-label">In Progress</div><div class="stat-number" id="progressCount">—</div></div>
         <div class="stat"><div class="stat-label">Resolved</div><div class="stat-number" id="resolvedCount">—</div></div>
     </section>
+
     <section class="panel">
-        <div class="panel-heading"><h2>Human Assistance Requests <span id="humanPendingCount" class="status pending">0 pending</span></h2></div>
+        <div class="panel-heading"><h2>Create Employee Account</h2></div>
+        <form id="employeeForm" class="employee-form">
+            <p class="muted" style="margin-bottom:18px;">Register an employee so they can sign in to the employee portal.</p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="employeeFullName">Employee Full Name</label>
+                    <input id="employeeFullName" type="text" maxlength="120" autocomplete="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeeEmailInput">Work Email</label>
+                    <input id="employeeEmailInput" type="email" maxlength="254" autocomplete="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeePasswordInput">Temporary Password</label>
+                    <input id="employeePasswordInput" type="password" minlength="8" maxlength="200" autocomplete="new-password" required>
+                    <p class="form-help">Use at least 8 characters. Give this password to the employee securely.</p>
+                </div>
+                <div class="form-group">
+                    <label for="employeePasswordConfirm">Confirm Temporary Password</label>
+                    <input id="employeePasswordConfirm" type="password" minlength="8" maxlength="200" autocomplete="new-password" required>
+                </div>
+            </div>
+            <div id="employeeFormMessage" class="message" role="status" aria-live="polite"></div>
+            <div class="form-actions">
+                <button type="submit" class="primary" id="createEmployeeButton">Create Employee</button>
+                <button type="reset" class="neutral">Clear Form</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading"><h2>Employee Accounts</h2></div>
+        <div class="toolbar">
+            <input id="employeeSearch" type="search" placeholder="Search employee name or email...">
+            <button class="neutral" id="refreshEmployeesButton">Refresh Employees</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Full Name</th><th>Work Email</th><th>Account Type</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="employeeRows"><tr><td colspan="5" class="empty">Loading employees...</td></tr></tbody>
+            </table>
+        </div>
+        <div class="message" id="employeeListMessage" role="status"></div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>Human Assistance Requests <span id="humanPendingCount" class="status pending">0 pending</span></h2>
+        </div>
         <div class="human-layout">
             <div class="request-list" id="humanRequestList"><div class="empty">Loading requests...</div></div>
             <div class="conversation">
@@ -84,34 +192,57 @@
             </div>
         </div>
     </section>
+
     <section class="panel">
         <div class="panel-heading"><h2>IT Support Tickets</h2></div>
         <div class="toolbar">
             <input id="searchInput" type="search" placeholder="Search tickets...">
             <select id="statusFilter">
-                <option value="">All statuses</option><option>Pending Review</option><option>Pending Approval</option><option>Accepted</option><option>Approved</option><option>In Progress</option><option>Fixed</option><option>Cannot Fix</option><option>Denied</option>
+                <option value="">All statuses</option>
+                <option>Pending Review</option><option>Pending Approval</option><option>Accepted</option>
+                <option>Approved</option><option>In Progress</option><option>Fixed</option>
+                <option>Cannot Fix</option><option>Denied</option>
             </select>
         </div>
-        <div class="table-wrap"><table><thead><tr><th>Ticket ID</th><th>Title</th><th>Category</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody id="ticketRows"><tr><td colspan="6" class="empty">Loading tickets...</td></tr></tbody></table></div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Ticket ID</th><th>Title</th><th>Category</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+                <tbody id="ticketRows"><tr><td colspan="6" class="empty">Loading tickets...</td></tr></tbody>
+            </table>
+        </div>
         <div class="message" id="message" role="status"></div>
     </section>
 </main>
+
 <div class="modal" id="ticketModal" role="dialog" aria-modal="true" aria-labelledby="ticketModalTitle">
     <div class="modal-card">
-        <div class="modal-top"><h2 id="ticketModalTitle">Ticket details</h2><button class="neutral" id="closeModal" type="button">Close</button></div>
+        <div class="modal-top">
+            <h2 id="ticketModalTitle">Ticket details</h2>
+            <button class="neutral" id="closeModal" type="button">Close</button>
+        </div>
         <div class="detail"><div class="detail-label">Title</div><div class="detail-value" id="detailTitle"></div></div>
         <div class="detail"><div class="detail-label">Description</div><div class="detail-value" id="detailDescription"></div></div>
         <div class="detail"><div class="detail-label">Email</div><div class="detail-value" id="detailEmail"></div></div>
         <div class="detail"><div class="detail-label">Category</div><div class="detail-value" id="detailCategory"></div></div>
         <div class="detail"><div class="detail-label">Current status</div><div class="detail-value" id="detailStatus"></div></div>
-        <label for="adminNote"><strong>Admin note</strong></label><textarea id="adminNote" placeholder="Add an update for this ticket..."></textarea>
-        <div class="actions"><button class="primary" data-status="Accepted">Accept</button><button class="primary" data-status="In Progress">In Progress</button><button class="success" data-status="Fixed">Mark Fixed</button><button class="danger" data-status="Cannot Fix">Cannot Fix</button><button class="danger" data-status="Denied">Deny</button></div>
+        <label for="adminNote"><strong>Admin note</strong></label>
+        <textarea id="adminNote" placeholder="Add an update for this ticket..."></textarea>
+        <div class="actions">
+            <button class="primary" data-status="Accepted">Accept</button>
+            <button class="primary" data-status="In Progress">In Progress</button>
+            <button class="success" data-status="Fixed">Mark Fixed</button>
+            <button class="danger" data-status="Cannot Fix">Cannot Fix</button>
+            <button class="danger" data-status="Denied">Deny</button>
+        </div>
     </div>
 </div>
+
 <script>
     const $ = id => document.getElementById(id);
+
     let tickets = [];
     let selectedTicket = null;
+    let employees = [];
     let humanRequests = [];
     let selectedHumanId = null;
     let lastRenderedHumanSignature = "";
@@ -120,55 +251,328 @@
         const response = await fetch(url, {
             ...options,
             credentials: "same-origin",
-            headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+            headers: {
+                ...(options.body ? { "Content-Type": "application/json" } : {}),
+                ...(options.headers || {})
+            }
         });
+
         const data = await response.json().catch(() => ({}));
-        if (response.status === 401) { window.location.href = "/"; throw new Error("Please log in again."); }
-        if (!response.ok) throw new Error(data.detail || data.message || "Request failed.");
+
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = "/";
+            throw new Error("Admin login required. Please sign in again.");
+        }
+
+        if (!response.ok) {
+            throw new Error(data.detail || data.message || "Request failed.");
+        }
+
         return data;
     }
 
     function escapeHtml(value) {
-        return String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[character]);
     }
-    function statusClass(status) { return String(status || "").toLowerCase().replace(/\s+/g, "-"); }
+
+    function statusClass(status) {
+        return String(status || "").toLowerCase().replace(/\s+/g, "-");
+    }
+
     function showDate(value) {
         if (!value) return "—";
         const date = new Date(value);
         return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
     }
 
+    async function loadEmployees() {
+        $("employeeListMessage").textContent = "";
+
+        try {
+            const result = await apiRequest("/admin/employees");
+            employees = result.employees || [];
+            renderEmployees();
+        } catch (error) {
+            $("employeeRows").innerHTML =
+                '<tr><td colspan="5" class="empty">Could not load employees.</td></tr>';
+            $("employeeListMessage").textContent =
+                "Could not load employees: " + error.message;
+        }
+    }
+
+    function renderEmployees() {
+        const search = $("employeeSearch").value.trim().toLowerCase();
+
+        const filtered = employees.filter(employee => {
+            const text = [
+                employee.full_name,
+                employee.name,
+                employee.email
+            ].join(" ").toLowerCase();
+
+            return text.includes(search);
+        });
+
+        if (!filtered.length) {
+            $("employeeRows").innerHTML =
+                '<tr><td colspan="5" class="empty">No employee accounts found.</td></tr>';
+            return;
+        }
+
+        $("employeeRows").innerHTML = filtered.map(employee => `
+            <tr>
+                <td>${escapeHtml(employee.full_name || employee.name || "Employee")}</td>
+                <td>${escapeHtml(employee.email)}</td>
+                <td>Employee</td>
+                <td><span class="status active-status">Active</span></td>
+                <td>
+                    <button type="button" class="view"
+                        data-change-password="${escapeHtml(employee.id)}">
+                        Change Password
+                    </button>
+                    <button type="button" class="danger"
+                        data-delete-employee="${escapeHtml(employee.id)}">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    // Fixed: define passwordButton and deleteButton before using them.
+    $("employeeRows").addEventListener("click", async event => {
+        const passwordButton = event.target.closest("[data-change-password]");
+        const deleteButton = event.target.closest("[data-delete-employee]");
+
+        if (passwordButton) {
+            const employee = employees.find(
+                item => String(item.id) === passwordButton.dataset.changePassword
+            );
+
+            if (!employee) {
+                alert("Employee account not found.");
+                return;
+            }
+
+            const newPassword = prompt(
+                "Enter a new password for " +
+                (employee.name || employee.full_name || employee.email) +
+                " (at least 8 characters):"
+            );
+
+            if (newPassword === null) return;
+
+            if (newPassword.length < 8 || newPassword.length > 200) {
+                alert("The password must be between 8 and 200 characters.");
+                return;
+            }
+
+            const confirmPassword = prompt("Confirm the new password:");
+
+            if (confirmPassword === null) return;
+
+            if (newPassword !== confirmPassword) {
+                alert("The passwords do not match.");
+                return;
+            }
+
+            passwordButton.disabled = true;
+
+            try {
+                const result = await apiRequest(
+                    "/admin/employees/" +
+                    encodeURIComponent(employee.id) +
+                    "/password",
+                    {
+                        method: "PATCH",
+                        body: JSON.stringify({ password: newPassword })
+                    }
+                );
+
+                alert(result.message || "Employee password changed successfully.");
+            } catch (error) {
+                alert("Could not change password: " + error.message);
+            } finally {
+                passwordButton.disabled = false;
+            }
+
+            return;
+        }
+
+        if (deleteButton) {
+            const employee = employees.find(
+                item => String(item.id) === deleteButton.dataset.deleteEmployee
+            );
+
+            if (!employee) {
+                alert("Employee account not found.");
+                return;
+            }
+
+            const confirmed = confirm(
+                "Delete the employee account for " +
+                (employee.name || employee.full_name || employee.email) +
+                " (" + employee.email + ")?\n\nThis action cannot be undone."
+            );
+
+            if (!confirmed) return;
+
+            deleteButton.disabled = true;
+
+            try {
+                const result = await apiRequest(
+                    "/admin/employees/" + encodeURIComponent(employee.id),
+                    { method: "DELETE" }
+                );
+
+                alert(result.message || "Employee account deleted.");
+                await loadEmployees();
+            } catch (error) {
+                alert("Could not delete employee: " + error.message);
+            } finally {
+                deleteButton.disabled = false;
+            }
+        }
+    });
+
+    $("employeeForm").addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const fullName = $("employeeFullName").value.trim();
+        const email = $("employeeEmailInput").value.trim().toLowerCase();
+        const password = $("employeePasswordInput").value;
+        const confirmPassword = $("employeePasswordConfirm").value;
+        const button = $("createEmployeeButton");
+
+        $("employeeFormMessage").className = "message";
+        $("employeeFormMessage").textContent = "";
+
+        if (!fullName || !email || !password) {
+            $("employeeFormMessage").className = "message error";
+            $("employeeFormMessage").textContent = "Please complete all fields.";
+            return;
+        }
+
+        if (password.length < 8) {
+            $("employeeFormMessage").className = "message error";
+            $("employeeFormMessage").textContent =
+                "The temporary password must be at least 8 characters.";
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            $("employeeFormMessage").className = "message error";
+            $("employeeFormMessage").textContent =
+                "The temporary passwords do not match.";
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Creating...";
+
+        try {
+            const result = await apiRequest("/admin/employees", {
+                method: "POST",
+                body: JSON.stringify({
+                    name: fullName,
+                    email: email,
+                    password: password
+                })
+            });
+
+            $("employeeForm").reset();
+            $("employeeFormMessage").className = "message success-message";
+            $("employeeFormMessage").textContent =
+                result.message || "Employee account created successfully.";
+
+            await loadEmployees();
+        } catch (error) {
+            $("employeeFormMessage").className = "message error";
+            $("employeeFormMessage").textContent =
+                "Could not create employee: " + error.message;
+        } finally {
+            button.disabled = false;
+            button.textContent = "Create Employee";
+        }
+    });
+
+    $("employeeForm").addEventListener("reset", () => {
+        $("employeeFormMessage").className = "message";
+        $("employeeFormMessage").textContent = "";
+    });
+
+    $("employeeSearch").addEventListener("input", renderEmployees);
+    $("refreshEmployeesButton").addEventListener("click", loadEmployees);
+
     async function loadTickets() {
         $("message").textContent = "";
+
         try {
             const result = await apiRequest("/admin/tickets");
             tickets = result.tickets || [];
+
             $("totalCount").textContent = tickets.length;
-            $("pendingCount").textContent = tickets.filter(t => ["Pending Review", "Pending Approval"].includes(t.status)).length;
-            $("progressCount").textContent = tickets.filter(t => ["Accepted", "Approved", "In Progress"].includes(t.status)).length;
-            $("resolvedCount").textContent = tickets.filter(t => ["Fixed", "Cannot Fix", "Denied"].includes(t.status)).length;
+            $("pendingCount").textContent = tickets.filter(ticket =>
+                ["Pending Review", "Pending Approval"].includes(ticket.status)
+            ).length;
+
+            $("progressCount").textContent = tickets.filter(ticket =>
+                ["Accepted", "Approved", "In Progress"].includes(ticket.status)
+            ).length;
+
+            $("resolvedCount").textContent = tickets.filter(ticket =>
+                ["Fixed", "Cannot Fix", "Denied"].includes(ticket.status)
+            ).length;
+
             renderTickets();
-        } catch (error) { $("message").textContent = "Could not load tickets: " + error.message; }
+        } catch (error) {
+            $("message").textContent =
+                "Could not load tickets: " + error.message;
+        }
     }
 
     function renderTickets() {
         const search = $("searchInput").value.toLowerCase().trim();
         const filter = $("statusFilter").value;
+
         const filtered = tickets.filter(ticket => {
-            const content = [ticket.id, ticket.title, ticket.description, ticket.email, ticket.category, ticket.status].join(" ").toLowerCase();
-            return content.includes(search) && (!filter || ticket.status === filter);
+            const content = [
+                ticket.id,
+                ticket.title,
+                ticket.description,
+                ticket.email,
+                ticket.category,
+                ticket.status
+            ].join(" ").toLowerCase();
+
+            return content.includes(search) &&
+                (!filter || ticket.status === filter);
         });
-        if (!filtered.length) { $("ticketRows").innerHTML = '<tr><td colspan="6" class="empty">No matching tickets found.</td></tr>'; return; }
-        $("ticketRows").innerHTML = filtered.map(ticket => `<tr>
-            <td>${escapeHtml(ticket.id)}</td><td>${escapeHtml(ticket.title)}</td><td>${escapeHtml(ticket.category)}</td>
-            <td><span class="status ${statusClass(ticket.status)}">${escapeHtml(ticket.status)}</span></td>
-            <td>${escapeHtml(showDate(ticket.created_at))}</td><td><button class="view" data-view="${escapeHtml(ticket.id)}">View</button></td>
-        </tr>`).join("");
+
+        if (!filtered.length) {
+            $("ticketRows").innerHTML =
+                '<tr><td colspan="6" class="empty">No matching tickets found.</td></tr>';
+            return;
+        }
+
+        $("ticketRows").innerHTML = filtered.map(ticket => `
+            <tr>
+                <td>${escapeHtml(ticket.id)}</td>
+                <td>${escapeHtml(ticket.title)}</td>
+                <td>${escapeHtml(ticket.category)}</td>
+                <td><span class="status ${statusClass(ticket.status)}">${escapeHtml(ticket.status)}</span></td>
+                <td>${escapeHtml(showDate(ticket.created_at))}</td>
+                <td><button class="view" data-view="${escapeHtml(ticket.id)}">View</button></td>
+            </tr>
+        `).join("");
     }
 
     function openTicket(ticketId) {
-        selectedTicket = tickets.find(ticket => ticket.id === ticketId);
+        selectedTicket = tickets.find(ticket => String(ticket.id) === String(ticketId));
         if (!selectedTicket) return;
+
         $("ticketModalTitle").textContent = "Ticket " + selectedTicket.id;
         $("detailTitle").textContent = selectedTicket.title || "";
         $("detailDescription").textContent = selectedTicket.description || "";
@@ -178,21 +582,45 @@
         $("adminNote").value = selectedTicket.admin_note || "";
         $("ticketModal").classList.add("open");
     }
+
     async function updateTicket(status) {
         if (!selectedTicket) return;
-        if (status === "Cannot Fix" && !confirm("Mark this ticket as unable to be fixed?")) return;
+
+        if (status === "Cannot Fix" &&
+            !confirm("Mark this ticket as unable to be fixed?")) {
+            return;
+        }
+
         try {
-            await apiRequest("/admin/tickets/" + encodeURIComponent(selectedTicket.id), { method: "PATCH", body: JSON.stringify({ status, admin_note: $("adminNote").value.trim() }) });
-            $("ticketModal").classList.remove("open"); $("message").textContent = "Ticket updated successfully."; await loadTickets();
-        } catch (error) { $("message").textContent = "Could not update ticket: " + error.message; }
+            await apiRequest(
+                "/admin/tickets/" + encodeURIComponent(selectedTicket.id),
+                {
+                    method: "PATCH",
+                    body: JSON.stringify({
+                        status,
+                        admin_note: $("adminNote").value.trim()
+                    })
+                }
+            );
+
+            $("ticketModal").classList.remove("open");
+            $("message").textContent = "Ticket updated successfully.";
+            await loadTickets();
+        } catch (error) {
+            $("message").textContent =
+                "Could not update ticket: " + error.message;
+        }
     }
 
     function latestUserMessage(item) {
         const messages = item.messages || [];
         const userMessage = [...messages].reverse().find(message => message.sender === "user");
+
         if (userMessage) return userMessage.message;
+
         const history = item.history || [];
         const lastUser = [...history].reverse().find(message => message.role === "user");
+
         return lastUser ? lastUser.content : "Human assistance requested";
     }
 
@@ -200,41 +628,82 @@
         try {
             const result = await apiRequest("/admin/human-requests");
             humanRequests = result.requests || [];
-            humanRequests.sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+
+            humanRequests.sort((a, b) =>
+                new Date(b.updated_at || b.created_at || 0) -
+                new Date(a.updated_at || a.created_at || 0)
+            );
+
             const pending = humanRequests.filter(item => item.status === "pending").length;
             $("humanPendingCount").textContent = pending + " pending";
+
             if (!humanRequests.length) {
-                $("humanRequestList").innerHTML = '<div class="empty">No human assistance requests yet.</div>';
+                $("humanRequestList").innerHTML =
+                    '<div class="empty">No human assistance requests yet.</div>';
             } else {
-                $("humanRequestList").innerHTML = humanRequests.map(item => `<div class="request-item ${item.conversation_id === selectedHumanId ? "selected" : ""}" data-human-id="${escapeHtml(item.conversation_id)}">
-                    <strong>${escapeHtml(item.conversation_id)}</strong><span class="status ${statusClass(item.status)}">${escapeHtml(item.status)}</span>
-                    <small>${escapeHtml(latestUserMessage(item))}</small><small>Updated: ${escapeHtml(showDate(item.updated_at || item.created_at))}</small>
-                </div>`).join("");
+                $("humanRequestList").innerHTML = humanRequests.map(item => `
+                    <div class="request-item ${item.conversation_id === selectedHumanId ? "selected" : ""}"
+                         data-human-id="${escapeHtml(item.conversation_id)}">
+                        <strong>${escapeHtml(item.conversation_id)}</strong>
+                        <span class="status ${statusClass(item.status)}">${escapeHtml(item.status)}</span>
+                        <small>${escapeHtml(latestUserMessage(item))}</small>
+                        <small>Updated: ${escapeHtml(showDate(item.updated_at || item.created_at))}</small>
+                    </div>
+                `).join("");
             }
-            if (selectedHumanId && !humanRequests.some(item => item.conversation_id === selectedHumanId)) {
-                selectedHumanId = null; renderHumanMessages([]); updateHumanControls("none");
+
+            if (selectedHumanId &&
+                !humanRequests.some(item => item.conversation_id === selectedHumanId)) {
+                selectedHumanId = null;
+                renderHumanMessages([]);
+                updateHumanControls("none");
             }
+
             if (selectedHumanId) await refreshHumanConversation();
-        } catch (error) { $("humanRequestList").innerHTML = '<div class="empty">Could not load requests: ' + escapeHtml(error.message) + '</div>'; }
+        } catch (error) {
+            $("humanRequestList").innerHTML =
+                '<div class="empty">Could not load requests: ' +
+                escapeHtml(error.message) + '</div>';
+        }
     }
 
     function renderHumanMessages(messages) {
         const area = $("humanChatMessages");
-        if (!messages.length) { area.textContent = selectedHumanId ? "No messages yet. The original conversation is shown in the request preview." : "Select a request to view its messages."; return; }
-        const signature = JSON.stringify(messages.map(item => [item.id, item.sender, item.message, item.created_at]));
+
+        if (!messages.length) {
+            area.textContent = selectedHumanId
+                ? "No messages yet. The original conversation is shown in the request preview."
+                : "Select a request to view its messages.";
+            lastRenderedHumanSignature = "";
+            return;
+        }
+
+        const signature = JSON.stringify(
+            messages.map(item => [item.id, item.sender, item.message, item.created_at])
+        );
+
         if (signature === lastRenderedHumanSignature) return;
         lastRenderedHumanSignature = signature;
+
         area.innerHTML = messages.map(item => {
             const sender = item.sender || "system";
-            const label = sender === "admin" ? "You (Admin)" : sender === "user" ? "User" : "System";
-            return `<div class="chat-line ${escapeHtml(sender)}"><strong>${label}</strong>${item.created_at ? ' <small>' + escapeHtml(showDate(item.created_at)) + '</small>' : ''}<br>${escapeHtml(item.message || "")}</div>`;
+            const label = sender === "admin" ? "You (Admin)" :
+                sender === "user" ? "User" : "System";
+
+            return `<div class="chat-line ${escapeHtml(sender)}">
+                <strong>${label}</strong>
+                ${item.created_at ? " <small>" + escapeHtml(showDate(item.created_at)) + "</small>" : ""}
+                <br>${escapeHtml(item.message || "")}
+            </div>`;
         }).join("");
+
         area.scrollTop = area.scrollHeight;
     }
 
     function updateHumanControls(status) {
         const pending = status === "pending";
         const active = status === "accepted";
+
         $("acceptHumanButton").disabled = !pending;
         $("declineHumanButton").disabled = !pending;
         $("endHumanButton").disabled = !active;
@@ -244,66 +713,170 @@
 
     async function refreshHumanConversation() {
         if (!selectedHumanId) return;
+
         try {
-            const result = await apiRequest("/human/status/" + encodeURIComponent(selectedHumanId));
-            $("humanChatTitle").textContent = "Conversation: " + selectedHumanId + " (" + result.status + ")";
+            const result = await apiRequest(
+                "/human/status/" + encodeURIComponent(selectedHumanId)
+            );
+
+            $("humanChatTitle").textContent =
+                "Conversation: " + selectedHumanId + " (" + result.status + ")";
+
             renderHumanMessages(result.messages || []);
             updateHumanControls(result.status);
-            if (result.message) $("humanAdminMessage").textContent = result.message;
-        } catch (error) { $("humanAdminMessage").textContent = "Could not refresh conversation: " + error.message; }
+
+            if (result.message) {
+                $("humanAdminMessage").textContent = result.message;
+            }
+        } catch (error) {
+            $("humanAdminMessage").textContent =
+                "Could not refresh conversation: " + error.message;
+        }
     }
 
     async function decideHumanRequest(status) {
         if (!selectedHumanId) return;
+
         try {
-            await apiRequest("/admin/human-requests/" + encodeURIComponent(selectedHumanId), { method: "PATCH", body: JSON.stringify({ status }) });
-            $("humanAdminMessage").textContent = status === "accepted" ? "Request accepted. You can now reply to the user." : status === "declined" ? "Request declined. The user will be notified." : "Human support session ended.";
-            await loadHumanRequests(); await refreshHumanConversation();
-        } catch (error) { $("humanAdminMessage").textContent = "Could not update request: " + error.message; }
+            await apiRequest(
+                "/admin/human-requests/" + encodeURIComponent(selectedHumanId),
+                {
+                    method: "PATCH",
+                    body: JSON.stringify({ status })
+                }
+            );
+
+            $("humanAdminMessage").textContent =
+                status === "accepted" ? "Request accepted. You can now reply to the user." :
+                status === "declined" ? "Request declined. The user will be notified." :
+                "Human support session ended.";
+
+            await loadHumanRequests();
+            await refreshHumanConversation();
+        } catch (error) {
+            $("humanAdminMessage").textContent =
+                "Could not update request: " + error.message;
+        }
     }
 
     $("humanRequestList").addEventListener("click", async event => {
         const item = event.target.closest("[data-human-id]");
         if (!item) return;
-        selectedHumanId = item.dataset.humanId; lastRenderedHumanSignature = ""; $("humanAdminMessage").textContent = "";
+
+        selectedHumanId = item.dataset.humanId;
+        lastRenderedHumanSignature = "";
+        $("humanAdminMessage").textContent = "";
         $("humanChatTitle").textContent = "Conversation: " + selectedHumanId;
-        const selected = humanRequests.find(request => request.conversation_id === selectedHumanId);
+
+        const selected = humanRequests.find(
+            request => request.conversation_id === selectedHumanId
+        );
+
         if (selected) {
             const history = selected.history || [];
-            const initialMessages = history.map((message, index) => ({ id: "history-" + index, sender: message.role === "assistant" ? "system" : "user", message: message.content }));
+            const initialMessages = history.map((message, index) => ({
+                id: "history-" + index,
+                sender: message.role === "assistant" ? "system" : "user",
+                message: message.content
+            }));
+
             renderHumanMessages(initialMessages);
         }
+
         updateHumanControls(selected ? selected.status : "none");
         await refreshHumanConversation();
         await loadHumanRequests();
     });
+
     $("acceptHumanButton").addEventListener("click", () => decideHumanRequest("accepted"));
     $("declineHumanButton").addEventListener("click", () => decideHumanRequest("declined"));
     $("endHumanButton").addEventListener("click", () => decideHumanRequest("completed"));
 
     $("humanChatForm").addEventListener("submit", async event => {
         event.preventDefault();
+
         const text = $("humanChatInput").value.trim();
         if (!text || !selectedHumanId) return;
+
         $("humanSendButton").disabled = true;
+
         try {
-            await apiRequest("/admin/human-message", { method: "POST", body: JSON.stringify({ conversation_id: selectedHumanId, message: text }) });
-            $("humanChatInput").value = ""; $("humanAdminMessage").textContent = "Reply sent to the user."; lastRenderedHumanSignature = ""; await refreshHumanConversation();
-        } catch (error) { $("humanAdminMessage").textContent = "Message could not be sent: " + error.message; }
-        finally { const request = humanRequests.find(item => item.conversation_id === selectedHumanId); $("humanSendButton").disabled = !request || request.status !== "accepted"; }
+            await apiRequest("/admin/human-message", {
+                method: "POST",
+                body: JSON.stringify({
+                    conversation_id: selectedHumanId,
+                    message: text
+                })
+            });
+
+            $("humanChatInput").value = "";
+            $("humanAdminMessage").textContent = "Reply sent to the user.";
+            lastRenderedHumanSignature = "";
+            await refreshHumanConversation();
+        } catch (error) {
+            $("humanAdminMessage").textContent =
+                "Message could not be sent: " + error.message;
+        } finally {
+            const request = humanRequests.find(
+                item => item.conversation_id === selectedHumanId
+            );
+
+            $("humanSendButton").disabled =
+                !request || request.status !== "accepted";
+        }
     });
 
-    $("ticketRows").addEventListener("click", event => { const button = event.target.closest("[data-view]"); if (button) openTicket(button.dataset.view); });
-    document.querySelectorAll("[data-status]").forEach(button => button.addEventListener("click", () => updateTicket(button.dataset.status)));
-    $("refreshButton").addEventListener("click", async () => { await loadTickets(); await loadHumanRequests(); });
-    $("searchInput").addEventListener("input", renderTickets); $("statusFilter").addEventListener("change", renderTickets);
-    $("closeModal").addEventListener("click", () => $("ticketModal").classList.remove("open"));
-    $("ticketModal").addEventListener("click", event => { if (event.target === $("ticketModal")) $("ticketModal").classList.remove("open"); });
-    document.addEventListener("keydown", event => { if (event.key === "Escape") $("ticketModal").classList.remove("open"); });
-    $("logoutButton").addEventListener("click", async () => { try { await fetch("/admin-logout", { method: "POST", credentials: "same-origin" }); } finally { window.location.href = "/"; } });
+    $("ticketRows").addEventListener("click", event => {
+        const button = event.target.closest("[data-view]");
+        if (button) openTicket(button.dataset.view);
+    });
+
+    document.querySelectorAll("[data-status]").forEach(button => {
+        button.addEventListener("click", () => updateTicket(button.dataset.status));
+    });
+
+    $("refreshButton").addEventListener("click", async () => {
+        await Promise.all([
+            loadTickets(),
+            loadHumanRequests(),
+            loadEmployees()
+        ]);
+    });
+
+    $("searchInput").addEventListener("input", renderTickets);
+    $("statusFilter").addEventListener("change", renderTickets);
+
+    $("closeModal").addEventListener("click", () =>
+        $("ticketModal").classList.remove("open")
+    );
+
+    $("ticketModal").addEventListener("click", event => {
+        if (event.target === $("ticketModal")) {
+            $("ticketModal").classList.remove("open");
+        }
+    });
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+            $("ticketModal").classList.remove("open");
+        }
+    });
+
+    $("logoutButton").addEventListener("click", async () => {
+        try {
+            await fetch("/admin-logout", {
+                method: "POST",
+                credentials: "same-origin"
+            });
+        } finally {
+            window.location.href = "/";
+        }
+    });
 
     loadTickets();
     loadHumanRequests();
+    loadEmployees();
+
     setInterval(loadHumanRequests, 3000);
     setInterval(refreshHumanConversation, 2000);
 </script>

@@ -1,8 +1,9 @@
-
 import os
 import re
 import hmac
 import json
+import hashlib
+import secrets
 import threading
 from datetime import datetime, timezone
 from typing import Literal
@@ -24,62 +25,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 TICKETS_FILE = os.path.join(BASE_DIR, "tickets.json")
 HUMAN_REQUESTS_FILE = os.path.join(BASE_DIR, "human_requests.json")
+EMPLOYEES_FILE = os.path.join(BASE_DIR, "employees.json")
 CHROMA_DIR = os.path.join(BASE_DIR, "chroma_data")
 
 app = FastAPI(title="VIRTANSAN AI")
+
 ticket_lock = threading.Lock()
 human_lock = threading.Lock()
-
-
-# ==========================================
-# TICKET MODELS
-# ==========================================
-
-class TicketCreate(BaseModel):
-    title: str = Field(min_length=3, max_length=200)
-    description: str = Field(min_length=5, max_length=3000)
-    email: str = Field(default="", max_length=254)
-    category: Literal["IT Support", "Password Reset"] = "IT Support"
-
-
-class TicketUpdate(BaseModel):
-    status: Literal[
-        "Pending Review",
-        "Pending Approval",
-        "Accepted",
-        "Approved",
-        "In Progress",
-        "Fixed",
-        "Cannot Fix",
-        "Denied",
-    ]
-    admin_note: str = Field(default="", max_length=2000)
-
-
-# ==========================================
-# TICKET STORAGE
-# ==========================================
-
-def read_tickets():
-    if not os.path.exists(TICKETS_FILE):
-        return []
-
-    with open(TICKETS_FILE, "r", encoding="utf-8") as file:
-        tickets = json.load(file)
-
-    if not isinstance(tickets, list):
-        raise ValueError("Ticket storage must contain a JSON list.")
-
-    return tickets
-
-
-def write_tickets(tickets):
-    temporary_file = TICKETS_FILE + ".tmp"
-
-    with open(temporary_file, "w", encoding="utf-8") as file:
-        json.dump(tickets, file, indent=2, ensure_ascii=False)
-
-    os.replace(temporary_file, TICKETS_FILE)
+employee_lock = threading.Lock()
 
 
 # ==========================================
@@ -160,6 +113,731 @@ def admin_dashboard(request: Request):
         )
 
     return FileResponse(admin_file)
+
+
+# ==========================================
+# TICKET MODELS
+# ==========================================
+
+class TicketCreate(BaseModel):
+    title: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=5, max_length=3000)
+    email: str = Field(default="", max_length=254)
+    category: Literal["IT Support", "Password Reset"] = "IT Support"
+
+
+class TicketUpdate(BaseModel):
+    status: Literal[
+        "Pending Review",
+        "Pending Approval",
+        "Accepted",
+        "Approved",
+        "In Progress",
+        "Fixed",
+        "Cannot Fix",
+        "Denied",
+    ]
+    admin_note: str = Field(default="", max_length=2000)
+
+
+# ==========================================
+# TICKET STORAGE
+# ==========================================
+
+def read_tickets():
+    if not os.path.exists(TICKETS_FILE):
+        return []
+
+    with open(TICKETS_FILE, "r", encoding="utf-8") as file:
+        tickets = json.load(file)
+
+    if not isinstance(tickets, list):
+        raise ValueError("Ticket storage must contain a JSON list.")
+
+    return tickets
+
+
+def write_tickets(tickets):
+    temporary_file = TICKETS_FILE + ".tmp"
+
+    with open(temporary_file, "w", encoding="utf-8") as file:
+        json.dump(tickets, file, indent=2, ensure_ascii=False)
+
+    os.replace(temporary_file, TICKETS_FILE)
+
+
+# ==========================================
+# EMPLOYEE ACCOUNT STORAGE
+# ==========================================
+
+def read_employees():
+    if not os.path.exists(EMPLOYEES_FILE):
+        return []
+
+    with open(EMPLOYEES_FILE, "r", encoding="utf-8") as file:
+        employees = json.load(file)
+
+    if not isinstance(employees, list):
+        raise ValueError(
+            "Employee storage must contain a JSON list."
+        )
+
+    return employees
+
+
+def write_employees(employees):
+    temporary_file = EMPLOYEES_FILE + ".tmp"
+
+    with open(temporary_file, "w", encoding="utf-8") as file:
+        json.dump(
+            employees,
+            file,
+            indent=2,
+            ensure_ascii=False,
+        )
+
+    os.replace(temporary_file, EMPLOYEES_FILE)
+
+
+# ==========================================
+# EMPLOYEE PASSWORD HASHING
+# ==========================================
+
+def hash_employee_password(password):
+    salt = secrets.token_hex(16)
+    iterations = 600000
+
+    password_hash = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt.encode("utf-8"),
+        iterations,
+    ).hex()
+
+    return f"pbkdf2_sha256${iterations}${salt}${password_hash}"
+
+
+def verify_employee_password(password, stored_hash):
+    try:
+        algorithm, iterations, salt, expected_hash = (
+            stored_hash.split("$")
+        )
+
+        if algorithm != "pbkdf2_sha256":
+            return False
+
+        iterations = int(iterations)
+
+        if iterations < 1 or iterations > 2000000:
+            return False
+
+        actual_hash = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt.encode("utf-8"),
+            iterations,
+        ).hex()
+
+        return hmac.compare_digest(
+            actual_hash,
+            expected_hash,
+        )
+
+    except (ValueError, TypeError, AttributeError):
+        return False
+
+
+def get_logged_in_employee(request: Request):
+    employee_id = request.session.get("employee_id")
+
+    if not employee_id:
+        return None
+
+    with employee_lock:
+        try:
+            employees = read_employees()
+        except (json.JSONDecodeError, ValueError, OSError):
+            return None
+
+    for employee in employees:
+        if not isinstance(employee, dict):
+            continue
+
+        if (
+            employee.get("id") == employee_id
+            and employee.get("role", "employee") == "employee"
+        ):
+            return employee
+
+    return None
+
+
+def require_employee(request: Request):
+    employee = get_logged_in_employee(request)
+
+    if not employee:
+        raise HTTPException(
+            status_code=401,
+            detail="Employee login required.",
+        )
+
+    return employee
+
+
+# ==========================================
+# CREATE AND LIST EMPLOYEE ACCOUNTS
+# ==========================================
+
+class EmployeeCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=8, max_length=200)
+
+class EmployeeEmailUpdate(BaseModel):
+    email: str = Field(min_length=3, max_length=254)
+
+class AdminEmployeePasswordUpdate(BaseModel):
+    password: str = Field(min_length=8, max_length=200)
+
+
+def public_employee_details(employee):
+    return {
+        "id": employee.get("id", ""),
+        "name": employee.get("name", ""),
+        "email": employee.get("email", ""),
+        "role": employee.get("role", "employee"),
+        "created_at": employee.get("created_at", ""),
+    }
+
+
+@app.post("/admin/employees", status_code=201)
+def create_employee(
+    payload: EmployeeCreate,
+    request: Request,
+):
+    require_admin(request)
+
+    name = payload.name.strip()
+    email = payload.email.strip().lower()
+    password = payload.password
+
+    if not name:
+        raise HTTPException(
+            status_code=400,
+            detail="Employee name is required.",
+        )
+
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        raise HTTPException(
+            status_code=400,
+            detail="Please enter a valid email address.",
+        )
+
+    if len(password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="The password must contain at least 8 characters.",
+        )
+
+    with employee_lock:
+        try:
+            employees = read_employees()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Employee account storage could not be read.",
+            )
+
+        for employee in employees:
+            if not isinstance(employee, dict):
+                continue
+
+            existing_email = employee.get("email", "")
+
+            if (
+                isinstance(existing_email, str)
+                and existing_email.strip().lower() == email
+            ):
+                raise HTTPException(
+                    status_code=409,
+                    detail="An employee with this email already exists.",
+                )
+
+        new_employee = {
+            "id": secrets.token_hex(16),
+            "name": name,
+            "email": email,
+            "role": "employee",
+            "password_hash": hash_employee_password(password),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+        employees.append(new_employee)
+
+        try:
+            write_employees(employees)
+        except OSError:
+            raise HTTPException(
+                status_code=500,
+                detail="The employee account could not be saved.",
+            )
+
+    return {
+        "message": "Employee account created successfully.",
+        "employee": public_employee_details(new_employee),
+    }
+
+
+@app.get("/admin/employees")
+def list_employees(request: Request):
+    require_admin(request)
+
+    with employee_lock:
+        try:
+            employees = read_employees()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Employee account storage could not be read.",
+            )
+
+    return {
+        "employees": [
+            public_employee_details(employee)
+            for employee in employees
+            if isinstance(employee, dict)
+        ]
+    }
+
+
+# ==========================================
+# UPDATE EMPLOYEE EMAIL
+# ==========================================
+
+@app.patch("/admin/employees/{employee_id}/email")
+def update_employee_email(
+    employee_id: str,
+    payload: EmployeeEmailUpdate,
+    request: Request,
+):
+    require_admin(request)
+
+    new_email = payload.email.strip().lower()
+
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", new_email):
+        raise HTTPException(
+            status_code=422,
+            detail="Please enter a valid email address.",
+        )
+
+    with employee_lock:
+        try:
+            employees = read_employees()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Employee account storage could not be read.",
+            )
+
+        target = next(
+            (
+                employee
+                for employee in employees
+                if isinstance(employee, dict)
+                and employee.get("id") == employee_id
+            ),
+            None,
+        )
+
+        if target is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Employee account not found.",
+            )
+
+        for employee in employees:
+            if not isinstance(employee, dict):
+                continue
+
+            if employee.get("id") == employee_id:
+                continue
+
+            existing_email = employee.get("email", "")
+
+            if (
+                isinstance(existing_email, str)
+                and existing_email.strip().lower() == new_email
+            ):
+                raise HTTPException(
+                    status_code=409,
+                    detail="That email address is already in use.",
+                )
+
+        target["email"] = new_email
+
+        try:
+            write_employees(employees)
+        except OSError:
+            raise HTTPException(
+                status_code=500,
+                detail="The employee email could not be saved.",
+            )
+
+    return {
+        "message": "Employee email updated successfully.",
+        "employee": public_employee_details(target),
+    }
+
+
+# ==========================================
+# ADMIN CHANGE EMPLOYEE PASSWORD
+# ==========================================
+
+@app.patch("/admin/employees/{employee_id}/password")
+def admin_change_employee_password(
+    employee_id: str,
+    payload: AdminEmployeePasswordUpdate,
+    request: Request,
+):
+    require_admin(request)
+
+    new_password = payload.password
+
+    if len(new_password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="The password must contain at least 8 characters.",
+        )
+
+    with employee_lock:
+        try:
+            employees = read_employees()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Employee account storage could not be read.",
+            )
+
+        target = next(
+            (
+                employee
+                for employee in employees
+                if isinstance(employee, dict)
+                and employee.get("id") == employee_id
+            ),
+            None,
+        )
+
+        if target is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Employee account not found.",
+            )
+
+        target["password_hash"] = hash_employee_password(new_password)
+
+        try:
+            write_employees(employees)
+        except OSError:
+            raise HTTPException(
+                status_code=500,
+                detail="The employee password could not be saved.",
+            )
+
+    return {
+        "message": "Employee password changed successfully."
+    }
+
+# ==========================================
+# DELETE EMPLOYEE ACCOUNT
+# ==========================================
+
+@app.delete("/admin/employees/{employee_id}")
+def delete_employee(
+    employee_id: str,
+    request: Request,
+):
+    require_admin(request)
+
+    with employee_lock:
+        try:
+            employees = read_employees()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Employee account storage could not be read.",
+            )
+
+        target = next(
+            (
+                employee
+                for employee in employees
+                if isinstance(employee, dict)
+                and employee.get("id") == employee_id
+            ),
+            None,
+        )
+
+        if target is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Employee account not found.",
+            )
+
+        remaining_employees = [
+            employee
+            for employee in employees
+            if not (
+                isinstance(employee, dict)
+                and employee.get("id") == employee_id
+            )
+        ]
+
+        try:
+            write_employees(remaining_employees)
+        except OSError:
+            raise HTTPException(
+                status_code=500,
+                detail="The employee account could not be deleted.",
+            )
+
+    return {
+        "message": "Employee account deleted successfully.",
+    }
+
+
+# ==========================================
+# EMPLOYEE LOGIN
+# ==========================================
+
+class EmployeeLogin(BaseModel):
+    email: str = Field(min_length=1, max_length=254)
+    password: str = Field(min_length=1, max_length=200)
+
+
+class EmployeePasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=200)
+    new_password: str = Field(min_length=8, max_length=200)
+
+
+@app.post("/employee-login")
+def employee_login(
+    credentials: EmployeeLogin,
+    request: Request,
+):
+    email = credentials.email.strip().lower()
+
+    with employee_lock:
+        try:
+            employees = read_employees()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Employee account storage could not be read.",
+            )
+
+        employee_found = None
+
+        for employee in employees:
+            if not isinstance(employee, dict):
+                continue
+
+            employee_email = employee.get("email", "")
+
+            if (
+                isinstance(employee_email, str)
+                and employee_email.strip().lower() == email
+            ):
+                employee_found = employee
+                break
+
+        if not employee_found:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password.",
+            )
+
+        stored_hash = employee_found.get("password_hash", "")
+
+        if not verify_employee_password(
+            credentials.password,
+            stored_hash,
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password.",
+            )
+
+        if employee_found.get("role", "employee") != "employee":
+            raise HTTPException(
+                status_code=403,
+                detail="This account is not an employee account.",
+            )
+
+        employee_id = employee_found.get("id")
+
+        if not isinstance(employee_id, str) or not employee_id:
+            raise HTTPException(
+                status_code=500,
+                detail="The employee account is missing its ID.",
+            )
+
+        request.session.clear()
+        request.session["employee_id"] = employee_id
+
+    return {
+        "message": "Employee login successful.",
+        "redirect": "/employee.html",
+    }
+
+
+# ==========================================
+# EMPLOYEE PROFILE
+# ==========================================
+
+@app.get("/employee/me")
+def employee_profile(request: Request):
+    employee = require_employee(request)
+
+    return {
+        "id": employee.get("id", ""),
+        "name": employee.get("name", ""),
+        "email": employee.get("email", ""),
+        "role": employee.get("role", "employee"),
+    }
+
+
+@app.post("/employee/logout")
+def employee_logout(request: Request):
+    request.session.pop("employee_id", None)
+    request.session.pop("is_admin", None)
+
+    return {"message": "Logged out successfully."}
+
+
+
+# ==========================================
+# EMPLOYEE PASSWORD CHANGE
+# ==========================================
+
+@app.post("/employee/change-password")
+def employee_change_password(
+    payload: EmployeePasswordChange,
+    request: Request,
+):
+    employee = require_employee(request)
+
+    current_password = payload.current_password
+    new_password = payload.new_password
+
+    if len(new_password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="The new password must contain at least 8 characters.",
+        )
+
+    if hmac.compare_digest(current_password, new_password):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Your new password must be different "
+                "from your current password."
+            ),
+        )
+
+    with employee_lock:
+        try:
+            employees = read_employees()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Employee account storage could not be read.",
+            )
+
+        for stored_employee in employees:
+            if not isinstance(stored_employee, dict):
+                continue
+
+            if stored_employee.get("id") != employee.get("id"):
+                continue
+
+            stored_hash = stored_employee.get("password_hash", "")
+
+            if not verify_employee_password(
+                current_password,
+                stored_hash,
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Your current password is incorrect.",
+                )
+
+            stored_employee["password_hash"] = (
+                hash_employee_password(new_password)
+            )
+
+            try:
+                write_employees(employees)
+            except OSError:
+                raise HTTPException(
+                    status_code=500,
+                    detail="The new password could not be saved.",
+                )
+
+            return {
+                "message": (
+                    "Your password has been changed successfully."
+                )
+            }
+
+    request.session.clear()
+
+    raise HTTPException(
+        status_code=401,
+        detail="Employee account not found. Please log in again.",
+    )
+
+
+# ==========================================
+# EMPLOYEE LOGOUT
+# ==========================================
+
+@app.post("/employee-logout")
+def employee_logout(request: Request):
+    request.session.clear()
+
+    return {
+        "message": "Logged out successfully.",
+        "redirect": "/",
+    }
+
+
+# ==========================================
+# EMPLOYEE DASHBOARD
+# ==========================================
+
+@app.get("/employee.html")
+def employee_dashboard(request: Request):
+    employee = get_logged_in_employee(request)
+
+    if not employee:
+        return RedirectResponse(
+            url="/",
+            status_code=303,
+        )
+
+    employee_file = os.path.join(
+        FRONTEND_DIR,
+        "employee.html",
+    )
+
+    if not os.path.exists(employee_file):
+        raise HTTPException(
+            status_code=404,
+            detail="Employee dashboard was not found.",
+        )
+
+    return FileResponse(employee_file)
 
 
 # ==========================================
@@ -384,7 +1062,7 @@ HUMAN_SUPPORT_REPLY = (
 
 
 # ==========================================
-# HUMAN SUPPORT HANDOFF STORAGE AND API
+# HUMAN SUPPORT STORAGE AND API
 # ==========================================
 
 def read_human_requests():
@@ -395,7 +1073,9 @@ def read_human_requests():
         data = json.load(file)
 
     if not isinstance(data, dict):
-        raise ValueError("Human-support storage must contain a JSON object.")
+        raise ValueError(
+            "Human-support storage must contain a JSON object."
+        )
 
     return data
 
@@ -404,7 +1084,12 @@ def write_human_requests(requests_data):
     temporary_file = HUMAN_REQUESTS_FILE + ".tmp"
 
     with open(temporary_file, "w", encoding="utf-8") as file:
-        json.dump(requests_data, file, indent=2, ensure_ascii=False)
+        json.dump(
+            requests_data,
+            file,
+            indent=2,
+            ensure_ascii=False,
+        )
 
     os.replace(temporary_file, HUMAN_REQUESTS_FILE)
 
@@ -456,7 +1141,10 @@ def request_human_support(payload: HumanSupportRequest):
     with human_lock:
         existing = get_human_request(conversation_id)
 
-        if existing and existing.get("status") in {"pending", "accepted"}:
+        if existing and existing.get("status") in {
+            "pending",
+            "accepted",
+        }:
             return {
                 "message": "A human-support request is already active.",
                 "status": existing.get("status"),
@@ -532,7 +1220,9 @@ def user_human_message(payload: HumanMessageRequest):
         now = datetime.now(timezone.utc).isoformat()
 
         item.setdefault("messages", []).append({
-            "id": f"msg-{int(datetime.now(timezone.utc).timestamp() * 1000)}",
+            "id": (
+                f"msg-{int(datetime.now(timezone.utc).timestamp() * 1000)}"
+            ),
             "message": message,
             "sender": "user",
             "created_at": now,
@@ -633,7 +1323,9 @@ def admin_human_message(
         now = datetime.now(timezone.utc).isoformat()
 
         item.setdefault("messages", []).append({
-            "id": f"msg-{int(datetime.now(timezone.utc).timestamp() * 1000)}",
+            "id": (
+                f"msg-{int(datetime.now(timezone.utc).timestamp() * 1000)}"
+            ),
             "message": message,
             "sender": "admin",
             "created_at": now,
@@ -926,7 +1618,9 @@ Latest message:
         OLLAMA_URL,
         json={
             "model": CHAT_MODEL,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
             "stream": False,
             "options": {"temperature": 0},
         },
@@ -935,11 +1629,18 @@ Latest message:
 
     response.raise_for_status()
 
-    result = response.json()["message"]["content"].strip().upper()
+    result = (
+        response.json()["message"]["content"]
+        .strip()
+        .upper()
+    )
 
     allowed_categories = {
-        "IT_RELATED", "SMALL_TALK", "NO_PROBLEM",
-        "UNCLEAR", "OFF_TOPIC",
+        "IT_RELATED",
+        "SMALL_TALK",
+        "NO_PROBLEM",
+        "UNCLEAR",
+        "OFF_TOPIC",
     }
 
     if result in allowed_categories:
@@ -999,7 +1700,9 @@ Latest message:
         OLLAMA_URL,
         json={
             "model": CHAT_MODEL,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
             "stream": False,
             "options": {"temperature": 0},
         },
@@ -1008,7 +1711,11 @@ Latest message:
 
     response.raise_for_status()
 
-    result = response.json()["message"]["content"].strip().upper()
+    result = (
+        response.json()["message"]["content"]
+        .strip()
+        .upper()
+    )
 
     if result in {"COMPANY", "PERSONAL", "UNCLEAR"}:
         return result
@@ -1130,11 +1837,8 @@ def chat(request: ChatRequest):
             detail="Please enter a message.",
         )
 
-    # Prepare conversation history before checking the user's intent.
     history = request.history[-12:]
 
-    # Avoid duplicating the latest user message if the frontend sends it
-    # in both "message" and "history".
     if (
         history
         and history[-1].role == "user"
@@ -1142,20 +1846,12 @@ def chat(request: ChatRequest):
     ):
         history = history[:-1]
 
-    # ======================================
-    # HUMAN ASSISTANT DETECTION
-    # ======================================
-    # This must happen before intent classification and RAG retrieval.
-    # It tells the user to click the button but does NOT submit a request.
-
     if wants_human_assistance(message):
         return {
             "reply": HUMAN_SUPPORT_REPLY,
             "source": "Human Support Guide",
         }
 
-    # Keep the AI from responding while a human-support request is pending
-    # or an agent has accepted and is handling the conversation.
     if request.conversation_id:
         with human_lock:
             human_item = get_human_request(
@@ -1206,10 +1902,6 @@ def chat(request: ChatRequest):
             "source": "Introduction Guide",
         }
 
-    # ======================================
-    # FIXED FOLLOW-UP DETECTION
-    # ======================================
-
     previous_assistant = last_assistant_message(history)
     previous_question = "?" in previous_assistant
     ongoing_it_issue = has_active_it_conversation(history)
@@ -1234,7 +1926,9 @@ def chat(request: ChatRequest):
 
         if intent == "NO_PROBLEM":
             return {
-                "reply": "I'm here whenever you need company IT assistance.",
+                "reply": (
+                    "I'm here whenever you need company IT assistance."
+                ),
                 "source": "Conversation Guide",
             }
 
@@ -1288,10 +1982,6 @@ def chat(request: ChatRequest):
             ),
         )
 
-    # ======================================
-    # PASSWORD SUPPORT
-    # ======================================
-
     password_context = any(
         item.role == "user" and is_password_related(item.content)
         for item in history
@@ -1305,10 +1995,6 @@ def chat(request: ChatRequest):
                 "reply": password_reply,
                 "source": "Password Support Guide",
             }
-
-    # ======================================
-    # CONTEXTUAL KNOWLEDGE-BASE SEARCH
-    # ======================================
 
     try:
         search_query = build_contextual_search_query(message, history)
@@ -1343,10 +2029,6 @@ def chat(request: ChatRequest):
                 ),
                 "source": source,
             }
-
-        # ======================================
-        # AI RESPONSE
-        # ======================================
 
         system_prompt = f"""
 You are VIRTANSAN AI, a friendly company IT helpdesk assistant.

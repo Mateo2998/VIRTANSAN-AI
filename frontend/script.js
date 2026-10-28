@@ -40,7 +40,6 @@ document.addEventListener("DOMContentLoaded", function () {
         "-" +
         Math.random().toString(36).slice(2, 10);
 
-    // Keep the conversation ID consistent with the current page session.
     localStorage.setItem("aihas_conversation_id", conversationId);
 
     if (year) {
@@ -78,7 +77,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Detect common ways users ask to speak with a real support person.
     function wantsHumanSupport(message) {
         return /\b(human|real person|live agent|human agent|human assistant|human support|talk to someone|speak to someone|talk to a person|speak to a person|customer service|support agent|real agent|talk to human|speak to human|contact a human|request human|person to help me|speak with someone|talk with someone)\b/i.test(message);
     }
@@ -176,11 +174,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (chatInput) {
-            if (status === "accepted") {
-                chatInput.placeholder = "Message your support agent...";
-            } else {
-                chatInput.placeholder = "Describe your IT issue...";
-            }
+            chatInput.placeholder = status === "accepted"
+                ? "Message your support agent..."
+                : "Describe your IT issue...";
         }
     }
 
@@ -190,30 +186,25 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!Array.isArray(messages)) return;
 
         messages.forEach(function (item, index) {
-            const message =
-                typeof item === "string"
-                    ? item
-                    : item.message || item.text || "";
+            const message = typeof item === "string"
+                ? item
+                : item.message || item.text || "";
 
             if (!message) return;
 
-            const id =
-                typeof item === "object" && item.id !== undefined
-                    ? String(item.id)
-                    : index + ":" + message;
+            const id = typeof item === "object" && item.id !== undefined
+                ? String(item.id)
+                : index + ":" + message;
 
             if (displayedHumanMessages.has(id)) return;
 
             displayedHumanMessages.add(id);
 
-            const sender =
-                typeof item === "object"
-                    ? String(item.sender || item.from || "admin").toLowerCase()
-                    : "admin";
+            const sender = typeof item === "object"
+                ? String(item.sender || item.from || "admin").toLowerCase()
+                : "admin";
 
-            if (sender === "user" || sender === "employee") {
-                return;
-            }
+            if (sender === "user" || sender === "employee") return;
 
             addMessage(message, "bot");
         });
@@ -229,9 +220,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             );
 
-            if (!response.ok) {
-                return;
-            }
+            if (!response.ok) return;
 
             const data = await response.json();
             const status = String(data.status || "none").toLowerCase();
@@ -349,8 +338,7 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("Human support request error:", error);
 
             addMessage(
-                error.message ||
-                "Unable to request human support. Please try again.",
+                error.message || "Unable to request human support. Please try again.",
                 "bot",
                 true
             );
@@ -399,9 +387,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 data.detail || "Unable to send your message to human support."
             );
         }
-
-        // Do not add data.message here. The backend's response may be
-        // a generic confirmation that would appear after every message.
     }
 
     if (chatForm && chatInput) {
@@ -412,7 +397,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (!message || isSending) return;
 
-            // Reveal the button, but do not automatically request an agent.
             if (wantsHumanSupport(message)) {
                 showHumanSupportButton();
             }
@@ -489,14 +473,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 conversationHistory.push(
-                    {
-                        role: "user",
-                        content: message
-                    },
-                    {
-                        role: "assistant",
-                        content: reply
-                    }
+                    { role: "user", content: message },
+                    { role: "assistant", content: reply }
                 );
 
                 conversationHistory = conversationHistory.slice(-12);
@@ -611,15 +589,10 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Employee and admin login are both connected to the backend.
     if (loginForm) {
         loginForm.addEventListener("submit", async function (event) {
             event.preventDefault();
-
-            if (loginMode !== "admin") {
-                loginMessage.textContent =
-                    "Employee login is not connected yet. Please use Admin Login.";
-                return;
-            }
 
             const email = loginEmail.value.trim();
             const password = loginPassword.value;
@@ -627,8 +600,12 @@ document.addEventListener("DOMContentLoaded", function () {
             loginMessage.textContent = "Checking credentials...";
             loginSubmit.disabled = true;
 
+            const endpoint = loginMode === "admin"
+                ? "/admin-login"
+                : "/employee-login";
+
             try {
-                const response = await fetch("/admin-login", {
+                const response = await fetch(endpoint, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -648,12 +625,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     );
                 }
 
-                window.location.href = "/admin.html";
+                window.location.href = loginMode === "admin"
+                    ? "/admin.html"
+                    : "/employee.html";
+
             } catch (error) {
                 loginMessage.textContent =
                     error.message || "Login failed. Please try again.";
 
-                console.error("Admin login error:", error);
+                console.error("Login error:", error);
             } finally {
                 loginSubmit.disabled = false;
             }
@@ -695,12 +675,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Start with the human-support button hidden.
     hideHumanSupportButton();
-
-    // Check whether a human-support request already exists.
     checkHumanStatus();
 
-    // Refresh human-support status while the page is open.
     setInterval(checkHumanStatus, 4000);
 });

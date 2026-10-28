@@ -4,15 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="VIRTANSAN Company Portal for employee services and company IT support."
+    >
+
+    <meta name="theme-color" content="#f7f9fc">
+
     <title>VIRTANSAN | Company Portal</title>
+
     <link rel="stylesheet" href="/static/style.css?v=8">
     <script src="/static/script.js?v=8" defer></script>
 </head>
+
 <body>
 
+    <!-- TOP BAR -->
     <div class="topbar">
         <div class="container topbar-inner">
             <span>Company Portal · IT services and employee support</span>
+
             <span class="status">
                 <span class="status-dot"></span>
                 Support assistant available
@@ -20,10 +32,13 @@
         </div>
     </div>
 
+    <!-- NAVIGATION -->
     <header class="site-header">
         <nav class="container nav" aria-label="Main navigation">
-            <a class="brand" href="#home">
+
+            <a class="brand" href="#home" aria-label="VIRTANSAN home">
                 <span class="brand-mark">V</span>
+
                 <span>
                     VIRTANSAN
                     <small>COMPANY PORTAL</small>
@@ -37,16 +52,26 @@
                 <a href="#contact">Contact</a>
             </div>
 
-            <button class="btn btn-outline" id="loginOpen" type="button">
+            <button
+                class="btn btn-outline"
+                id="loginOpen"
+                type="button"
+            >
                 Log in
             </button>
+
         </nav>
     </header>
 
+    <!-- MAIN CONTENT -->
     <main>
+
+        <!-- HERO SECTION -->
         <section class="hero" id="home">
             <div class="container hero-grid">
+
                 <div class="hero-content">
+
                     <div class="eyebrow">
                         <span class="eyebrow-mark"></span>
                         Technology that works for you
@@ -64,28 +89,48 @@
                     </p>
 
                     <div class="hero-actions">
-                        <button class="btn btn-primary" id="heroSupport" type="button">
+
+                        <button
+                            class="btn btn-primary"
+                            id="heroSupport"
+                            type="button"
+                        >
                             Get IT support →
                         </button>
 
                         <a class="btn btn-outline" href="#services">
                             Explore services
                         </a>
+
                     </div>
 
                     <div class="trust-row">
-                        <span><span class="check">✓</span> Employee-focused services</span>
-                        <span><span class="check">✓</span> Help when you need it</span>
+                        <span>
+                            <span class="check">✓</span>
+                            Employee-focused services
+                        </span>
+
+                        <span>
+                            <span class="check">✓</span>
+                            Help when you need it
+                        </span>
                     </div>
+
                 </div>
 
-                <div class="hero-visual" aria-label="Company technology illustration">
+                <!-- HERO VISUAL -->
+                <div
+                    class="hero-visual"
+                    aria-label="Company technology illustration"
+                >
+
                     <div class="orb">
                         <div class="orb-core">V</div>
                     </div>
 
                     <div class="floating-card float-one">
                         <span class="float-icon">⌘</span>
+
                         <span>
                             Digital workplace
                             <small>Tools in one place</small>
@@ -94,20 +139,27 @@
 
                     <div class="floating-card float-two">
                         <span class="float-icon">✓</span>
+
                         <span>
                             IT support
                             <small>Guidance and assistance</small>
                         </span>
                     </div>
+
                 </div>
+
             </div>
         </section>
 
+        <!-- SERVICES -->
         <section class="section" id="services">
             <div class="container">
+
                 <div class="section-heading">
                     <div class="section-kicker">What we provide</div>
+
                     <h2>Everything you need to stay productive</h2>
+
                     <p>
                         Explore company services and find support for common
                         workplace technology needs.
@@ -115,9 +167,12 @@
                 </div>
 
                 <div class="features">
+
                     <article class="feature-card">
                         <div class="feature-icon">⌘</div>
+
                         <h3>IT Helpdesk</h3>
+
                         <p>
                             Get guidance for company devices, network access,
                             VPN connections, and common technical issues.
@@ -126,7 +181,9 @@
 
                     <article class="feature-card">
                         <div class="feature-icon">▣</div>
+
                         <h3>Software &amp; Access</h3>
+
                         <p>
                             Learn how to request approved software and access
                             the applications required for your role.
@@ -135,20 +192,27 @@
 
                     <article class="feature-card">
                         <div class="feature-icon">◈</div>
+
                         <h3>Account Assistance</h3>
+
                         <p>
                             Find the correct process for account problems and
                             submit requests for administrator review when needed.
                         </p>
                     </article>
+
                 </div>
+
             </div>
         </section>
 
+        <!-- SUPPORT BANNER -->
         <section class="band" id="about">
             <div class="container band-inner">
+
                 <div>
                     <h2>Need a hand with something?</h2>
+
                     <p>
                         Start with the Support AI assistant for company IT
                         questions. Requests requiring administrator action
@@ -156,17 +220,26 @@
                     </p>
                 </div>
 
-                <button class="btn band-button" id="bandSupport" type="button">
+                <button
+                    class="btn band-button"
+                    id="bandSupport"
+                    type="button"
+                >
                     Chat with Support AI →
                 </button>
+
             </div>
         </section>
+
     </main>
 
+    <!-- FOOTER -->
     <footer id="contact">
         <div class="container footer-inner">
+
             <div>
-                © <span id="year"></span> VIRTANSAN Company Portal. Internal use only.
+                © <span id="year"></span>
+                VIRTANSAN Company Portal. Internal use only.
             </div>
 
             <div class="footer-links">
@@ -174,9 +247,11 @@
                 <a href="#about">About</a>
                 <a href="mailto:it-support@example.com">Contact IT</a>
             </div>
+
         </div>
     </footer>
 
+    <!-- CHATBOT LAUNCHER -->
     <button
         class="chat-launcher"
         id="chatToggle"
@@ -189,6 +264,7 @@
         <span>Support AI</span>
     </button>
 
+    <!-- CHATBOT PANEL -->
     <section
         class="chat-panel"
         id="chatPanel"
@@ -196,11 +272,15 @@
         aria-hidden="true"
         inert
     >
+
         <div class="chat-head">
+
             <div class="chat-head-left">
                 <div class="bot-avatar">✦</div>
+
                 <div>
                     <strong>VIRTANSAN Support AI</strong>
+
                     <small>
                         <span class="status-dot"></span>
                         Ready to help with company IT
@@ -216,15 +296,25 @@
             >
                 ×
             </button>
+
         </div>
 
-        <div class="chat-messages" id="chatMessages" aria-live="polite">
+        <div
+            class="chat-messages"
+            id="chatMessages"
+            aria-live="polite"
+            aria-relevant="additions"
+        >
             <div class="message bot">
 Hi! I'm the company's IT support assistant.
             </div>
         </div>
 
-        <div id="humanSupportArea" style="display: none; padding: 8px 12px;">
+        <div
+            id="humanSupportArea"
+            style="display: none; padding: 8px 12px;"
+        >
+
             <button
                 class="btn btn-outline"
                 id="humanSupportButton"
@@ -237,17 +327,21 @@ Hi! I'm the company's IT support assistant.
             <div
                 id="humanSupportStatus"
                 role="status"
+                aria-live="polite"
                 style="font-size: 12px; margin-top: 5px;"
             ></div>
+
         </div>
 
         <form class="chat-form" id="chatForm">
+
             <input
                 id="chatInput"
                 type="text"
                 placeholder="Describe your IT issue..."
                 autocomplete="off"
                 aria-label="Message Support AI"
+                maxlength="2000"
                 required
             >
 
@@ -259,23 +353,29 @@ Hi! I'm the company's IT support assistant.
             >
                 ➤
             </button>
+
         </form>
 
         <div class="chat-note">
             Don't share passwords or sensitive personal information.
         </div>
+
     </section>
 
+    <!-- LOGIN DIALOG -->
     <div
         class="login-backdrop"
         id="loginBackdrop"
         role="dialog"
         aria-modal="true"
         aria-labelledby="loginTitle"
+        aria-describedby="loginDescription"
         aria-hidden="true"
         inert
     >
+
         <div class="login-card">
+
             <button
                 class="login-close"
                 id="loginClose"
@@ -285,8 +385,10 @@ Hi! I'm the company's IT support assistant.
                 ×
             </button>
 
+            <!-- LOGIN BRAND -->
             <div class="brand login-brand">
                 <span class="brand-mark">V</span>
+
                 <span>
                     VIRTANSAN
                     <small>COMPANY PORTAL</small>
@@ -296,36 +398,45 @@ Hi! I'm the company's IT support assistant.
             <h2 id="loginTitle">Welcome back</h2>
 
             <p id="loginDescription">
-                Sign in to access the company portal.
+                Sign in to access your company account.
             </p>
 
+            <!-- LOGIN MODE -->
             <button
                 class="btn btn-outline login-mode-button"
                 id="loginModeButton"
                 type="button"
+                aria-label="Switch between employee and administrator login"
             >
                 Admin Login
             </button>
 
             <form id="loginForm">
-                <label class="form-field">
+
+                <label class="form-field" for="loginEmail">
                     <span id="loginEmailLabel">Company email</span>
+
                     <input
                         type="email"
                         id="loginEmail"
+                        name="email"
                         placeholder="name@company.com"
                         autocomplete="username"
+                        maxlength="254"
                         required
                     >
                 </label>
 
-                <label class="form-field">
+                <label class="form-field" for="loginPassword">
                     <span>Password</span>
+
                     <input
                         type="password"
                         id="loginPassword"
+                        name="password"
                         placeholder="Enter your password"
                         autocomplete="current-password"
+                        maxlength="200"
                         required
                     >
                 </label>
@@ -338,9 +449,21 @@ Hi! I'm the company's IT support assistant.
                     Log in
                 </button>
 
-                <div class="login-message" id="loginMessage" role="status"></div>
+                <div
+                    class="login-message"
+                    id="loginMessage"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
             </form>
+
+            <p class="login-security-note">
+                Use your authorized company account to sign in.
+            </p>
+
         </div>
+
     </div>
 
 </body>
