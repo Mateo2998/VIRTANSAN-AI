@@ -4,7 +4,17 @@
     "name": "Matthew",
     "email": "matthew@work.com",
     "role": "employee",
-    "password_hash": "pbkdf2_sha256$600000$b0ece542485f35cd306a7512d799a327$71f1d45558a1f071f92710d00f027097d839839f7e7b05bc68a7079ea54eef93",
-    "created_at": "2026-10-28T08:37:32.801764+00:00"
+    "password_hash": "pbkdf2_sha256$600000$11610268f582531d730608240e0d35e4$f81f17bf6fd9237d9d9d592003d57c0dfe410fc886574669da1825a8c175601b",
+    "created_at": "2026-10-28T08:37:32.801764+00:00",
+    "is_active": true
+  },
+  {
+    "id": "7cd75141e4ad337d373f0b0db7526b74",
+    "name": "Ernest Sanchez",
+    "email": "ernest@work.com",
+    "role": "employee",
+    "password_hash": "pbkdf2_sha256$600000$643b7f97df7fc0c040364771b24ac511$7d5915dfc8909e402506e75b21c1c60cb3dfc50823382912a0abb7c4a0fd711a",
+    "created_at": "2026-11-06T01:31:14.096626+00:00",
+    "is_active": true
   }
 ]

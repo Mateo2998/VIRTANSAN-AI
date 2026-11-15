@@ -1,3 +1,4 @@
+
 import os
 import re
 import hmac
@@ -10,8 +11,9 @@ from typing import Literal
 
 import chromadb
 import requests
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.middleware.sessions import SessionMiddleware
@@ -34,6 +36,90 @@ ticket_lock = threading.Lock()
 human_lock = threading.Lock()
 employee_lock = threading.Lock()
 
+SESSION_SECRET = os.getenv(
+    "SESSION_SECRET",
+    "dev-only-change-this-session-secret",
+)
+
+# ADMIN SESSION COOKIE ONLY
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET,
+    session_cookie="virtansan_admin_session",
+    same_site="lax",
+    https_only=False,
+)
+
+# EMPLOYEE SESSION COOKIE ONLY
+EMPLOYEE_SESSION_COOKIE = "virtansan_employee_session"
+EMPLOYEE_SESSION_MAX_AGE = 60 * 60 * 12
+
+employee_session_serializer = URLSafeTimedSerializer(
+    SESSION_SECRET,
+    salt="virtansan-employee-session",
+)
+
+
+def current_time():
+    return datetime.now(timezone.utc).isoformat()
+
+
+# ==========================================
+# EMPLOYEE SESSION HELPERS
+# ==========================================
+
+def create_employee_session_token(employee_id):
+    return employee_session_serializer.dumps({
+        "employee_id": employee_id
+    })
+
+
+def get_employee_id_from_cookie(request: Request):
+    token = request.cookies.get(EMPLOYEE_SESSION_COOKIE)
+
+    if not token:
+        return None
+
+    try:
+        session_data = employee_session_serializer.loads(
+            token,
+            max_age=EMPLOYEE_SESSION_MAX_AGE,
+        )
+
+        employee_id = session_data.get("employee_id")
+
+        if isinstance(employee_id, str) and employee_id:
+            return employee_id
+
+    except (BadSignature, SignatureExpired, TypeError, AttributeError):
+        return None
+
+    return None
+
+
+def set_employee_session_cookie(response, employee_id):
+    token = create_employee_session_token(employee_id)
+
+    response.set_cookie(
+        key=EMPLOYEE_SESSION_COOKIE,
+        value=token,
+        max_age=EMPLOYEE_SESSION_MAX_AGE,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        path="/",
+    )
+
+
+def clear_employee_session_cookie(response):
+    response.delete_cookie(
+        key=EMPLOYEE_SESSION_COOKIE,
+        path="/",
+        httponly=True,
+        secure=False,
+        samesite="lax",
+    )
+
 
 # ==========================================
 # ADMIN AUTHENTICATION
@@ -41,19 +127,6 @@ employee_lock = threading.Lock()
 
 ADMIN_EMAIL = "admin@work.com"
 ADMIN_PASSWORD = "admin123"
-
-SESSION_SECRET = os.getenv(
-    "SESSION_SECRET",
-    "dev-only-change-this-session-secret",
-)
-
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=SESSION_SECRET,
-    session_cookie="virtansan_session",
-    same_site="lax",
-    https_only=False,
-)
 
 
 class AdminLogin(BaseModel):
@@ -96,6 +169,7 @@ def admin_login(credentials: AdminLogin, request: Request):
 @app.post("/admin-logout")
 def admin_logout(request: Request):
     request.session.clear()
+
     return {"message": "Logged out successfully"}
 
 
@@ -116,91 +190,60 @@ def admin_dashboard(request: Request):
 
 
 # ==========================================
-# TICKET MODELS
+# JSON STORAGE HELPERS
 # ==========================================
 
-class TicketCreate(BaseModel):
-    title: str = Field(min_length=3, max_length=200)
-    description: str = Field(min_length=5, max_length=3000)
-    email: str = Field(default="", max_length=254)
-    category: Literal["IT Support", "Password Reset"] = "IT Support"
-
-
-class TicketUpdate(BaseModel):
-    status: Literal[
-        "Pending Review",
-        "Pending Approval",
-        "Accepted",
-        "Approved",
-        "In Progress",
-        "Fixed",
-        "Cannot Fix",
-        "Denied",
-    ]
-    admin_note: str = Field(default="", max_length=2000)
-
-
-# ==========================================
-# TICKET STORAGE
-# ==========================================
-
-def read_tickets():
-    if not os.path.exists(TICKETS_FILE):
+def read_json_list(file_path, error_message):
+    if not os.path.exists(file_path):
         return []
 
-    with open(TICKETS_FILE, "r", encoding="utf-8") as file:
-        tickets = json.load(file)
+    with open(file_path, "r", encoding="utf-8") as file:
+        data = json.load(file)
 
-    if not isinstance(tickets, list):
-        raise ValueError("Ticket storage must contain a JSON list.")
+    if not isinstance(data, list):
+        raise ValueError(error_message)
 
-    return tickets
-
-
-def write_tickets(tickets):
-    temporary_file = TICKETS_FILE + ".tmp"
-
-    with open(temporary_file, "w", encoding="utf-8") as file:
-        json.dump(tickets, file, indent=2, ensure_ascii=False)
-
-    os.replace(temporary_file, TICKETS_FILE)
+    return data
 
 
-# ==========================================
-# EMPLOYEE ACCOUNT STORAGE
-# ==========================================
-
-def read_employees():
-    if not os.path.exists(EMPLOYEES_FILE):
-        return []
-
-    with open(EMPLOYEES_FILE, "r", encoding="utf-8") as file:
-        employees = json.load(file)
-
-    if not isinstance(employees, list):
-        raise ValueError(
-            "Employee storage must contain a JSON list."
-        )
-
-    return employees
-
-
-def write_employees(employees):
-    temporary_file = EMPLOYEES_FILE + ".tmp"
+def write_json(file_path, data):
+    temporary_file = file_path + ".tmp"
 
     with open(temporary_file, "w", encoding="utf-8") as file:
         json.dump(
-            employees,
+            data,
             file,
             indent=2,
             ensure_ascii=False,
         )
 
-    os.replace(temporary_file, EMPLOYEES_FILE)
+    os.replace(temporary_file, file_path)
+
+
+def read_tickets():
+    return read_json_list(
+        TICKETS_FILE,
+        "Ticket storage must contain a JSON list.",
+    )
+
+
+def write_tickets(tickets):
+    write_json(TICKETS_FILE, tickets)
+
+
+def read_employees():
+    return read_json_list(
+        EMPLOYEES_FILE,
+        "Employee storage must contain a JSON list.",
+    )
+
+
+def write_employees(employees):
+    write_json(EMPLOYEES_FILE, employees)
 
 
 # ==========================================
-# EMPLOYEE PASSWORD HASHING
+# EMPLOYEE ACCOUNT STORAGE
 # ==========================================
 
 def hash_employee_password(password):
@@ -238,17 +281,14 @@ def verify_employee_password(password, stored_hash):
             iterations,
         ).hex()
 
-        return hmac.compare_digest(
-            actual_hash,
-            expected_hash,
-        )
+        return hmac.compare_digest(actual_hash, expected_hash)
 
     except (ValueError, TypeError, AttributeError):
         return False
 
 
 def get_logged_in_employee(request: Request):
-    employee_id = request.session.get("employee_id")
+    employee_id = get_employee_id_from_cookie(request)
 
     if not employee_id:
         return None
@@ -266,6 +306,7 @@ def get_logged_in_employee(request: Request):
         if (
             employee.get("id") == employee_id
             and employee.get("role", "employee") == "employee"
+            and employee.get("is_active", True) is True
         ):
             return employee
 
@@ -284,8 +325,19 @@ def require_employee(request: Request):
     return employee
 
 
+def public_employee_details(employee):
+    return {
+        "id": employee.get("id", ""),
+        "name": employee.get("name", ""),
+        "email": employee.get("email", ""),
+        "role": employee.get("role", "employee"),
+        "is_active": employee.get("is_active", True),
+        "created_at": employee.get("created_at", ""),
+    }
+
+
 # ==========================================
-# CREATE AND LIST EMPLOYEE ACCOUNTS
+# EMPLOYEE ACCOUNT MODELS
 # ==========================================
 
 class EmployeeCreate(BaseModel):
@@ -293,28 +345,44 @@ class EmployeeCreate(BaseModel):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=8, max_length=200)
 
+
 class EmployeeEmailUpdate(BaseModel):
     email: str = Field(min_length=3, max_length=254)
+
 
 class AdminEmployeePasswordUpdate(BaseModel):
     password: str = Field(min_length=8, max_length=200)
 
 
-def public_employee_details(employee):
-    return {
-        "id": employee.get("id", ""),
-        "name": employee.get("name", ""),
-        "email": employee.get("email", ""),
-        "role": employee.get("role", "employee"),
-        "created_at": employee.get("created_at", ""),
-    }
+class EmployeeStatusUpdate(BaseModel):
+    is_active: bool
 
+
+class EmployeeLogin(BaseModel):
+    email: str = Field(min_length=1, max_length=254)
+    password: str = Field(min_length=1, max_length=200)
+
+
+class EmployeePasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=200)
+    new_password: str = Field(min_length=8, max_length=200)
+
+
+def valid_email(email):
+    return bool(
+        re.fullmatch(
+            r"[^@\s]+@[^@\s]+\.[^@\s]+",
+            email,
+        )
+    )
+
+
+# ==========================================
+# ADMIN EMPLOYEE MANAGEMENT
+# ==========================================
 
 @app.post("/admin/employees", status_code=201)
-def create_employee(
-    payload: EmployeeCreate,
-    request: Request,
-):
+def create_employee(payload: EmployeeCreate, request: Request):
     require_admin(request)
 
     name = payload.name.strip()
@@ -327,16 +395,10 @@ def create_employee(
             detail="Employee name is required.",
         )
 
-    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+    if not valid_email(email):
         raise HTTPException(
             status_code=400,
             detail="Please enter a valid email address.",
-        )
-
-    if len(password) < 8:
-        raise HTTPException(
-            status_code=400,
-            detail="The password must contain at least 8 characters.",
         )
 
     with employee_lock:
@@ -368,8 +430,9 @@ def create_employee(
             "name": name,
             "email": email,
             "role": "employee",
+            "is_active": True,
             "password_hash": hash_employee_password(password),
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": current_time(),
         }
 
         employees.append(new_employee)
@@ -410,10 +473,6 @@ def list_employees(request: Request):
     }
 
 
-# ==========================================
-# UPDATE EMPLOYEE EMAIL
-# ==========================================
-
 @app.patch("/admin/employees/{employee_id}/email")
 def update_employee_email(
     employee_id: str,
@@ -424,7 +483,7 @@ def update_employee_email(
 
     new_email = payload.email.strip().lower()
 
-    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", new_email):
+    if not valid_email(new_email):
         raise HTTPException(
             status_code=422,
             detail="Please enter a valid email address.",
@@ -489,10 +548,6 @@ def update_employee_email(
     }
 
 
-# ==========================================
-# ADMIN CHANGE EMPLOYEE PASSWORD
-# ==========================================
-
 @app.patch("/admin/employees/{employee_id}/password")
 def admin_change_employee_password(
     employee_id: str,
@@ -500,14 +555,6 @@ def admin_change_employee_password(
     request: Request,
 ):
     require_admin(request)
-
-    new_password = payload.password
-
-    if len(new_password) < 8:
-        raise HTTPException(
-            status_code=400,
-            detail="The password must contain at least 8 characters.",
-        )
 
     with employee_lock:
         try:
@@ -534,7 +581,7 @@ def admin_change_employee_password(
                 detail="Employee account not found.",
             )
 
-        target["password_hash"] = hash_employee_password(new_password)
+        target["password_hash"] = hash_employee_password(payload.password)
 
         try:
             write_employees(employees)
@@ -544,17 +591,13 @@ def admin_change_employee_password(
                 detail="The employee password could not be saved.",
             )
 
-    return {
-        "message": "Employee password changed successfully."
-    }
+    return {"message": "Employee password changed successfully."}
 
-# ==========================================
-# DELETE EMPLOYEE ACCOUNT
-# ==========================================
 
-@app.delete("/admin/employees/{employee_id}")
-def delete_employee(
+@app.patch("/admin/employees/{employee_id}/status")
+def update_employee_status(
     employee_id: str,
+    payload: EmployeeStatusUpdate,
     request: Request,
 ):
     require_admin(request)
@@ -584,47 +627,38 @@ def delete_employee(
                 detail="Employee account not found.",
             )
 
-        remaining_employees = [
-            employee
-            for employee in employees
-            if not (
-                isinstance(employee, dict)
-                and employee.get("id") == employee_id
+        if target.get("role", "employee") != "employee":
+            raise HTTPException(
+                status_code=403,
+                detail="This account cannot be modified here.",
             )
-        ]
+
+        target["is_active"] = payload.is_active
 
         try:
-            write_employees(remaining_employees)
+            write_employees(employees)
         except OSError:
             raise HTTPException(
                 status_code=500,
-                detail="The employee account could not be deleted.",
+                detail="The employee account status could not be saved.",
             )
 
     return {
-        "message": "Employee account deleted successfully.",
+        "message": (
+            "Employee account activated successfully."
+            if payload.is_active
+            else "Employee account deactivated successfully."
+        ),
+        "employee": public_employee_details(target),
     }
 
 
 # ==========================================
-# EMPLOYEE LOGIN
+# EMPLOYEE LOGIN AND PROFILE
 # ==========================================
 
-class EmployeeLogin(BaseModel):
-    email: str = Field(min_length=1, max_length=254)
-    password: str = Field(min_length=1, max_length=200)
-
-
-class EmployeePasswordChange(BaseModel):
-    current_password: str = Field(min_length=1, max_length=200)
-    new_password: str = Field(min_length=8, max_length=200)
-
-
 @app.post("/employee-login")
-def employee_login(
-    credentials: EmployeeLogin,
-    request: Request,
-):
+def employee_login(credentials: EmployeeLogin, request: Request):
     email = credentials.email.strip().lower()
 
     with employee_lock:
@@ -657,11 +691,9 @@ def employee_login(
                 detail="Invalid email or password.",
             )
 
-        stored_hash = employee_found.get("password_hash", "")
-
         if not verify_employee_password(
             credentials.password,
-            stored_hash,
+            employee_found.get("password_hash", ""),
         ):
             raise HTTPException(
                 status_code=401,
@@ -674,6 +706,15 @@ def employee_login(
                 detail="This account is not an employee account.",
             )
 
+        if employee_found.get("is_active", True) is not True:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Your employee account has been deactivated. "
+                    "Please contact your administrator."
+                ),
+            )
+
         employee_id = employee_found.get("id")
 
         if not isinstance(employee_id, str) or not employee_id:
@@ -682,18 +723,15 @@ def employee_login(
                 detail="The employee account is missing its ID.",
             )
 
-        request.session.clear()
-        request.session["employee_id"] = employee_id
-
-    return {
+    response = JSONResponse({
         "message": "Employee login successful.",
         "redirect": "/employee.html",
-    }
+    })
 
+    set_employee_session_cookie(response, employee_id)
 
-# ==========================================
-# EMPLOYEE PROFILE
-# ==========================================
+    return response
+
 
 @app.get("/employee/me")
 def employee_profile(request: Request):
@@ -709,16 +747,26 @@ def employee_profile(request: Request):
 
 @app.post("/employee/logout")
 def employee_logout(request: Request):
-    request.session.pop("employee_id", None)
-    request.session.pop("is_admin", None)
+    response = JSONResponse({
+        "message": "Logged out successfully."
+    })
 
-    return {"message": "Logged out successfully."}
+    clear_employee_session_cookie(response)
+
+    return response
 
 
+@app.post("/employee-logout")
+def employee_logout_legacy(request: Request):
+    response = JSONResponse({
+        "message": "Logged out successfully.",
+        "redirect": "/",
+    })
 
-# ==========================================
-# EMPLOYEE PASSWORD CHANGE
-# ==========================================
+    clear_employee_session_cookie(response)
+
+    return response
+
 
 @app.post("/employee/change-password")
 def employee_change_password(
@@ -727,16 +775,10 @@ def employee_change_password(
 ):
     employee = require_employee(request)
 
-    current_password = payload.current_password
-    new_password = payload.new_password
-
-    if len(new_password) < 8:
-        raise HTTPException(
-            status_code=400,
-            detail="The new password must contain at least 8 characters.",
-        )
-
-    if hmac.compare_digest(current_password, new_password):
+    if hmac.compare_digest(
+        payload.current_password,
+        payload.new_password,
+    ):
         raise HTTPException(
             status_code=400,
             detail=(
@@ -761,19 +803,17 @@ def employee_change_password(
             if stored_employee.get("id") != employee.get("id"):
                 continue
 
-            stored_hash = stored_employee.get("password_hash", "")
-
             if not verify_employee_password(
-                current_password,
-                stored_hash,
+                payload.current_password,
+                stored_employee.get("password_hash", ""),
             ):
                 raise HTTPException(
                     status_code=400,
                     detail="Your current password is incorrect.",
                 )
 
-            stored_employee["password_hash"] = (
-                hash_employee_password(new_password)
+            stored_employee["password_hash"] = hash_employee_password(
+                payload.new_password
             )
 
             try:
@@ -785,12 +825,8 @@ def employee_change_password(
                 )
 
             return {
-                "message": (
-                    "Your password has been changed successfully."
-                )
+                "message": "Your password has been changed successfully."
             }
-
-    request.session.clear()
 
     raise HTTPException(
         status_code=401,
@@ -798,38 +834,14 @@ def employee_change_password(
     )
 
 
-# ==========================================
-# EMPLOYEE LOGOUT
-# ==========================================
-
-@app.post("/employee-logout")
-def employee_logout(request: Request):
-    request.session.clear()
-
-    return {
-        "message": "Logged out successfully.",
-        "redirect": "/",
-    }
-
-
-# ==========================================
-# EMPLOYEE DASHBOARD
-# ==========================================
-
 @app.get("/employee.html")
 def employee_dashboard(request: Request):
     employee = get_logged_in_employee(request)
 
     if not employee:
-        return RedirectResponse(
-            url="/",
-            status_code=303,
-        )
+        return RedirectResponse(url="/", status_code=303)
 
-    employee_file = os.path.join(
-        FRONTEND_DIR,
-        "employee.html",
-    )
+    employee_file = os.path.join(FRONTEND_DIR, "employee.html")
 
     if not os.path.exists(employee_file):
         raise HTTPException(
@@ -841,40 +853,84 @@ def employee_dashboard(request: Request):
 
 
 # ==========================================
-# TICKET API
+# TICKET MODELS
 # ==========================================
 
-@app.post("/tickets")
-def create_ticket(ticket: TicketCreate):
-    title_input = ticket.title.strip()
-    description = ticket.description.strip()
-    email = ticket.email.strip()
+class TicketCreate(BaseModel):
+    title: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=5, max_length=3000)
+    email: str = Field(default="", max_length=254)
+    category: Literal["IT Support", "Password Reset"] = "IT Support"
 
-    if len(title_input) < 3:
-        raise HTTPException(
-            status_code=422,
-            detail="The ticket title must contain at least 3 characters.",
-        )
 
-    if len(description) < 5:
-        raise HTTPException(
-            status_code=422,
-            detail="Please provide a more detailed description.",
-        )
+class PublicPasswordResetRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=254)
+    description: str = Field(min_length=5, max_length=3000)
+    confirmed: bool
+    request_id: str = Field(min_length=8, max_length=120)
 
-    if ticket.category == "Password Reset" and not email:
-        raise HTTPException(
-            status_code=400,
-            detail="A work email is required for password-reset requests.",
-        )
 
-    if ticket.category == "Password Reset":
-        title = f"{email} - Password Reset"
-        status = "Pending Approval"
-    else:
-        title = title_input
-        status = "Pending Review"
+class TicketUpdate(BaseModel):
+    status: Literal[
+        "Pending Review",
+        "Pending Approval",
+        "Accepted",
+        "Approved",
+        "In Progress",
+        "Fixed",
+        "Cannot Fix",
+        "Denied",
+    ]
+    admin_note: str = Field(default="", max_length=2000)
 
+
+# ==========================================
+# TICKET SECURITY HELPERS
+# ==========================================
+
+def contains_sensitive_secret(text):
+    patterns = [
+        r"\bpassword\s*[:=]\s*\S+",
+        r"\bpasscode\s*[:=]\s*\S+",
+        r"\botp\s*[:=]\s*\S+",
+        r"\bverification code\s*[:=]\s*\S+",
+        r"\bsecurity code\s*[:=]\s*\S+",
+    ]
+
+    return any(
+        re.search(pattern, text, re.IGNORECASE)
+        for pattern in patterns
+    )
+
+
+def next_ticket_id(tickets):
+    ticket_numbers = []
+
+    for existing_ticket in tickets:
+        if not isinstance(existing_ticket, dict):
+            continue
+
+        ticket_id = existing_ticket.get("id", "")
+
+        if (
+            isinstance(ticket_id, str)
+            and ticket_id.startswith("TKT-")
+            and ticket_id[4:].isdigit()
+        ):
+            ticket_numbers.append(int(ticket_id[4:]))
+
+    next_number = max(ticket_numbers, default=0) + 1
+    return f"TKT-{next_number:04d}"
+
+
+def create_stored_ticket(
+    title,
+    description,
+    email,
+    category,
+    status,
+    request_id=None,
+):
     with ticket_lock:
         try:
             tickets = read_tickets()
@@ -884,33 +940,30 @@ def create_ticket(ticket: TicketCreate):
                 detail="Ticket storage could not be read.",
             )
 
-        ticket_numbers = []
+        if request_id:
+            for existing_ticket in tickets:
+                if (
+                    isinstance(existing_ticket, dict)
+                    and existing_ticket.get("request_id") == request_id
+                ):
+                    return existing_ticket, False
 
-        for existing_ticket in tickets:
-            ticket_id = existing_ticket.get("id", "")
-
-            if (
-                isinstance(ticket_id, str)
-                and ticket_id.startswith("TKT-")
-                and ticket_id[4:].isdigit()
-            ):
-                ticket_numbers.append(int(ticket_id[4:]))
-
-        next_number = max(ticket_numbers, default=0) + 1
-        ticket_id = f"TKT-{next_number:04d}"
-        current_time = datetime.now(timezone.utc).isoformat()
+        now = current_time()
 
         new_ticket = {
-            "id": ticket_id,
+            "id": next_ticket_id(tickets),
             "title": title,
             "description": description,
             "email": email,
-            "category": ticket.category,
+            "category": category,
             "status": status,
             "admin_note": "",
-            "created_at": current_time,
-            "updated_at": current_time,
+            "created_at": now,
+            "updated_at": now,
         }
+
+        if request_id:
+            new_ticket["request_id"] = request_id
 
         tickets.append(new_ticket)
 
@@ -922,11 +975,203 @@ def create_ticket(ticket: TicketCreate):
                 detail="The ticket could not be saved.",
             )
 
+    return new_ticket, True
+
+
+# ==========================================
+# PUBLIC PASSWORD RESET REQUEST
+# ==========================================
+
+@app.post("/public/password-reset")
+def public_password_reset(payload: PublicPasswordResetRequest):
+    email = payload.email.strip().lower()
+    description = payload.description.strip()
+    request_id = payload.request_id.strip()
+
+    if not payload.confirmed:
+        raise HTTPException(
+            status_code=400,
+            detail="Please confirm the password-reset request first.",
+        )
+
+    if not valid_email(email):
+        raise HTTPException(
+            status_code=422,
+            detail="Please enter a valid email address.",
+        )
+
+    if len(description) < 5:
+        raise HTTPException(
+            status_code=422,
+            detail="Please provide a little more information.",
+        )
+
+    if contains_sensitive_secret(description):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Do not include passwords, one-time codes, or verification "
+                "codes in your request."
+            ),
+        )
+
+    # Find the employee account using the registered email.
+    with employee_lock:
+        try:
+            employees = read_employees()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Employee account storage could not be read.",
+            )
+
+        matching_employee = next(
+            (
+                employee
+                for employee in employees
+                if isinstance(employee, dict)
+                and isinstance(employee.get("email"), str)
+                and employee.get("email").strip().lower() == email
+                and employee.get("role", "employee") == "employee"
+            ),
+            None,
+        )
+
+        # Reject email addresses that do not belong to an employee.
+        if matching_employee is None:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    "This account does not exist. "
+                    "Please enter a registered company email address."
+                ),
+            )
+
+        # Reject inactive or deactivated employee accounts.
+        if matching_employee.get("is_active", True) is not True:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "This employee account is inactive. "
+                    "Please contact your administrator."
+                ),
+            )
+
+    # Create a ticket only after the account has been verified.
+    new_ticket, created = create_stored_ticket(
+        title=f"{email} - Password Reset",
+        description=description,
+        email=email,
+        category="Password Reset",
+        status="Pending Approval",
+        request_id=request_id,
+    )
+
+    if not created:
+        return {
+            "message": "This password-reset request has already been submitted.",
+            "status": "already_submitted",
+            "ticket_id": new_ticket.get("id", ""),
+        }
+
     return {
-        "message": "Ticket created successfully.",
+        "message": (
+            "Your password-reset request has been submitted successfully. "
+            "Please wait for administrator review."
+        ),
+        "status": "received",
+        "ticket_id": new_ticket["id"],
+    }
+
+
+# ==========================================
+# EMPLOYEE IT SUPPORT TICKETS
+# ==========================================
+
+@app.post("/tickets")
+def create_employee_ticket(
+    ticket: TicketCreate,
+    request: Request,
+):
+    employee = require_employee(request)
+
+    title = ticket.title.strip()
+    description = ticket.description.strip()
+
+    if len(title) < 3:
+        raise HTTPException(
+            status_code=422,
+            detail="The ticket title must contain at least 3 characters.",
+        )
+
+    if len(description) < 5:
+        raise HTTPException(
+            status_code=422,
+            detail="Please provide a more detailed description.",
+        )
+
+    if contains_sensitive_secret(description):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Do not include passwords, one-time codes, or "
+                "verification codes in a ticket."
+            ),
+        )
+
+    category = ticket.category
+
+    if category == "Password Reset":
+        title = f"{employee.get('email', '')} - Password Reset"
+        status = "Pending Approval"
+    else:
+        status = "Pending Review"
+
+    new_ticket, created = create_stored_ticket(
+        title=title,
+        description=description,
+        email=employee.get("email", ""),
+        category=category,
+        status=status,
+    )
+
+    return {
+        "message": (
+            "Ticket created successfully."
+            if created
+            else "This ticket has already been submitted."
+        ),
         "ticket": new_ticket,
     }
 
+
+@app.get("/tickets/mine")
+def list_my_tickets(request: Request):
+    employee = require_employee(request)
+    employee_email = employee.get("email", "").strip().lower()
+
+    with ticket_lock:
+        try:
+            tickets = read_tickets()
+        except (json.JSONDecodeError, ValueError, OSError):
+            raise HTTPException(
+                status_code=500,
+                detail="Ticket storage could not be read.",
+            )
+
+    own_tickets = [
+        ticket
+        for ticket in tickets
+        if isinstance(ticket, dict)
+        and str(ticket.get("email", "")).strip().lower() == employee_email
+    ]
+
+    return {"tickets": own_tickets}
+
+
+# ==========================================
+# ADMIN TICKET MANAGEMENT
+# ==========================================
 
 @app.get("/admin/tickets")
 def list_tickets(request: Request):
@@ -965,9 +1210,7 @@ def update_ticket(
             if ticket.get("id") == ticket_id:
                 ticket["status"] = update.status
                 ticket["admin_note"] = update.admin_note.strip()
-                ticket["updated_at"] = datetime.now(
-                    timezone.utc
-                ).isoformat()
+                ticket["updated_at"] = current_time()
 
                 try:
                     write_tickets(tickets)
@@ -994,7 +1237,7 @@ def update_ticket(
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
-    content: str
+    content: str = Field(max_length=4000)
 
 
 class ChatRequest(BaseModel):
@@ -1018,7 +1261,7 @@ class HumanRequestStatusUpdate(BaseModel):
 
 
 # ==========================================
-# HUMAN ASSISTANT DETECTION
+# HUMAN SUPPORT DETECTION
 # ==========================================
 
 def wants_human_assistance(message: str) -> bool:
@@ -1038,12 +1281,6 @@ def wants_human_assistance(message: str) -> bool:
         r"\bspeak to (?:a )?person\b",
         r"\btalk to someone\b",
         r"\bspeak to someone\b",
-        r"\bneed (?:a )?human\b",
-        r"\bwant (?:a )?human\b",
-        r"\bneed (?:a )?human assistant\b",
-        r"\bwant (?:a )?human assistant\b",
-        r"\bconnect me with (?:a )?human\b",
-        r"\bconnect me to (?:a )?person\b",
         r"\bcustomer service representative\b",
         r"\bsupport representative\b",
     ]
@@ -1062,7 +1299,7 @@ HUMAN_SUPPORT_REPLY = (
 
 
 # ==========================================
-# HUMAN SUPPORT STORAGE AND API
+# HUMAN SUPPORT STORAGE
 # ==========================================
 
 def read_human_requests():
@@ -1081,17 +1318,7 @@ def read_human_requests():
 
 
 def write_human_requests(requests_data):
-    temporary_file = HUMAN_REQUESTS_FILE + ".tmp"
-
-    with open(temporary_file, "w", encoding="utf-8") as file:
-        json.dump(
-            requests_data,
-            file,
-            indent=2,
-            ensure_ascii=False,
-        )
-
-    os.replace(temporary_file, HUMAN_REQUESTS_FILE)
+    write_json(HUMAN_REQUESTS_FILE, requests_data)
 
 
 def get_human_request(conversation_id):
@@ -1126,17 +1353,19 @@ def save_human_request(conversation_id, item):
         )
 
 
+# ==========================================
+# EMPLOYEE HUMAN SUPPORT API
+# ==========================================
+
 @app.post("/human/request")
-def request_human_support(payload: HumanSupportRequest):
+def request_human_support(
+    payload: HumanSupportRequest,
+    request: Request,
+):
+    require_employee(request)
+
     conversation_id = payload.conversation_id.strip()
-
-    if not conversation_id:
-        raise HTTPException(
-            status_code=400,
-            detail="A conversation ID is required.",
-        )
-
-    now = datetime.now(timezone.utc).isoformat()
+    now = current_time()
 
     with human_lock:
         existing = get_human_request(conversation_id)
@@ -1173,7 +1402,12 @@ def request_human_support(payload: HumanSupportRequest):
 
 
 @app.get("/human/status/{conversation_id}")
-def human_support_status(conversation_id: str):
+def human_support_status(
+    conversation_id: str,
+    request: Request,
+):
+    require_employee(request)
+
     with human_lock:
         item = get_human_request(conversation_id)
 
@@ -1193,7 +1427,12 @@ def human_support_status(conversation_id: str):
 
 
 @app.post("/human/message")
-def user_human_message(payload: HumanMessageRequest):
+def user_human_message(
+    payload: HumanMessageRequest,
+    request: Request,
+):
+    require_employee(request)
+
     message = payload.message.strip()
 
     if not message:
@@ -1217,12 +1456,10 @@ def user_human_message(payload: HumanMessageRequest):
                 detail="A human agent has not accepted this request.",
             )
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = current_time()
 
         item.setdefault("messages", []).append({
-            "id": (
-                f"msg-{int(datetime.now(timezone.utc).timestamp() * 1000)}"
-            ),
+            "id": secrets.token_hex(8),
             "message": message,
             "sender": "user",
             "created_at": now,
@@ -1234,6 +1471,10 @@ def user_human_message(payload: HumanMessageRequest):
 
     return {"success": True}
 
+
+# ==========================================
+# ADMIN HUMAN SUPPORT API
+# ==========================================
 
 @app.get("/admin/human-requests")
 def list_human_support_requests(request: Request):
@@ -1269,7 +1510,7 @@ def update_human_support_request(
             )
 
         item["status"] = update.status
-        item["updated_at"] = datetime.now(timezone.utc).isoformat()
+        item["updated_at"] = current_time()
 
         if update.status == "declined":
             item["message"] = (
@@ -1320,12 +1561,10 @@ def admin_human_message(
                 detail="Accept the request before replying.",
             )
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = current_time()
 
         item.setdefault("messages", []).append({
-            "id": (
-                f"msg-{int(datetime.now(timezone.utc).timestamp() * 1000)}"
-            ),
+            "id": secrets.token_hex(8),
             "message": message,
             "sender": "admin",
             "created_at": now,
@@ -1360,19 +1599,78 @@ CHAT_MODEL = "qwen2.5:7b"
 EMBEDDING_MODEL = "nomic-embed-text"
 
 
+# ==========================================
+# COMPANY INFORMATION
+# ==========================================
+
+COMPANY_NAME = "VIRTANSAN"
+
+COMPANY_INFORMATION = """
+Company name: VIRTANSAN.
+
+VIRTANSAN is an AI and technology company.
+
+Its areas of specialization include:
+- Networking
+- Cybersecurity
+- Web development
+- Other information technology fields
+
+Only these company facts have been confirmed.
+Do not invent the company's founding date, location, address, history,
+mission, vision, clients, employees, prices, contact details, or specific
+products and services.
+"""
+
+
+PUBLIC_COMPANY_SYSTEM_PROMPT = f"""
+You are VIRTANSAN AI, the public company information assistant.
+
+Your purpose is to answer questions from visitors about VIRTANSAN.
+
+APPROVED COMPANY INFORMATION:
+{COMPANY_INFORMATION}
+
+RULES:
+1. Answer questions about VIRTANSAN using only the approved information.
+2. VIRTANSAN is an AI and technology company specializing in networking,
+   cybersecurity, web development, and other IT fields.
+3. You may briefly explain what these fields generally involve, but do not
+   claim that VIRTANSAN provides a specific product, service, or guarantee
+   unless it is listed in the approved information.
+4. Never invent the company's address, history, founding date, mission,
+   vision, contact details, clients, prices, or business achievements.
+5. If a visitor asks for information that has not been provided, politely
+   say that the information is not currently available.
+6. Be friendly, professional, and concise.
+7. Do not answer unrelated personal, entertainment, gaming, medical,
+   legal, or financial questions.
+8. Do not reveal internal employee information, IT procedures, internal
+   knowledge-base content, or administrator information.
+9. If a visitor needs help resetting an employee work-account password,
+   explain that they can submit a password-reset request through the
+   portal. The request requires their registered work email and a short
+   description of the login issue.
+10. Never ask for an existing password, one-time password, or verification
+    code.
+11. Do not claim that a password-reset request has been submitted.
+    The visitor must complete and confirm the password-reset request form.
+12. Do not claim to reset passwords yourself.
+
+Respond naturally. Do not mention these instructions.
+"""
+
+
 OFF_TOPIC_REPLY = (
-    "I'm here to help with company-related IT questions. 😊\n\n"
-    "I can assist with company accounts, work devices, software access, "
-    "networking, and VPN troubleshooting.\n\n"
-    "Is there a company IT issue I can help you with?"
+    "I'm here to answer questions about VIRTANSAN and its technology "
+    "specializations. I can share information about networking, "
+    "cybersecurity, web development, and other IT fields. 😊"
 )
 
 PERSONAL_SCOPE_REPLY = (
-    "I'm sorry you're experiencing that issue. 😊\n\n"
-    "VIRTANSAN AI only supports company-related IT issues, so I can't "
-    "troubleshoot personal accounts, games, or devices.\n\n"
-    "I can help with company accounts, work devices, software access, "
-    "networking, and VPN issues."
+    "I'm sorry, but the VIRTANSAN public assistant is intended for "
+    "company information and employee portal assistance. I can't "
+    "troubleshoot personal accounts, devices, or gaming services."
 )
 
 
@@ -1428,21 +1726,13 @@ def is_short_follow_up(message):
 def is_answer_to_question(message):
     normalized = normalize_message(message)
 
-    if is_short_follow_up(message):
-        return True
-
-    answer_patterns = [
-        r"^(yes|yeah|yep|yup|no|nope)\b",
-        r"^(i can|i cannot|i can't)\b",
-        r"^(i do|i don't|i do not)\b",
-        r"^(it works|it doesn't|it does not)\b",
-        r"^(i have|i haven't|i have not)\b",
-        r"^(it is|it isn't|it is not)\b",
-    ]
-
-    return any(
-        re.search(pattern, normalized)
-        for pattern in answer_patterns
+    return is_short_follow_up(message) or bool(
+        re.search(
+            r"^(yes|yeah|yep|yup|no|nope|i can|i cannot|i can't|"
+            r"i do|i don't|i do not|it works|it doesn't|it does not|"
+            r"i have|i haven't|i have not|it is|it isn't|it is not)\b",
+            normalized,
+        )
     )
 
 
@@ -1516,57 +1806,104 @@ def build_contextual_search_query(message, history):
 
 
 # ==========================================
-# FRONTEND
+# PASSWORD SUPPORT
 # ==========================================
 
-@app.get("/")
-def home():
-    index_file = os.path.join(FRONTEND_DIR, "index.html")
+def is_password_related(text):
+    text = text.lower()
 
-    if not os.path.exists(index_file):
-        raise HTTPException(
-            status_code=404,
-            detail="Frontend index.html was not found.",
-        )
+    terms = [
+        "password",
+        "forgot my pass",
+        "forgotten my pass",
+        "can't remember my pass",
+        "cannot remember my pass",
+        "work account",
+        "reset my pass",
+        "reset pass",
+    ]
 
-    return FileResponse(index_file)
+    return any(term in text for term in terms)
 
 
-# ==========================================
-# HEALTH CHECK
-# ==========================================
+def get_password_reply(message, history):
+    normalized = normalize_message(message)
+    previous_assistant = last_assistant_message(history).lower()
 
-@app.get("/health")
-def health():
-    return {
-        "status": "healthy",
-        "knowledge_base": collection.name,
-        "documents_indexed": collection.count(),
+    affirmative = {
+        "yes", "yes please", "yeah", "yep", "yup",
+        "sure", "okay", "ok", "please do", "that would help",
     }
 
+    negative = {
+        "no", "no thanks", "no thank you", "not now",
+    }
 
-# ==========================================
-# EMBEDDING FUNCTION
-# ==========================================
+    if normalized in negative:
+        return (
+            "That's okay. 😊 If you still cannot access your work account, "
+            "you can submit a password-reset request through the public "
+            "portal. The administrator will review it."
+        )
 
-def create_embedding(text):
-    response = requests.post(
-        EMBEDDING_URL,
-        json={
-            "model": EMBEDDING_MODEL,
-            "prompt": text,
-        },
-        timeout=120,
-    )
+    if normalized in affirmative:
+        if (
+            "would you like" in previous_assistant
+            or "like me to walk you through" in previous_assistant
+            or "if you'd like" in previous_assistant
+        ):
+            return (
+                "Sure! 😊 You can normally reset a work password by opening "
+                "your organization's sign-in page and selecting **Forgot "
+                "password?**. Follow the official verification steps.\n\n"
+                "If you cannot access the reset option or the portal, use "
+                "the portal's password-reset request form so an administrator "
+                "can review your request.\n\n"
+                "Never share your password or verification codes here."
+            )
 
-    response.raise_for_status()
+        if (
+            "which sign-in system" in previous_assistant
+            or "which application" in previous_assistant
+        ):
+            return (
+                "Which sign-in system do you use for work—for example, "
+                "Microsoft 365, Google Workspace, or another company system?"
+            )
 
-    data = response.json()
+    if normalized in {
+        "what", "huh", "i don't understand", "i dont understand",
+    }:
+        return (
+            "Sorry for the confusion. 😊 If you cannot access your work "
+            "account, you can submit a password-reset request through "
+            "the portal for administrator review."
+        )
 
-    if "embedding" not in data:
-        raise ValueError("Ollama did not return an embedding.")
+    if "work account" in normalized:
+        return (
+            "Got it—it's your work account. 😊 If you cannot use the usual "
+            "password-reset option, you can submit a password-reset request "
+            "through the portal. The administrator will review it."
+        )
 
-    return data["embedding"]
+    if any(
+        phrase in normalized
+        for phrase in (
+            "forgot my password", "forgot password",
+            "forgotten password", "can't remember my password",
+            "cannot remember my password", "reset my password",
+            "reset password",
+        )
+    ):
+        return (
+            "No worries! 😊 Is this your work account? If you cannot access "
+            "the portal, you can submit a password-reset request using your "
+            "registered work email. Please do not share your password or "
+            "verification codes here."
+        )
+
+    return None
 
 
 # ==========================================
@@ -1602,9 +1939,6 @@ OFF_TOPIC:
 The user requests something unrelated to company IT.
 
 Use the conversation history to understand the latest message.
-For example, "no, I cannot" after being asked whether the user can access
-the internet during VPN troubleshooting is IT_RELATED.
-
 Return only one category name.
 
 Conversation:
@@ -1648,10 +1982,6 @@ Latest message:
 
     return "UNCLEAR"
 
-
-# ==========================================
-# COMPANY SCOPE CLASSIFICATION
-# ==========================================
 
 def classify_scope(message, history):
     recent_conversation = "\n".join(
@@ -1724,151 +2054,144 @@ Latest message:
 
 
 # ==========================================
-# PASSWORD SUPPORT
+# OLLAMA CHAT HELPER
 # ==========================================
 
-def is_password_related(text):
-    text = text.lower()
+def ask_ollama(messages, temperature=0.2, num_predict=300):
+    response = requests.post(
+        OLLAMA_URL,
+        json={
+            "model": CHAT_MODEL,
+            "messages": messages,
+            "stream": False,
+            "options": {
+                "temperature": temperature,
+                "num_predict": num_predict,
+            },
+        },
+        timeout=120,
+    )
 
-    terms = [
-        "password",
-        "forgot my pass",
-        "forgotten my pass",
-        "can't remember my pass",
-        "cannot remember my pass",
-        "work account",
-        "reset my pass",
-        "reset pass",
+    response.raise_for_status()
+
+    result = response.json()
+    reply = result.get("message", {}).get("content", "").strip()
+
+    if not reply:
+        raise ValueError("The AI service returned an empty response.")
+
+    return reply
+
+
+# ==========================================
+# PUBLIC COMPANY CHAT
+# ==========================================
+
+def public_company_chat(message, history):
+    normalized = normalize_message(message)
+
+    greetings = {
+        "hi", "hello", "hey", "hiya", "howdy",
+        "good morning", "good afternoon", "good evening",
+    }
+
+    if normalized in greetings and not history:
+        return (
+            "Hello! 😊 Welcome to VIRTANSAN.\n\n"
+            "I'm VIRTANSAN's public AI assistant. I can answer questions "
+            "about the company and its areas of specialization, including "
+            "networking, cybersecurity, and web development.\n\n"
+            "What would you like to know?"
+        )
+
+    help_messages = {
+        "help", "what can you do", "what can you help me with",
+        "what do you do", "how can you help me",
+    }
+
+    if normalized in help_messages:
+        return (
+            "I can tell you about VIRTANSAN and its areas of specialization, "
+            "including networking, cybersecurity, web development, and "
+            "other IT fields. I can also guide employees who need to request "
+            "a work-account password reset."
+        )
+
+    if is_password_related(message):
+        password_reply = get_password_reply(message, history)
+
+        if password_reply:
+            return password_reply
+
+        return (
+            "If you cannot access your employee account, you can submit "
+            "a password-reset request through the portal. You will need "
+            "your registered work email and a short description of the "
+            "login problem. The administrator will review your request.\n\n"
+            "Never share your password or verification codes."
+        )
+
+    if re.search(
+        r"\b(steam|roblox|epic games|personal gmail|my personal account)\b",
+        message,
+        re.IGNORECASE,
+    ):
+        return PERSONAL_SCOPE_REPLY
+
+    ollama_messages = [
+        {
+            "role": "system",
+            "content": PUBLIC_COMPANY_SYSTEM_PROMPT,
+        }
     ]
 
-    return any(term in text for term in terms)
+    for item in history[-8:]:
+        ollama_messages.append({
+            "role": item.role,
+            "content": item.content,
+        })
 
+    ollama_messages.append({
+        "role": "user",
+        "content": message,
+    })
 
-def get_password_reply(message, history):
-    normalized = normalize_message(message)
-    previous_assistant = last_assistant_message(history).lower()
-
-    affirmative = {
-        "yes", "yes please", "yeah", "yep", "yup",
-        "sure", "okay", "ok", "please do", "that would help",
-    }
-
-    negative = {
-        "no", "no thanks", "no thank you", "not now",
-    }
-
-    if normalized in negative:
-        return (
-            "That's okay. 😊 You can use your organization's official "
-            "password-reset option whenever you're ready. If you can't "
-            "access it, contact your IT support team."
-        )
-
-    if normalized in affirmative:
-        if (
-            "would you like" in previous_assistant
-            or "like me to walk you through" in previous_assistant
-            or "if you'd like" in previous_assistant
-        ):
-            return (
-                "Sure! 😊 Here's the general process for resetting your "
-                "work password:\n\n"
-                "1. Open your organization's usual work sign-in page.\n"
-                "2. Select **Forgot password?** or the equivalent option.\n"
-                "3. Follow the verification steps provided by your organization.\n"
-                "4. Create a new password and try signing in again.\n\n"
-                "If you don't see a reset option, contact your IT support "
-                "team. Never share your password or verification codes here."
-            )
-
-        if (
-            "which sign-in system" in previous_assistant
-            or "which application" in previous_assistant
-        ):
-            return (
-                "Which sign-in system do you use for work—for example, "
-                "Microsoft 365, Google Workspace, or another company system?"
-            )
-
-    if normalized in {
-        "what", "huh", "i don't understand", "i dont understand",
-    }:
-        return (
-            "Sorry for the confusion. 😊 I can guide you through the general "
-            "work-password reset process, but your IT team may need to help "
-            "if your company manages password resets."
-        )
-
-    if "work account" in normalized:
-        return (
-            "Got it—it's your work account. 😊 Would you like me to walk "
-            "you through the general password-reset steps?"
-        )
-
-    if any(
-        phrase in normalized
-        for phrase in (
-            "forgot my password", "forgot password",
-            "forgotten password", "can't remember my password",
-            "cannot remember my password", "reset my password",
-            "reset password",
-        )
-    ):
-        return (
-            "No worries! 😊 Is this your work account, or are you trying "
-            "to sign in to a specific application? Please don't share "
-            "your password or verification codes here."
-        )
-
-    return None
+    return ask_ollama(
+        ollama_messages,
+        temperature=0.2,
+        num_predict=250,
+    )
 
 
 # ==========================================
-# CHAT ENDPOINT
+# EMBEDDING FUNCTION
 # ==========================================
 
-@app.post("/chat")
-def chat(request: ChatRequest):
-    message = request.message.strip()
+def create_embedding(text):
+    response = requests.post(
+        EMBEDDING_URL,
+        json={
+            "model": EMBEDDING_MODEL,
+            "prompt": text,
+        },
+        timeout=120,
+    )
 
-    if not message:
-        raise HTTPException(
-            status_code=400,
-            detail="Please enter a message.",
-        )
+    response.raise_for_status()
 
-    history = request.history[-12:]
+    data = response.json()
 
-    if (
-        history
-        and history[-1].role == "user"
-        and history[-1].content.strip() == message
-    ):
-        history = history[:-1]
+    if "embedding" not in data:
+        raise ValueError("Ollama did not return an embedding.")
 
-    if wants_human_assistance(message):
-        return {
-            "reply": HUMAN_SUPPORT_REPLY,
-            "source": "Human Support Guide",
-        }
+    return data["embedding"]
 
-    if request.conversation_id:
-        with human_lock:
-            human_item = get_human_request(
-                request.conversation_id.strip()
-            )
 
-        if human_item and human_item.get("status") in {
-            "pending", "accepted",
-        }:
-            raise HTTPException(
-                status_code=409,
-                detail=(
-                    "Human support is handling this conversation. "
-                    "Please wait for the human agent."
-                ),
-            )
+# ==========================================
+# EMPLOYEE IT CHAT
+# ==========================================
 
+def employee_it_chat(message, history, conversation_id=None):
     normalized = normalize_message(message)
 
     greetings = {
@@ -1883,24 +2206,37 @@ def chat(request: ChatRequest):
     }
 
     if not history and normalized in greetings:
-        return {
-            "reply": (
-                "Hey there! 😊 Welcome to VIRTANSAN AI.\n\n"
-                "I'm your company IT assistant. Tell me what's happening "
-                "with a company IT service, and I'll help you work through it."
-            ),
-            "source": "Introduction Guide",
-        }
+        return (
+            "Hey there! 😊 Welcome to VIRTANSAN AI.\n\n"
+            "I'm your company IT assistant. Tell me what's happening "
+            "with a company IT service, and I'll help you work through it."
+        )
 
     if not history and normalized in help_messages:
-        return {
-            "reply": (
-                "Of course! 😊 I can help with company account issues, "
-                "work devices, software access, networking, VPN connections, "
-                "and other company IT problems."
-            ),
-            "source": "Introduction Guide",
-        }
+        return (
+            "Of course! 😊 I can help with company account issues, "
+            "work devices, software access, networking, VPN connections, "
+            "and other company IT problems."
+        )
+
+    if wants_human_assistance(message):
+        return HUMAN_SUPPORT_REPLY
+
+    if conversation_id:
+        with human_lock:
+            human_item = get_human_request(conversation_id)
+
+        if human_item and human_item.get("status") in {
+            "pending",
+            "accepted",
+        }:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "Human support is handling this conversation. "
+                    "Please wait for the human agent."
+                ),
+            )
 
     previous_assistant = last_assistant_message(history)
     previous_question = "?" in previous_assistant
@@ -1919,59 +2255,42 @@ def chat(request: ChatRequest):
             intent = classify_intent(message, history)
 
         if intent == "OFF_TOPIC":
-            return {
-                "reply": OFF_TOPIC_REPLY,
-                "source": "Scope Guard",
-            }
+            return OFF_TOPIC_REPLY
 
         if intent == "NO_PROBLEM":
-            return {
-                "reply": (
-                    "I'm here whenever you need company IT assistance."
-                ),
-                "source": "Conversation Guide",
-            }
+            return (
+                "I'm here whenever you need company IT assistance."
+            )
 
         if intent == "SMALL_TALK":
-            return {
-                "reply": (
-                    "I'm here whenever you need help with a company IT issue."
-                ),
-                "source": "Conversation Guide",
-            }
+            return (
+                "I'm here whenever you need help with a company IT issue."
+            )
 
         if intent == "UNCLEAR":
-            return {
-                "reply": (
-                    "Could you tell me a little more about what you need "
-                    "help with? 😊"
-                ),
-                "source": "Conversation Guide",
-            }
+            return (
+                "Could you tell me a little more about what you need "
+                "help with? 😊"
+            )
 
         if is_it_follow_up:
-            if is_personal_issue(history):
-                scope = "PERSONAL"
-            else:
-                scope = "COMPANY"
+            scope = (
+                "PERSONAL"
+                if is_personal_issue(history)
+                else "COMPANY"
+            )
         else:
             scope = classify_scope(message, history)
 
         if scope == "PERSONAL":
-            return {
-                "reply": PERSONAL_SCOPE_REPLY,
-                "source": "Company Scope Guard",
-            }
+            return PERSONAL_SCOPE_REPLY
 
         if scope == "UNCLEAR":
-            return {
-                "reply": (
-                    "I can help with company-related IT issues. 😊 "
-                    "Is this problem related to a company account, work "
-                    "device, application, or network service?"
-                ),
-                "source": "Company Scope Guard",
-            }
+            return (
+                "I can help with company-related IT issues. 😊 "
+                "Is this problem related to a company account, work "
+                "device, application, or network service?"
+            )
 
     except requests.RequestException:
         raise HTTPException(
@@ -1991,10 +2310,7 @@ def chat(request: ChatRequest):
         password_reply = get_password_reply(message, history)
 
         if password_reply:
-            return {
-                "reply": password_reply,
-                "source": "Password Support Guide",
-            }
+            return password_reply
 
     try:
         search_query = build_contextual_search_query(message, history)
@@ -2020,15 +2336,12 @@ def chat(request: ChatRequest):
             source = "No relevant source found"
 
         if not knowledge:
-            return {
-                "reply": (
-                    "I couldn't find enough information in my knowledge base "
-                    "to answer confidently. Could you explain the company IT "
-                    "issue in a little more detail? Your IT support team may "
-                    "need to help with company-specific settings."
-                ),
-                "source": source,
-            }
+            return (
+                "I couldn't find enough information in my knowledge base "
+                "to answer confidently. Could you explain the company IT "
+                "issue in a little more detail? Your IT support team may "
+                "need to help with company-specific settings."
+            )
 
         system_prompt = f"""
 You are VIRTANSAN AI, a friendly company IT helpdesk assistant.
@@ -2082,35 +2395,11 @@ KNOWLEDGE-BASE REFERENCE:
             "content": message,
         })
 
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": CHAT_MODEL,
-                "messages": ollama_messages,
-                "stream": False,
-                "options": {
-                    "temperature": 0.2,
-                    "num_predict": 300,
-                },
-            },
-            timeout=120,
+        return ask_ollama(
+            ollama_messages,
+            temperature=0.2,
+            num_predict=300,
         )
-
-        response.raise_for_status()
-
-        result = response.json()
-        reply = result.get("message", {}).get("content", "").strip()
-
-        if not reply:
-            raise HTTPException(
-                status_code=502,
-                detail="The AI service returned an empty response.",
-            )
-
-        return {
-            "reply": reply,
-            "source": source,
-        }
 
     except requests.RequestException:
         raise HTTPException(
@@ -2132,6 +2421,95 @@ KNOWLEDGE-BASE REFERENCE:
                 "Please try again."
             ),
         )
+
+
+# ==========================================
+# CHAT ENDPOINT
+# ==========================================
+
+@app.post("/chat")
+def chat(payload: ChatRequest, request: Request):
+    message = payload.message.strip()
+
+    if not message:
+        raise HTTPException(
+            status_code=400,
+            detail="Please enter a message.",
+        )
+
+    history = payload.history[-12:]
+
+    if (
+        history
+        and history[-1].role == "user"
+        and history[-1].content.strip() == message
+    ):
+        history = history[:-1]
+
+    employee = get_logged_in_employee(request)
+
+    try:
+        if employee:
+            reply = employee_it_chat(
+                message,
+                history,
+                payload.conversation_id.strip()
+                if payload.conversation_id
+                else None,
+            )
+
+            mode = "employee"
+        else:
+            reply = public_company_chat(message, history)
+            mode = "public"
+
+        return {
+            "reply": reply,
+            "mode": mode,
+        }
+
+    except requests.RequestException:
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "I couldn't connect to the local AI service. "
+                "Please check that Ollama is running and try again."
+            ),
+        )
+
+
+# ==========================================
+# FRONTEND
+# ==========================================
+
+@app.get("/")
+def home():
+    index_file = os.path.join(FRONTEND_DIR, "index.html")
+
+    if not os.path.exists(index_file):
+        raise HTTPException(
+            status_code=404,
+            detail="Frontend index.html was not found.",
+        )
+
+    return FileResponse(index_file)
+
+
+# ==========================================
+# HEALTH CHECK
+# ==========================================
+
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy",
+        "knowledge_base": collection.name,
+        "documents_indexed": collection.count(),
+        "chat_modes": [
+            "public_company_information",
+            "authenticated_employee_it_helpdesk",
+        ],
+    }
 
 
 # ==========================================

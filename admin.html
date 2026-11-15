@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,6 +44,7 @@
         .pending, .pending-review, .pending-approval { background: #fff0ce; color: #875800; }
         .accepted, .in-progress { background: #e0edff; color: #2056a3; }
         .fixed, .completed, .active-status { background: #d9f5e6; color: #176b43; }
+        .inactive-status { background: #ffe3e3; color: #9b2525; }
         .declined, .cannot-fix, .denied { background: #ffe3e3; color: #9b2525; }
         .view { background: #e6efff; color: #2056a3; }
         .message { padding: 12px 20px; font-size: 13px; white-space: pre-wrap; }
@@ -321,30 +323,39 @@
             return;
         }
 
-        $("employeeRows").innerHTML = filtered.map(employee => `
-            <tr>
-                <td>${escapeHtml(employee.full_name || employee.name || "Employee")}</td>
-                <td>${escapeHtml(employee.email)}</td>
-                <td>Employee</td>
-                <td><span class="status active-status">Active</span></td>
-                <td>
-                    <button type="button" class="view"
-                        data-change-password="${escapeHtml(employee.id)}">
-                        Change Password
-                    </button>
-                    <button type="button" class="danger"
-                        data-delete-employee="${escapeHtml(employee.id)}">
-                        Delete
-                    </button>
-                </td>
-            </tr>
-        `).join("");
+        $("employeeRows").innerHTML = filtered.map(employee => {
+            // Existing accounts without is_active are treated as active.
+            const isActive = employee.is_active !== false;
+
+            return `
+                <tr>
+                    <td>${escapeHtml(employee.full_name || employee.name || "Employee")}</td>
+                    <td>${escapeHtml(employee.email)}</td>
+                    <td>Employee</td>
+                    <td>
+                        <span class="status ${isActive ? "active-status" : "inactive-status"}">
+                            ${isActive ? "Active" : "Inactive"}
+                        </span>
+                    </td>
+                    <td>
+                        <button type="button" class="view"
+                            data-change-password="${escapeHtml(employee.id)}">
+                            Change Password
+                        </button>
+                        <button type="button" class="${isActive ? "danger" : "success"}"
+                            data-toggle-employee="${escapeHtml(employee.id)}"
+                            data-current-status="${isActive}">
+                            ${isActive ? "Deactivate" : "Reactivate"}
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
     }
 
-    // Fixed: define passwordButton and deleteButton before using them.
     $("employeeRows").addEventListener("click", async event => {
         const passwordButton = event.target.closest("[data-change-password]");
-        const deleteButton = event.target.closest("[data-delete-employee]");
+        const toggleButton = event.target.closest("[data-toggle-employee]");
 
         if (passwordButton) {
             const employee = employees.find(
@@ -401,9 +412,9 @@
             return;
         }
 
-        if (deleteButton) {
+        if (toggleButton) {
             const employee = employees.find(
-                item => String(item.id) === deleteButton.dataset.deleteEmployee
+                item => String(item.id) === toggleButton.dataset.toggleEmployee
             );
 
             if (!employee) {
@@ -411,28 +422,46 @@
                 return;
             }
 
+            const isCurrentlyActive = employee.is_active !== false;
+            const newStatus = !isCurrentlyActive;
+            const employeeName =
+                employee.name || employee.full_name || employee.email;
+
             const confirmed = confirm(
-                "Delete the employee account for " +
-                (employee.name || employee.full_name || employee.email) +
-                " (" + employee.email + ")?\n\nThis action cannot be undone."
+                newStatus
+                    ? "Reactivate the employee account for " + employeeName + "?\n\nThe employee will be able to log in again."
+                    : "Deactivate the employee account for " + employeeName + "?\n\nThe employee will no longer be able to log in. Their account record and related data will be preserved."
             );
 
             if (!confirmed) return;
 
-            deleteButton.disabled = true;
+            toggleButton.disabled = true;
 
             try {
                 const result = await apiRequest(
-                    "/admin/employees/" + encodeURIComponent(employee.id),
-                    { method: "DELETE" }
+                    "/admin/employees/" +
+                    encodeURIComponent(employee.id) +
+                    "/status",
+                    {
+                        method: "PATCH",
+                        body: JSON.stringify({
+                            is_active: newStatus
+                        })
+                    }
                 );
 
-                alert(result.message || "Employee account deleted.");
+                alert(
+                    result.message ||
+                    (newStatus
+                        ? "Employee account reactivated successfully."
+                        : "Employee account deactivated successfully.")
+                );
+
                 await loadEmployees();
             } catch (error) {
-                alert("Could not delete employee: " + error.message);
+                alert("Could not update employee status: " + error.message);
             } finally {
-                deleteButton.disabled = false;
+                toggleButton.disabled = false;
             }
         }
     });

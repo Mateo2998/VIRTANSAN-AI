@@ -888,4 +888,29 @@ footer {
     .login-card {
         padding: 25px;
     }
+
+    /* Password Reset Form */
+    #resetForm textarea#resetDescriptionInput {
+        display: block;
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        height: 110px;
+        min-height: 110px;
+        max-height: 110px;
+        padding: 12px;
+        border: 1px solid #d3dce8;
+        border-radius: 6px;
+        outline: none;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: none !important;
+        overflow-y: auto;
+    }
+
+    #resetForm textarea#resetDescriptionInput:focus {
+        border-color: #1764c0;
+        box-shadow: 0 0 0 2px rgba(23, 100, 192, 0.12);
+    }
 }

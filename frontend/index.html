@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,15 +6,15 @@
 
     <meta
         name="description"
-        content="VIRTANSAN Company Portal for employee services and company IT support."
+        content="VIRTANSAN Company Portal for company information, employee services, and IT support."
     >
 
     <meta name="theme-color" content="#f7f9fc">
 
     <title>VIRTANSAN | Company Portal</title>
 
-    <link rel="stylesheet" href="/static/style.css?v=8">
-    <script src="/static/script.js?v=8" defer></script>
+    <link rel="stylesheet" href="/static/style.css?v=11">
+    <script src="/static/script.js?v=10" defer></script>
 </head>
 
 <body>
@@ -23,11 +22,11 @@
     <!-- TOP BAR -->
     <div class="topbar">
         <div class="container topbar-inner">
-            <span>Company Portal · IT services and employee support</span>
+            <span>VIRTANSAN · Technology and digital solutions</span>
 
             <span class="status">
                 <span class="status-dot"></span>
-                Support assistant available
+                AI assistant available
             </span>
         </div>
     </div>
@@ -47,17 +46,22 @@
 
             <div class="nav-links">
                 <a href="#home">Home</a>
-                <a href="#services">Services</a>
+                <a href="#services">Specializations</a>
                 <a href="#about">About</a>
                 <a href="#contact">Contact</a>
             </div>
 
+            <button class="btn btn-outline" id="loginOpen" type="button">
+                Log in
+            </button>
+
             <button
                 class="btn btn-outline"
-                id="loginOpen"
+                id="employeeLogout"
                 type="button"
+                style="display: none;"
             >
-                Log in
+                Log out
             </button>
 
         </nav>
@@ -78,14 +82,15 @@
                     </div>
 
                     <h1>
-                        Work smarter with
-                        <span>connected</span> support.
+                        Innovation through
+                        <span>technology</span> and expertise.
                     </h1>
 
                     <p class="hero-copy">
-                        A central place for company updates, digital services,
-                        and IT support. Find the help you need and get back
-                        to what matters.
+                        VIRTANSAN is an AI and technology company with
+                        specializations in networking, cybersecurity,
+                        web development, and other information technology
+                        fields.
                     </p>
 
                     <div class="hero-actions">
@@ -95,11 +100,11 @@
                             id="heroSupport"
                             type="button"
                         >
-                            Get IT support →
+                            Ask VIRTANSAN AI →
                         </button>
 
                         <a class="btn btn-outline" href="#services">
-                            Explore services
+                            Explore specializations
                         </a>
 
                     </div>
@@ -107,12 +112,12 @@
                     <div class="trust-row">
                         <span>
                             <span class="check">✓</span>
-                            Employee-focused services
+                            Technology-focused solutions
                         </span>
 
                         <span>
                             <span class="check">✓</span>
-                            Help when you need it
+                            AI-powered assistance
                         </span>
                     </div>
 
@@ -132,8 +137,8 @@
                         <span class="float-icon">⌘</span>
 
                         <span>
-                            Digital workplace
-                            <small>Tools in one place</small>
+                            Technology
+                            <small>Digital solutions</small>
                         </span>
                     </div>
 
@@ -141,8 +146,8 @@
                         <span class="float-icon">✓</span>
 
                         <span>
-                            IT support
-                            <small>Guidance and assistance</small>
+                            AI assistance
+                            <small>Intelligent support</small>
                         </span>
                     </div>
 
@@ -151,18 +156,18 @@
             </div>
         </section>
 
-        <!-- SERVICES -->
+        <!-- SPECIALIZATIONS -->
         <section class="section" id="services">
             <div class="container">
 
                 <div class="section-heading">
-                    <div class="section-kicker">What we provide</div>
+                    <div class="section-kicker">Our specializations</div>
 
-                    <h2>Everything you need to stay productive</h2>
+                    <h2>Technology across multiple fields</h2>
 
                     <p>
-                        Explore company services and find support for common
-                        workplace technology needs.
+                        VIRTANSAN focuses on different areas of information
+                        technology and digital solutions.
                     </p>
                 </div>
 
@@ -171,33 +176,33 @@
                     <article class="feature-card">
                         <div class="feature-icon">⌘</div>
 
-                        <h3>IT Helpdesk</h3>
+                        <h3>Networking</h3>
 
                         <p>
-                            Get guidance for company devices, network access,
-                            VPN connections, and common technical issues.
+                            Network infrastructure, connectivity,
+                            configuration, and troubleshooting.
                         </p>
                     </article>
 
                     <article class="feature-card">
                         <div class="feature-icon">▣</div>
 
-                        <h3>Software &amp; Access</h3>
+                        <h3>Cybersecurity</h3>
 
                         <p>
-                            Learn how to request approved software and access
-                            the applications required for your role.
+                            Digital security, network protection,
+                            and cybersecurity-related solutions.
                         </p>
                     </article>
 
                     <article class="feature-card">
                         <div class="feature-icon">◈</div>
 
-                        <h3>Account Assistance</h3>
+                        <h3>Web Development</h3>
 
                         <p>
-                            Find the correct process for account problems and
-                            submit requests for administrator review when needed.
+                            Website development and digital application
+                            solutions.
                         </p>
                     </article>
 
@@ -206,17 +211,17 @@
             </div>
         </section>
 
-        <!-- SUPPORT BANNER -->
+        <!-- ABOUT / SUPPORT BANNER -->
         <section class="band" id="about">
             <div class="container band-inner">
 
                 <div>
-                    <h2>Need a hand with something?</h2>
+                    <h2>Have questions about VIRTANSAN?</h2>
 
                     <p>
-                        Start with the Support AI assistant for company IT
-                        questions. Requests requiring administrator action
-                        can follow the helpdesk process.
+                        Ask our AI assistant about the company and its
+                        technology specializations. Employees can also
+                        sign in to access the internal IT helpdesk.
                     </p>
                 </div>
 
@@ -225,7 +230,7 @@
                     id="bandSupport"
                     type="button"
                 >
-                    Chat with Support AI →
+                    Chat with VIRTANSAN AI →
                 </button>
 
             </div>
@@ -239,13 +244,13 @@
 
             <div>
                 © <span id="year"></span>
-                VIRTANSAN Company Portal. Internal use only.
+                VIRTANSAN. All rights reserved.
             </div>
 
             <div class="footer-links">
-                <a href="#services">Services</a>
+                <a href="#services">Specializations</a>
                 <a href="#about">About</a>
-                <a href="mailto:it-support@example.com">Contact IT</a>
+                <a href="#" id="footerLogin">Employee Login</a>
             </div>
 
         </div>
@@ -256,19 +261,19 @@
         class="chat-launcher"
         id="chatToggle"
         type="button"
-        aria-label="Open Support AI chat"
+        aria-label="Open VIRTANSAN AI chat"
         aria-expanded="false"
         aria-controls="chatPanel"
     >
         <span class="chat-launcher-icon">✦</span>
-        <span>Support AI</span>
+        <span>VIRTANSAN AI</span>
     </button>
 
     <!-- CHATBOT PANEL -->
     <section
         class="chat-panel"
         id="chatPanel"
-        aria-label="Support AI chat"
+        aria-label="VIRTANSAN AI chat"
         aria-hidden="true"
         inert
     >
@@ -279,11 +284,11 @@
                 <div class="bot-avatar">✦</div>
 
                 <div>
-                    <strong>VIRTANSAN Support AI</strong>
+                    <strong>VIRTANSAN AI</strong>
 
-                    <small>
+                    <small id="chatSubtitle">
                         <span class="status-dot"></span>
-                        Ready to help with company IT
+                        Company information assistant
                     </small>
                 </div>
             </div>
@@ -305,11 +310,14 @@
             aria-live="polite"
             aria-relevant="additions"
         >
-            <div class="message bot">
-Hi! I'm the company's IT support assistant.
+            <div class="message bot" id="initialGreeting">
+                Hello! I'm VIRTANSAN AI. You can ask me about VIRTANSAN,
+                including our specializations in networking, cybersecurity,
+                and web development.
             </div>
         </div>
 
+        <!-- HUMAN SUPPORT: EMPLOYEES ONLY -->
         <div
             id="humanSupportArea"
             style="display: none; padding: 8px 12px;"
@@ -338,9 +346,9 @@ Hi! I'm the company's IT support assistant.
             <input
                 id="chatInput"
                 type="text"
-                placeholder="Describe your IT issue..."
+                placeholder="Ask about VIRTANSAN..."
                 autocomplete="off"
-                aria-label="Message Support AI"
+                aria-label="Message VIRTANSAN AI"
                 maxlength="2000"
                 required
             >
@@ -356,8 +364,8 @@ Hi! I'm the company's IT support assistant.
 
         </form>
 
-        <div class="chat-note">
-            Don't share passwords or sensitive personal information.
+        <div class="chat-note" id="chatNote">
+            Do not share passwords or verification codes.
         </div>
 
     </section>
@@ -385,7 +393,6 @@ Hi! I'm the company's IT support assistant.
                 ×
             </button>
 
-            <!-- LOGIN BRAND -->
             <div class="brand login-brand">
                 <span class="brand-mark">V</span>
 
@@ -401,7 +408,6 @@ Hi! I'm the company's IT support assistant.
                 Sign in to access your company account.
             </p>
 
-            <!-- LOGIN MODE -->
             <button
                 class="btn btn-outline login-mode-button"
                 id="loginModeButton"
@@ -458,9 +464,143 @@ Hi! I'm the company's IT support assistant.
 
             </form>
 
+            <button
+                class="btn btn-outline"
+                id="loginPasswordReset"
+                type="button"
+                style="width: 100%; margin-top: 12px;"
+            >
+                Forgot your password?
+            </button>
+
             <p class="login-security-note">
                 Use your authorized company account to sign in.
             </p>
+
+        </div>
+
+    </div>
+
+    <!-- PUBLIC PASSWORD RESET DIALOG -->
+    <div
+        class="login-backdrop"
+        id="resetBackdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="resetTitle"
+        aria-describedby="resetDescription"
+        aria-hidden="true"
+        inert
+    >
+
+        <div class="login-card">
+
+            <button
+                class="login-close"
+                id="resetClose"
+                type="button"
+                aria-label="Close password reset form"
+            >
+                ×
+            </button>
+
+            <div class="brand login-brand">
+                <span class="brand-mark">V</span>
+
+                <span>
+                    VIRTANSAN
+                    <small>ACCOUNT ASSISTANCE</small>
+                </span>
+            </div>
+
+            <h2 id="resetTitle">Request a password reset</h2>
+
+            <p id="resetDescription">
+                If you are an employee who cannot access the portal,
+                submit your registered company email for administrator review.
+            </p>
+
+            <form id="resetForm">
+
+                <label class="form-field" for="resetEmail">
+                    <span>Registered company email</span>
+
+                    <input
+                        type="email"
+                        id="resetEmail"
+                        name="email"
+                        placeholder="name@company.com"
+                        autocomplete="email"
+                        maxlength="254"
+                        required
+                    >
+                </label>
+
+                <label class="form-field" for="resetDescriptionInput">
+                    <span>Describe your issue</span>
+
+                    <textarea
+                        id="resetDescriptionInput"
+                        name="description"
+                        placeholder="Briefly explain why you cannot access your account."
+                        maxlength="1000"
+                        rows="4"
+                        required
+                        style="
+                            display: block;
+                            width: 100%;
+                            height: 110px;
+                            min-height: 110px;
+                            max-height: 110px;
+                            padding: 12px;
+                            border: 1px solid #d3dce8;
+                            border-radius: 6px;
+                            outline: none;
+                            font-family: Arial, sans-serif;
+                            font-size: 14px;
+                            line-height: 1.5;
+                            resize: none;
+                            box-sizing: border-box;
+                        "
+                ></textarea>
+
+                <p class="login-security-note">
+                    Do not enter your current password or any verification code.
+                    Your request will be reviewed by an administrator.
+                </p>
+
+                <label
+                    style="display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; font-size: 13px;"
+                >
+                    <input
+                        type="checkbox"
+                        id="resetConfirmation"
+                        required
+                        style="margin-top: 3px;"
+                    >
+
+                    <span>
+                        I confirm that I want to submit this password-reset
+                        request for administrator review.
+                    </span>
+                </label>
+
+                <button
+                    class="btn btn-primary login-submit"
+                    id="resetSubmit"
+                    type="submit"
+                >
+                    Submit Request
+                </button>
+
+                <div
+                    class="login-message"
+                    id="resetMessage"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
+            </form>
 
         </div>
 
