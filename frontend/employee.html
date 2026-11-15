@@ -383,6 +383,117 @@
             white-space: pre-wrap;
         }
 
+        /* TICKET CREATION */
+
+        .ticket-support-area {
+            display: none;
+            padding: 10px 12px;
+            border-top: 1px solid #edf0f5;
+            background: #fafbfe;
+            flex-shrink: 0;
+        }
+
+        .ticket-support-area.visible { display: block; }
+
+        .ticket-button {
+            border: 1px solid #304987;
+            background: #304987;
+            color: white;
+            padding: 9px 12px;
+            border-radius: 7px;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .ticket-button:hover { background: #23396f; }
+        .ticket-button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .ticket-form {
+            display: none;
+            padding: 12px;
+            border-top: 1px solid #e7eaf2;
+            background: white;
+            flex-shrink: 0;
+            overflow-y: auto;
+            max-height: 260px;
+        }
+
+        .ticket-form.visible { display: block; }
+
+        .ticket-form h4 {
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .ticket-form p {
+            font-size: 11px;
+            color: #778196;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .ticket-form .form-group { margin-bottom: 10px; }
+
+        .ticket-form label {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .ticket-form input,
+        .ticket-form textarea {
+            font-size: 12px;
+            padding: 9px;
+        }
+
+        .ticket-form textarea {
+            min-height: 75px;
+            resize: vertical;
+        }
+
+        .ticket-form-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .ticket-form-actions button {
+            flex: 1;
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .ticket-cancel-button {
+            border: 1px solid #d9deea;
+            background: white;
+            color: #526078;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .ticket-cancel-button:hover { background: #f4f6fb; }
+
+        .ticket-form-message {
+            display: none;
+            padding: 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .ticket-form-message.error,
+        .ticket-form-message.success { display: block; }
+
+        .ticket-form-message.error {
+            color: #a12828;
+            background: #fff0f0;
+        }
+
+        .ticket-form-message.success {
+            color: #176b42;
+            background: #e9f8ef;
+        }
+
         .chat-form {
             padding: 12px;
             border-top: 1px solid #e7eaf2;
@@ -764,7 +875,7 @@
 Ask me about VPN troubleshooting, software access, or other IT problems. How can I help you?</div>
         </div>
 
-        <!-- Hidden until the employee asks for human support -->
+        <!-- HUMAN SUPPORT -->
         <div class="human-support-area" id="humanSupportArea">
             <button type="button" class="human-support-button"
                     id="humanSupportButton">
@@ -774,6 +885,49 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
             <div class="human-support-status" id="humanSupportStatus"
                  role="status" aria-live="polite"></div>
         </div>
+
+        <!-- TICKET CREATION BUTTON -->
+        <div class="ticket-support-area" id="ticketSupportArea">
+            <button type="button" class="ticket-button" id="showTicketFormButton">
+                Create Support Ticket
+            </button>
+        </div>
+
+        <!-- TICKET FORM -->
+        <form class="ticket-form" id="ticketForm">
+            <h4>Create Support Ticket</h4>
+            <p>
+                Describe the IT issue you need help with. Your signed-in
+                employee account will automatically be associated with this ticket.
+            </p>
+
+            <div class="form-group">
+                <label for="ticketTitle">Ticket Title</label>
+                <input type="text" id="ticketTitle"
+                       placeholder="Example: Unable to connect to VPN"
+                       minlength="3" maxlength="200" required>
+            </div>
+
+            <div class="form-group">
+                <label for="ticketDescription">Issue Description</label>
+                <textarea id="ticketDescription"
+                          placeholder="Describe the problem and the troubleshooting steps you have already tried..."
+                          minlength="5" maxlength="3000" required></textarea>
+            </div>
+
+            <div class="ticket-form-message" id="ticketFormMessage"
+                 role="status" aria-live="polite"></div>
+
+            <div class="ticket-form-actions">
+                <button type="button" class="ticket-cancel-button" id="cancelTicketButton">
+                    Cancel
+                </button>
+
+                <button type="submit" class="primary-button" id="submitTicketButton">
+                    Submit Ticket
+                </button>
+            </div>
+        </form>
 
         <div class="chat-status" id="chatStatus" role="status" aria-live="polite"></div>
 
@@ -950,10 +1104,19 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
         const humanSupportButton = document.getElementById("humanSupportButton");
         const humanSupportStatus = document.getElementById("humanSupportStatus");
 
+        const ticketSupportArea = document.getElementById("ticketSupportArea");
+        const showTicketFormButton = document.getElementById("showTicketFormButton");
+        const ticketForm = document.getElementById("ticketForm");
+        const ticketTitle = document.getElementById("ticketTitle");
+        const ticketDescription = document.getElementById("ticketDescription");
+        const ticketFormMessage = document.getElementById("ticketFormMessage");
+        const submitTicketButton = document.getElementById("submitTicketButton");
+        const cancelTicketButton = document.getElementById("cancelTicketButton");
+
         let chatIsBusy = false;
+        let ticketIsSubmitting = false;
         let conversationHistory = [];
 
-        // Keep the same conversation ID across page reloads.
         let conversationId = localStorage.getItem("aihas_conversation_id");
 
         if (!conversationId) {
@@ -968,11 +1131,56 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
         let humanMessagesShown = new Set();
 
 
-        // DETECT EXPLICIT HUMAN-SUPPORT REQUESTS
+        // DETECT HUMAN-SUPPORT REQUESTS
 
         function wantsHumanSupport(message) {
             return /\b(human|real person|live agent|human agent|human assistant|human support|talk to someone|speak to someone|talk to a person|speak to a person|customer service|support agent|real agent|talk to human|speak to human|contact a human|request human|person to help me|speak with someone|talk with someone)\b/i.test(message);
         }
+
+
+        // DETECT TICKET REQUESTS
+
+        function wantsTicket(message) {
+            return /\b(create|make|open|submit|raise|file|request)\b.{0,35}\b(ticket|support ticket|it ticket)\b|\b(ticket|support ticket|it ticket)\b.{0,35}\b(create|make|open|submit|raise|file)\b|\b(i need|i want|can i get|could i get)\b.{0,25}\b(ticket|support)\b/i.test(message);
+        }
+
+        function showTicketOption() {
+            ticketSupportArea.classList.add("visible");
+        }
+
+        function hideTicketOption() {
+            ticketSupportArea.classList.remove("visible");
+        }
+
+        function showTicketForm() {
+            ticketForm.classList.add("visible");
+            showTicketOption();
+
+            ticketForm.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest"
+            });
+
+            ticketTitle.focus();
+        }
+
+        function closeTicketForm() {
+            ticketForm.classList.remove("visible");
+            ticketForm.reset();
+            ticketFormMessage.textContent = "";
+            ticketFormMessage.className = "ticket-form-message";
+        }
+
+        function showTicketMessage(text, type) {
+            ticketFormMessage.textContent = text;
+            ticketFormMessage.className = "ticket-form-message " + type;
+        }
+
+        showTicketFormButton.addEventListener("click", showTicketForm);
+
+        cancelTicketButton.addEventListener("click", function () {
+            closeTicketForm();
+        });
 
 
         // OPEN AND CLOSE CHAT
@@ -1008,7 +1216,6 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
 
 
         // CHAT MESSAGE DISPLAY
-        // The RAG source filename is deliberately not displayed.
 
         function addChatMessage(text, sender) {
             const message = document.createElement("div");
@@ -1045,6 +1252,96 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
 
             return result;
         }
+
+
+        // CREATE SUPPORT TICKET
+
+        ticketForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            if (ticketIsSubmitting) {
+                return;
+            }
+
+            const title = ticketTitle.value.trim();
+            const description = ticketDescription.value.trim();
+
+            if (title.length < 3) {
+                showTicketMessage("Please enter a title with at least 3 characters.", "error");
+                return;
+            }
+
+            if (description.length < 5) {
+                showTicketMessage("Please provide more details about your IT issue.", "error");
+                return;
+            }
+
+            ticketIsSubmitting = true;
+            submitTicketButton.disabled = true;
+            cancelTicketButton.disabled = true;
+            submitTicketButton.textContent = "Submitting...";
+
+            showTicketMessage("Submitting your support ticket...", "success");
+
+            try {
+                const response = await fetch("/tickets", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify({
+                        title: title,
+                        description: description,
+                        category: "IT Support"
+                    })
+                });
+
+                const result = await readApiResponse(response);
+
+                const ticket = result.ticket || {};
+                const ticketId =
+                    ticket.ticket_id ||
+                    ticket.ticket_number ||
+                    ticket.id ||
+                    result.ticket_id ||
+                    result.ticket_number ||
+                    "";
+
+                const status = ticket.status || "Pending Review";
+
+                closeTicketForm();
+                hideTicketOption();
+
+                if (ticketId) {
+                    addChatMessage(
+                        "Your support ticket has been successfully submitted.\n\n" +
+                        "Ticket ID: " + ticketId + "\n" +
+                        "Status: " + status + "\n\n" +
+                        "Your IT support team can now review your request.",
+                        "bot"
+                    );
+                } else {
+                    addChatMessage(
+                        "Your support ticket has been successfully submitted.\n\n" +
+                        "Status: " + status + "\n\n" +
+                        "Your IT support team can now review your request.",
+                        "bot"
+                    );
+                }
+
+            } catch (error) {
+                showTicketMessage(
+                    error.message || "Unable to submit your ticket. Please try again.",
+                    "error"
+                );
+            } finally {
+                ticketIsSubmitting = false;
+                submitTicketButton.disabled = false;
+                cancelTicketButton.disabled = false;
+                submitTicketButton.textContent = "Submit Ticket";
+            }
+        });
 
 
         // REQUEST HUMAN ASSISTANCE
@@ -1183,8 +1480,6 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
 
                 const result = await readApiResponse(response);
 
-                // Reveal the support area only if the employee previously
-                // requested human support in this chat.
                 if (humanSupportArea.classList.contains("visible")) {
                     updateHumanSupportDisplay(result);
                 }
@@ -1262,8 +1557,6 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
             sendButton.textContent = "...";
             chatStatus.textContent = "";
 
-            // Only reveal the human-support option if the employee asks
-            // to speak to a human or requests human assistance.
             if (wantsHumanSupport(message)) {
                 showHumanSupportArea();
                 setHumanStatus(
@@ -1271,14 +1564,43 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
                 );
             }
 
-            // Keep the full history for the human-support request.
+            // If the employee explicitly asks to create a ticket,
+            // display the ticket form button without creating anything yet.
+            if (wantsTicket(message)) {
+                showTicketOption();
+
+                addChatMessage(
+                    "Of course. You can create an IT support ticket using the button below. " +
+                    "Fill in the issue title and description, then submit it.",
+                    "bot"
+                );
+
+                conversationHistory.push({
+                    role: "user",
+                    content: message
+                });
+
+                conversationHistory.push({
+                    role: "assistant",
+                    content: "The employee requested a support ticket. The ticket form was offered."
+                });
+
+                conversationHistory = conversationHistory.slice(-12);
+
+                chatIsBusy = false;
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                sendButton.textContent = "Send";
+                chatInput.focus();
+                return;
+            }
+
             conversationHistory.push({
                 role: "user",
                 content: message
             });
 
             try {
-                // Refresh status when a support request has already been made.
                 if (humanSupportArea.classList.contains("visible")) {
                     try {
                         const statusResponse = await fetch(
@@ -1294,12 +1616,10 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
                             updateHumanSupportDisplay(statusResult);
                         }
                     } catch (statusError) {
-                        // Continue with the last known status if status refresh fails.
+                        // Continue with the last known status.
                     }
                 }
 
-                // If the human administrator accepted the request,
-                // send the employee's message to the human conversation.
                 if (
                     humanSupportArea.classList.contains("visible") &&
                     (
@@ -1318,13 +1638,13 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
                     return;
                 }
 
-                // If the request is still waiting, tell the employee.
                 if (
                     humanSupportArea.classList.contains("visible") &&
                     humanRequestStatus === "pending"
                 ) {
                     addChatMessage(
-                        "Your human-support request is still waiting for an IT administrator. You can continue asking the AI for help while you wait.",
+                        "Your human-support request is still waiting for an IT administrator. " +
+                        "You can continue asking the AI for help while you wait.",
                         "bot"
                     );
 
@@ -1332,7 +1652,6 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
                     return;
                 }
 
-                // Otherwise, send the message to the AI helpdesk.
                 chatStatus.textContent = "Support AI is preparing a response...";
 
                 const response = await fetch("/chat", {
@@ -1358,6 +1677,14 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
                     role: "assistant",
                     content: reply
                 });
+
+                // If the AI cannot confidently answer, make ticket creation
+                // available as another way to get help.
+                if (
+                    /\b(couldn't find enough information|could not find enough information|unable to resolve|cannot resolve|can't resolve|contact your it support|contact the it team|it support team may need|not enough information|unable to help|cannot help with this issue|can't help with this issue)\b/i.test(reply)
+                ) {
+                    showTicketOption();
+                }
 
                 conversationHistory = conversationHistory.slice(-12);
                 chatStatus.textContent = "";
@@ -1392,9 +1719,6 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
             }
         });
 
-        // IMPORTANT:
-        // There is intentionally no click handler that automatically reveals
-        // the human-support button when the chat is opened.
     </script>
 </body>
 </html>
