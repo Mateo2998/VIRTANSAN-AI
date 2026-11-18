@@ -1,32 +1,175 @@
-Document Title: No Problem Reported or Issue Resolved
+# Document Title: No Problem Reported or Issue Resolved
+Document ID: IT-SupportProcedure-007
 Category: General Support
 
-PURPOSE
-Handle conversations where the employee reports that nothing is wrong, that their issue is already resolved, or that they are only greeting or thanking the assistant. Close the conversation politely without starting unnecessary troubleshooting.
+## PURPOSE
 
-GENERAL RULES
-- Do not start a troubleshooting procedure when the employee has not reported a problem.
-- Do not invent problems or suggest checks that were not requested.
-- Do not ask the employee for personal information, passwords, or authentication codes.
-- If the employee says an earlier issue is working again, acknowledge that it is resolved and stop troubleshooting.
-- Do not claim that a ticket was closed or that IT was notified unless the system actually performed that action and confirmed it.
+Handle conversations where an employee has no IT problem, has already resolved an issue, or is simply greeting or thanking the assistant.
 
-SCENARIO 1: THE EMPLOYEE SAYS THEY HAVE NO PROBLEM
-Step 1: Acknowledge politely and let them know they can come back anytime.
-Step 2: Ask once, in a single short sentence, whether there is anything IT-related you can help with.
-Step 3: If they say no, end the conversation courteously.
+The AI should respond naturally and politely without starting unnecessary troubleshooting.
 
-SCENARIO 2: THE ISSUE IS RESOLVED
-Step 1: Confirm that the issue is now resolved.
-Step 2: Briefly note, if helpful, what resolved it so the employee knows what to try next time.
-Step 3: Do not continue with remaining troubleshooting steps.
-Step 4: If the employee mentions a different issue, treat it as a new, separate problem.
+## GENERAL RULES
 
-SCENARIO 3: GREETING OR THANKS ONLY
-Step 1: Respond warmly and briefly.
-Step 2: Ask how you can help with an IT-related concern.
+- Do not start troubleshooting when the employee has not reported a problem.
+- Do not invent problems or suggest unnecessary checks.
+- Do not ask for personal information, passwords, or verification codes.
+- Keep greetings, acknowledgments, and closing responses short.
+- Remember whether an earlier issue has already been resolved.
+- Do not repeat troubleshooting steps that the employee has completed.
+- Do not claim that a ticket was closed or IT was notified unless the system actually performed and confirmed the action.
+- If the employee introduces a different IT problem, treat it as a new issue.
 
-CONVERSATION GUIDELINES
-- Be polite, calm, and brief.
-- Do not repeat troubleshooting the employee has already completed.
-- Do not pressure the employee to describe a problem if they do not have one.
+## SCENARIO 1: EMPLOYEE SAYS THEY HAVE NO PROBLEM
+
+Use this procedure when an employee says they have no issue or does not need assistance.
+
+### Step 1: Acknowledge
+
+Respond naturally and politely.
+
+Example:
+
+"No problem! I'm here whenever you need help."
+
+### Step 2: Offer Assistance Once
+
+If appropriate, ask:
+
+"Is there anything IT-related I can help you with?"
+
+Wait for the employee's answer.
+
+### Step 3: End the Conversation
+
+If the employee says no:
+
+- Acknowledge their response.
+- End the conversation politely.
+- Do not continue asking questions or suggest troubleshooting.
+
+Example:
+
+"Alright! Feel free to reach out whenever you need IT assistance."
+
+## SCENARIO 2: EMPLOYEE CONFIRMS THE ISSUE IS RESOLVED
+
+Use this procedure when an employee says their previous problem is now working.
+
+### Step 1: Acknowledge the Resolution
+
+Respond positively.
+
+Example:
+
+"Glad to hear it's working again!"
+
+### Step 2: Mention the Solution if Helpful
+
+If the employee explained what fixed the issue, briefly acknowledge it.
+
+Example:
+
+"Great! Restarting the application resolved the problem."
+
+Do not invent a solution if the employee did not explain what fixed it.
+
+### Step 3: Stop Troubleshooting
+
+- Do not continue the previous troubleshooting procedure.
+- Do not repeat completed steps.
+- Do not ask unnecessary follow-up questions.
+- Do not claim that a related support ticket was closed unless the system confirms it.
+
+### Step 4: Handle a Different Issue Separately
+
+If the employee reports another problem, treat it as a new support request and follow the relevant knowledge base procedure.
+
+## SCENARIO 3: EMPLOYEE GREETS THE AI
+
+Use this procedure when the employee sends a greeting without describing an IT problem.
+
+Examples:
+
+- Hello.
+- Hi.
+- Good morning.
+- Good afternoon.
+- Hey.
+
+Respond naturally and briefly.
+
+Example:
+
+"Hello! How can I help you with an IT-related concern today?"
+
+Do not start troubleshooting or assume that the employee has a problem.
+
+## SCENARIO 4: EMPLOYEE SAYS THANK YOU
+
+Use this procedure when the employee thanks the assistant after receiving help.
+
+Respond warmly and briefly.
+
+Examples:
+
+- "You're welcome! Glad I could help."
+- "No problem! Feel free to reach out if you need anything else."
+- "Happy to help!"
+
+Do not restart the troubleshooting process unless the employee introduces another problem.
+
+## SCENARIO 5: EMPLOYEE SAYS GOODBYE
+
+When an employee says goodbye or indicates that they are finished:
+
+- Respond politely.
+- Do not ask unnecessary questions.
+- Do not continue the conversation with unrelated suggestions.
+
+Example:
+
+"Goodbye! Have a great day!"
+
+## CONVERSATION GUIDELINES
+
+- Be friendly, polite, and natural.
+- Keep responses short and simple.
+- Do not pressure employees to report an issue.
+- Do not repeatedly ask whether they need help.
+- Do not interpret every message as a technical problem.
+- Do not provide unnecessary troubleshooting instructions.
+- Remember the current conversation context.
+- If the employee confirms that an issue is resolved, stop troubleshooting that issue.
+- If the employee introduces a new problem, follow the appropriate support procedure.
+
+## EXPECTED AI BEHAVIOR
+
+Example 1: No Problem
+
+Employee: I don't have any problems.
+
+AI: No problem! Is there anything IT-related I can help you with?
+
+Employee: No, that's all.
+
+AI: Alright! Feel free to reach out whenever you need help.
+
+Example 2: Issue Resolved
+
+Employee: It's working now.
+
+AI: Glad to hear that! Let me know if you need help with anything else.
+
+Example 3: Greeting
+
+Employee: Good morning!
+
+AI: Good morning! How can I help you with an IT-related concern today?
+
+Example 4: Thank You
+
+Employee: Thank you for helping me.
+
+AI: You're welcome! Happy to help.
+
+These examples demonstrate the expected behavior. Respond naturally based on the employee's actual message instead of repeating fixed scripts.

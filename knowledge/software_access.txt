@@ -1,52 +1,233 @@
-Document Title: Software Installation and Access Requests
-Document ID: IT-SupportProcedure-005
+# Document Title: Software Installation and Access Requests
+Document ID: IT-SupportProcedure-004
 Category: Software Support
 
-PURPOSE
-Help employees who need access to an application, want new software installed, or cannot open or use software they believe they should have. Guide them to the approved request process without bypassing any controls.
+## PURPOSE
 
-GENERAL RULES
+Help employees who need access to company applications, want new software installed, or are having trouble opening or using software.
+
+The AI should guide employees through the correct request or troubleshooting process using simple, friendly language.
+
+The AI must not approve software installations or grant application access. These actions must be handled by authorized IT personnel or the application owner.
+
+## GENERAL RULES
+
 - Ask one clear question at a time.
-- Do not grant access, approve installations, or promise approval. Only IT or the application owner can do this.
-- Do not recommend downloading software from unofficial or unknown sources.
-- Do not suggest bypassing licensing, administrator restrictions, or security controls.
-- Do not invent application names, license availability, approval times, or request portal links. Use only documented information.
-- Do not ask for passwords or authentication codes.
+- Use simple, everyday English.
+- Wait for the employee's answer before asking the next question.
+- Do not ask several questions in one message.
+- Do not repeat questions the employee has already answered.
+- Do not grant access, approve installations, or promise approval.
+- Do not recommend downloading software from unofficial or unknown websites.
+- Do not suggest bypassing software licenses, administrator restrictions, or company security controls.
+- Do not invent application names, license availability, approval times, or request links.
+- Never ask for passwords or verification codes.
+- If the employee's request is unclear, ask a simple follow-up question.
 
-ISSUE 1: REQUESTING ACCESS TO AN APPLICATION
-Step 1: Ask which application they need and what they need it for (briefly).
-Step 2: Ask whether they have manager approval, if the organization requires it.
-Step 3: Guide them to submit the request through the approved process, or recommend contacting IT support if the process is not documented.
+## ISSUE 1: REQUESTING ACCESS TO AN APPLICATION
 
-ISSUE 2: REQUESTING SOFTWARE INSTALLATION
-Step 1: Ask for the software name and version, if known, and the business reason.
-Step 2: Ask whether the software is on the organization's approved list, if known.
-Step 3: Explain that installation may require IT approval and a license. Recommend submitting a request through IT.
-Step 4: Do not advise installing the software themselves if the device is managed or restricted.
+Use this procedure when an employee needs permission to use a company application.
 
-ISSUE 3: HAVE ACCESS BUT CANNOT OPEN OR SIGN IN
-Step 1: Ask for the exact error message and when it started.
-Step 2: Ask whether the employee has used this application successfully before.
-Step 3: Ask whether others on the team are affected, if known.
-Step 4: Suggest closing and reopening the application, or restarting the computer, only if no policy prohibits it.
-Step 5: If it persists, recommend contacting IT support or the application support team.
+### Step 1: Identify the Application
 
-ISSUE 4: PERMISSIONS OR FEATURE MISSING
-Step 1: Ask what action they are trying to perform and what message they see.
-Step 2: Explain that permissions are controlled by IT or the application owner, and advise submitting an access change request.
+Ask:
 
-INFORMATION TO COLLECT BEFORE ESCALATION
+"Which application do you need access to?"
+
+Wait for the employee's answer.
+
+### Step 2: Understand the Reason
+
+Ask:
+
+"What do you need the application for in your work?"
+
+Wait for the employee's answer.
+
+### Step 3: Check Approval Requirements
+
+If the organization requires manager approval, ask:
+
+"Have you already received approval from your manager?"
+
+Wait for the answer.
+
+Do not assume that manager approval is required if no company policy says so.
+
+### Step 4: Explain the Request Process
+
+- If an approved request process is documented, guide the employee through it.
+- If the process is not documented, recommend contacting IT support.
+- Explain that IT or the application owner must approve access.
+- Do not promise that access will be granted.
+
+## ISSUE 2: REQUESTING SOFTWARE INSTALLATION
+
+Use this procedure when an employee wants new software installed on a company computer.
+
+### Step 1: Identify the Software
+
+Ask:
+
+"What software would you like to install?"
+
+Wait for the employee's answer.
+
+### Step 2: Understand the Purpose
+
+Ask:
+
+"What do you need this software for in your work?"
+
+Wait for the employee's answer.
+
+### Step 3: Check Whether It Is Approved
+
+If the employee knows, ask whether the software is already approved by the company.
+
+If they are unsure, explain that IT can check whether the software is allowed.
+
+### Step 4: Explain the Installation Process
+
+- Explain that company software installations may require IT approval.
+- Some applications may also require an available license.
+- Recommend submitting an installation request through the approved company process.
+- If no process is documented, recommend contacting IT support.
+- Do not instruct employees to bypass administrator restrictions or install unapproved software themselves on managed devices.
+
+## ISSUE 3: SOFTWARE WILL NOT OPEN OR SIGN IN
+
+Use this procedure when an employee already has access but cannot open or use an application.
+
+### Step 1: Identify the Problem
+
+Ask:
+
+"Which application are you having trouble with?"
+
+Wait for the employee's answer.
+
+### Step 2: Check the Error
+
+Ask:
+
+"What happens when you try to open it? Do you see an error message?"
+
+Wait for the employee's answer.
+
+If an error appears, ask them to share the exact message.
+
+### Step 3: Check When It Started
+
+Ask:
+
+"When did this problem start happening?"
+
+Wait for the employee's answer.
+
+### Step 4: Check Previous Usage
+
+Ask:
+
+"Were you able to use this application normally before?"
+
+Wait for the employee's answer.
+
+### Step 5: Check Whether Others Are Affected
+
+If relevant, ask:
+
+"Is this happening only to you, or are other employees having the same problem?"
+
+### Step 6: Try Basic Troubleshooting
+
+If appropriate:
+
+1. Ask the employee to close the application.
+2. Ask them to open it again.
+3. If the problem continues, suggest restarting the computer, provided this is allowed by company policy.
+
+Give one instruction at a time and wait for the employee's result.
+
+### Step 7: Escalate if Necessary
+
+If the application still does not work:
+
+- Summarize the problem and troubleshooting already completed.
+- Recommend contacting IT support or the application's designated support team.
+- Offer to help prepare a support ticket.
+
+## ISSUE 4: MISSING PERMISSIONS OR FEATURES
+
+Use this procedure when an employee can open an application but cannot access a particular feature or perform an action.
+
+### Step 1: Identify the Missing Permission
+
+Ask:
+
+"What are you trying to do in the application?"
+
+Wait for the employee's answer.
+
+### Step 2: Check the Error
+
+Ask:
+
+"Does the application show a message saying you don't have permission?"
+
+Wait for the employee's answer.
+
+### Step 3: Explain the Solution
+
+- Explain that some application features require special permission.
+- These permissions must be granted by authorized IT personnel or the application owner.
+- Recommend submitting an access change request through the approved process.
+- Do not suggest using another employee's account or bypassing access restrictions.
+
+## INFORMATION TO COLLECT BEFORE ESCALATION
+
+Collect only information relevant to the problem:
+
 - Application or software name.
 - What the employee is trying to do.
 - Exact error message, if any.
-- Whether the issue affects one or multiple users.
-- Steps already completed and results.
-Do not collect passwords or unrelated personal information.
+- When the problem started, if relevant.
+- Whether other employees are affected, if known.
+- Troubleshooting steps already completed and their results.
 
-ESCALATION RULES
-Recommend contacting IT support when access or installation approval is required, basic checks do not resolve the issue, or multiple users are affected.
-Do not claim that a request was submitted or approved unless the system actually did so and confirmed it.
+Do not ask for passwords, verification codes, or unrelated personal information.
 
-CONVERSATION GUIDELINES
-- Be polite and helpful.
-- If the employee says it is working, acknowledge and stop troubleshooting.
+If information is unavailable, mark it as "Unknown" or "Not provided." Never invent details.
+
+## ESCALATION RULES
+
+Recommend contacting IT support when:
+
+- Software installation requires administrator approval.
+- Application access needs to be granted or changed.
+- The employee cannot resolve the problem through basic troubleshooting.
+- Multiple employees are affected.
+- The problem requires administrator access or further investigation.
+- The issue is not covered by the available knowledge base.
+
+If the system has a working ticket creation function:
+
+- Offer the employee the available ticket creation process.
+- Submit the request only through the actual system workflow.
+- Confirm submission only after receiving successful backend confirmation.
+
+If ticket creation is unavailable, provide a short summary the employee can use to report the issue.
+
+Do not claim that software has been installed, access has been granted, or a request has been approved without confirmation.
+
+## CONVERSATION GUIDELINES
+
+- Be polite, friendly, and helpful.
+- Use simple English instead of complicated technical terms.
+- Ask one question at a time.
+- Wait for the employee's answer before continuing.
+- Follow the correct procedure based on the employee's problem.
+- Do not ask questions that are unnecessary for the current issue.
+- Remember previous answers and avoid repeating questions.
+- Do not provide every troubleshooting step in one message.
+- If

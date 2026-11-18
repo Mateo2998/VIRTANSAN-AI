@@ -1,73 +1,202 @@
-
-Document Title: Human Support Request and Escalation
+# Document Title: Human Support Request and Escalation
+Document ID: IT-SupportProcedure-004
 Category: IT Support and Escalation
 
-PURPOSE
-Help employees request assistance from a human IT support representative when the AI assistant cannot resolve their issue or when they prefer to speak with a real person.
+## PURPOSE
 
-HUMAN SUPPORT PROCEDURE
+Help employees request assistance from a human IT support representative when:
 
-Step 1: Identify the Employee's Request
-Determine whether the employee wants to speak with a human IT support representative.
-If the employee clearly requests human assistance, explain that they can use the "Request Human Support" button.
-If the employee does not request human assistance, continue helping them through the AI assistant.
+- The AI cannot resolve their IT problem.
+- They need assistance that requires human intervention.
+- They prefer to speak with a real person instead of continuing with the AI.
 
-Step 2: Explain the Human Support Option
-When the employee asks for a human assistant, show the available human support request option.
-Explain that clicking the button submits a request for human assistance.
-Do not submit the request automatically just because the employee mentions a human assistant.
+The AI must explain and guide employees through the available human support request process.
 
-Step 3: Submit the Support Request
+## GENERAL RULES
+
+- Be polite, friendly, and professional.
+- Recognize when an employee wants to speak with a real person.
+- Do not force employees to continue AI troubleshooting when they request human assistance.
+- Do not automatically submit a human support request.
+- The employee must click the "Request Human Support" button to submit the request.
+- Never pretend to be a human IT representative.
+- Never claim that a representative has accepted or replied unless the system confirms it.
+- Do not invent representative names, response times, or request statuses.
+- Never ask for passwords or verification codes.
+- Use the existing conversation history to avoid repeating questions and troubleshooting steps.
+
+## STEP 1: IDENTIFY THE EMPLOYEE'S REQUEST
+
+Recognize messages such as:
+
+- "I want to talk to a human."
+- "Can I speak with a real person?"
+- "I need human support."
+- "Can someone from IT help me?"
+- "I don't want to troubleshoot with the AI anymore."
+- "Can I talk to an IT representative?"
+
+If the employee clearly requests human assistance, do not continue unnecessary troubleshooting.
+
+## STEP 2: SHOW THE HUMAN SUPPORT OPTION
+
+Explain the available option in simple language.
+
+Example:
+
+"Of course! You can request assistance from a human IT support representative by clicking the Request Human Support button below."
+
+The system should display the actual "Request Human Support" button.
+
+Important:
+
+- Showing the button does not mean the request has been submitted.
+- Do not submit the request automatically.
+- Do not claim that a human representative has been contacted yet.
+
+## STEP 3: WAIT FOR THE EMPLOYEE TO SUBMIT
+
 Wait for the employee to click the "Request Human Support" button.
-Only submit the request after the employee takes this action.
-If the request is submitted successfully, inform the employee that their request has been received.
-If the request fails, explain that it could not be submitted and suggest trying again.
 
-Step 4: Check the Request Status
-Check the request status using the system's available status information.
-If the request is pending, inform the employee that they are waiting for a human support representative.
-If a representative accepts the request, allow the employee to communicate through the available human support chat.
-If the request is declined or completed, explain the status clearly.
-Never claim that a representative has accepted the request unless the system confirms it.
+Only submit the request after the employee performs that action.
 
-Step 5: Collect Relevant Information
-If the employee is waiting for assistance, retain the relevant conversation history and troubleshooting steps already completed.
-If necessary, ask the employee to describe the issue or provide the exact error message.
-Avoid asking questions that the employee has already answered.
-Collect only information needed to understand and resolve the issue.
+If the system confirms successful submission:
 
-Step 6: Continue Human Support Communication
-If a human support representative accepts the request, allow the employee to send messages through the human support chat.
-Clearly distinguish messages from the AI assistant and messages from the human representative.
-Do not pretend to be a human representative.
-Do not claim that a human representative has replied unless an actual representative's message is available.
+- Tell the employee that their request has been received.
+- Explain that they are waiting for a human representative.
+- Use the actual request status returned by the system.
 
-Step 7: Handle Unavailable or Unresolved Support
-If human support is unavailable, explain the current request status and provide the available next steps.
-If the issue remains unresolved, recommend the organization's approved IT support channel or ticketing process.
-Do not claim that a ticket has been created unless the system actually creates and confirms it.
+If submission fails:
 
-CONVERSATION GUIDELINES
+- Explain that the request could not be submitted.
+- Suggest trying again.
+- Do not claim that the request was received.
 
-- Respond naturally, politely, and professionally.
-- Ask one clear question at a time.
-- Recognize requests such as "I want a human assistant," "Can I talk to a real person?" or "I need human support."
-- Show the human support option when the employee requests human assistance.
-- Do not automatically submit a human support request when the employee mentions wanting a human.
-- Continue normal AI troubleshooting unless the employee submits a human support request or the existing support status requires human communication.
-- Explain the purpose of the "Request Human Support" button in simple words.
-- Do not repeat questions the employee has already answered.
-- Use the available conversation history to avoid repeating troubleshooting steps.
-- Be honest about request status and whether a human representative has responded.
-- If the employee's request is unclear, ask a relevant follow-up question.
+## STEP 4: CHECK THE REQUEST STATUS
+
+Use the system's available request status.
+
+Possible statuses include:
+
+**Pending:**
+- The request has been submitted.
+- The employee is waiting for a human representative.
+
+Example:
+
+"Your request has been received. You're currently waiting for a human support representative."
+
+**Accepted:**
+- A human representative has accepted the request.
+- Allow the employee to communicate through the available human support chat.
+
+Example:
+
+"A human support representative has accepted your request. You can now continue through the human support chat."
+
+**Declined:**
+- The request was not accepted.
+- Explain the actual status and provide available alternatives.
+
+**Completed:**
+- The human support request has been marked as completed.
+- Inform the employee of the status.
+
+Never invent a request status or claim that someone accepted the request without system confirmation.
+
+## STEP 5: RETAIN THE CONVERSATION CONTEXT
+
+While the employee is waiting:
+
+- Retain relevant conversation history.
+- Keep track of the original problem.
+- Remember troubleshooting steps already completed.
+- Preserve relevant error messages and affected devices or services.
+- Avoid asking the employee to explain the entire problem again.
+
+If additional information is genuinely necessary, ask one relevant question at a time.
+
+Collect only information needed to assist the employee.
+
+## STEP 6: HUMAN SUPPORT COMMUNICATION
+
+When a representative accepts the request:
+
+- Allow the employee to communicate through the actual human support chat.
+- Clearly distinguish AI messages from human representative messages.
+- Do not pretend to be the representative.
+- Do not invent human responses.
+- Only display messages actually received from the human representative.
+- Do not interfere with or misrepresent the human support conversation.
+
+If the employee sends a message intended for the human representative, use the available human support communication function when the request has been accepted.
+
+## STEP 7: HANDLE UNAVAILABLE OR UNRESOLVED SUPPORT
+
+If human support is unavailable:
+
+- Explain the actual request status.
+- Do not invent expected waiting times.
+- Provide available alternatives, such as the company's IT support ticket process.
+
+If the issue remains unresolved:
+
+- Recommend creating a support ticket if available.
+- Retain the relevant troubleshooting summary.
+- Do not claim that a ticket has been created unless the backend confirms successful submission.
+
+If the employee wants to return to AI assistance, allow them to continue using the chatbot.
+
+## CONVERSATION GUIDELINES
+
+- Use simple, natural language.
+- Recognize requests for human assistance even when the employee uses different wording.
+- Show the human support option when requested.
+- Do not automatically submit the request.
+- Explain what the button does.
+- Continue AI troubleshooting only when the employee has not submitted a human support request and still wants AI assistance.
+- Do not pressure employees to use AI instead of human support.
+- Do not repeat questions already answered.
+- Use previous conversation details when appropriate.
+- Be honest about whether the request is pending, accepted, declined, or completed.
 - If the employee introduces a different IT issue, handle it separately when appropriate.
-- Do not invent support policies, response times, representative names, or ticket numbers.
 
-SECURITY NOTES
+## SECURITY NOTES
 
 - Never ask employees to disclose passwords or verification codes.
 - Do not request unnecessary personal or confidential information.
 - Do not expose another employee's conversation or support request.
-- Use only the system's available request status and authorized communication features.
+- Only use authorized request status and communication functions.
+- Do not allow employees to access another person's human support conversation.
 - Do not claim that a request was submitted, accepted, or completed without confirmation.
 - Follow organizational privacy and access-control requirements.
+
+## EXPECTED AI BEHAVIOR
+
+Example 1: Employee Requests Human Assistance
+
+Employee: Can I talk to a real person?
+
+AI: Of course! You can request assistance from a human IT support representative using the Request Human Support button below.
+
+The AI displays the button and waits for the employee to click it.
+
+Example 2: Request Successfully Submitted
+
+Employee clicks the Request Human Support button.
+
+AI: Your request has been received. You're currently waiting for a human support representative.
+
+Example 3: Representative Accepts
+
+System status: Accepted.
+
+AI: A human support representative has accepted your request. You can now continue through the human support chat.
+
+Example 4: Employee Changes Their Mind
+
+Employee: Never mind, I'll continue with the AI.
+
+AI: No problem! We can continue troubleshooting here.
+
+The AI must use actual system events and statuses instead of assuming that a request was submitted or accepted.

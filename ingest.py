@@ -15,40 +15,74 @@ collection = client.get_or_create_collection(
 )
 
 
-def create_embedding(text):
-    response = requests.post(
-        "http://localhost:11434/api/embeddings",
-        json={
-            "model": MODEL_NAME,
-            "prompt": text
-        },
-        timeout=120
-    )
+def create_embedding(text, filename):
+    try:
+        response = requests.post(
+            "http://localhost:11434/api/embeddings",
+            json={
+                "model": MODEL_NAME,
+                "prompt": text
+            },
+            timeout=120
+        )
 
-    response.raise_for_status()
-    return response.json()["embedding"]
+        if response.status_code != 200:
+            print(f"\nEmbedding failed for: {filename}")
+            print(f"Status code: {response.status_code}")
+            print(f"Error: {response.text}")
+
+        response.raise_for_status()
+
+        return response.json()["embedding"]
+
+    except requests.exceptions.RequestException as error:
+        print(f"\nError processing: {filename}")
+        print(error)
+        raise
 
 
 def main():
-    files = list(KNOWLEDGE_FOLDER.glob("*.txt"))
+    files = sorted(KNOWLEDGE_FOLDER.glob("*.txt"))
 
     if not files:
         print("No .txt files found in the knowledge folder.")
         return
 
+    print(f"Found {len(files)} knowledge documents.\n")
+
+    successful = 0
+    failed = 0
+
     for file in files:
-        content = file.read_text(encoding="utf-8")
+        try:
+            content = file.read_text(encoding="utf-8")
 
-        collection.upsert(
-            ids=[file.name],
-            documents=[content],
-            embeddings=[create_embedding(content)],
-            metadatas=[{"source": file.name}]
-        )
+            if not content.strip():
+                print(f"Skipped empty file: {file.name}")
+                continue
 
-        print(f"Indexed: {file.name}")
+            embedding = create_embedding(content, file.name)
 
-    print(f"Total documents indexed: {collection.count()}")
+            collection.upsert(
+                ids=[file.name],
+                documents=[content],
+                embeddings=[embedding],
+                metadatas=[{"source": file.name}]
+            )
+
+            successful += 1
+            print(f"Indexed: {file.name}")
+
+        except Exception as error:
+            failed += 1
+            print(f"Failed: {file.name}")
+            print(f"Reason: {error}\n")
+
+    print("\n========== INGESTION SUMMARY ==========")
+    print(f"Successfully indexed: {successful}")
+    print(f"Failed: {failed}")
+    print(f"Total documents in database: {collection.count()}")
+    print("=======================================")
 
 
 if __name__ == "__main__":
