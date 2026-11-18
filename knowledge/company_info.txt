@@ -1,0 +1,105 @@
+# Document Title: VIRTANSAN Company Information
+**Document ID:** VIRTANSAN-INFO-001  
+**Category:** Company Information
+
+## 1. COMPANY OVERVIEW
+
+VIRTANSAN is an international organization specializing in Information Technology (IT), Computer Science (CS), and technology-related fields.
+
+The organization focuses on technology development, digital solutions, and IT-related services. Its areas of specialization cover several important sectors of the technology industry, including Artificial Intelligence, software development, networking, and cybersecurity.
+
+VIRTANSAN aims to contribute to the technology sector through innovation, technical development, and the application of modern computing technologies.
+
+## 2. AREAS OF SPECIALIZATION
+
+VIRTANSAN operates across several areas of IT and Computer Science.
+
+### 2.1 Artificial Intelligence Development
+
+VIRTANSAN specializes in Artificial Intelligence (AI) creation and development. This field involves developing intelligent systems and applications that can assist with tasks, process information, and support different technological needs.
+
+Examples of AI-related areas include:
+- AI-powered applications.
+- Intelligent automation.
+- AI-assisted systems and solutions.
+- Machine learning and related technologies.
+
+### 2.2 Web Development
+
+Web development is another area of specialization. It involves creating and maintaining websites and web-based applications.
+
+Related activities may include:
+- Website development.
+- Web application development.
+- Frontend and backend development.
+- Database integration.
+- Development of interactive digital platforms.
+
+### 2.3 Computer Networking
+
+VIRTANSAN also specializes in computer networking, which focuses on the communication and connection of computers, devices, and systems.
+
+Related areas include:
+- Network infrastructure.
+- Network configuration and administration.
+- Network connectivity and troubleshooting.
+- Network management.
+- Network performance and reliability.
+
+### 2.4 Cybersecurity
+
+Cybersecurity focuses on protecting computer systems, networks, applications, and information against digital threats and unauthorized access.
+
+Related areas include:
+- Information security.
+- Network security.
+- Threat identification and prevention.
+- Vulnerability awareness.
+- Security monitoring and protection.
+- Data and system protection.
+
+### 2.5 Other IT and Computer Science Fields
+
+In addition to its main specializations, VIRTANSAN covers other areas related to Information Technology and Computer Science.
+
+These may include software development, computer systems, information management, digital technologies, and other computing-related disciplines.
+
+## 3. INDUSTRY AND TECHNOLOGY FOCUS
+
+VIRTANSAN operates within the broader technology industry, where computing, software, digital infrastructure, and emerging technologies play important roles.
+
+Its areas of specialization are interconnected. For example:
+- Artificial Intelligence can be integrated into software and web applications.
+- Networking provides the infrastructure needed for connected systems and services.
+- Cybersecurity helps protect applications, networks, and digital information.
+- Software and web development provide platforms for implementing digital solutions.
+
+These fields collectively represent VIRTANSAN's focus on IT and Computer Science.
+
+## 4. COMPANY KNOWLEDGE AND INFORMATION
+
+VIRTANSAN AI may use this document to answer general questions about the organization, including:
+
+- What is VIRTANSAN?
+- What industry does VIRTANSAN belong to?
+- What are the company's areas of specialization?
+- Does VIRTANSAN work with Artificial Intelligence?
+- Does VIRTANSAN specialize in networking or cybersecurity?
+- What technology-related fields does VIRTANSAN cover?
+
+## 5. INFORMATION ACCURACY GUIDELINES
+
+When providing information about VIRTANSAN:
+
+- Use the information documented in the approved company knowledge base.
+- Describe the company's specializations accurately.
+- Do not invent company history, founding dates, office locations, employee information, clients, partnerships, or financial details.
+- Do not claim specific products, platforms, or services exist unless they are documented.
+- Do not assume that every technology listed is an active company project.
+- If requested information is unavailable, politely explain that it is not included in the available company documentation.
+
+## 6. SUMMARY
+
+VIRTANSAN is an international organization focused on Information Technology, Computer Science, and related technological fields. Its primary areas of specialization include Artificial Intelligence development, web development, computer networking, and cybersecurity, alongside other IT and CS disciplines.
+
+The organization brings together different areas of technology under a broad focus on digital solutions, innovation, and technical development.
