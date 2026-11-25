@@ -1,9 +1,9 @@
-# VIRTANSAN AI
+# VIRTANSANLARA AI
 ### AI-Powered Enterprise Helpdesk and Workflow Automation System
 
 ## 1. Project Overview
 
-VIRTANSAN AI is an AI-powered IT helpdesk system designed to assist employees with common company-related IT problems.
+VIRTANSANLARA AI is an AI-powered IT helpdesk system designed to assist employees with common company-related IT problems.
 
 It uses Artificial Intelligence and Retrieval-Augmented Generation (RAG) to provide troubleshooting assistance using an internal knowledge base.
 
@@ -51,7 +51,7 @@ Install Python 3.13 and Ollama on your computer.
 
 Step 2. Open the project folder.
 
-Open the VIRTANSAN AI project folder in Visual Studio Code.
+Open the VIRTANSANLARA AI project folder in Visual Studio Code.
 
 Step 3. Create a virtual environment.
 
@@ -125,7 +125,7 @@ The application should now be accessible locally.
 ## 8. Project Structure
 
 ```text
-VIRTANSAN AI/
+VIRTANSANLARA AI/
 │
 ├── frontend/
 │   └── index.html
@@ -170,9 +170,9 @@ ollama list
 
 ## 10. Developers
 
-Project Name: VIRTANSAN AI
+Project Name: VIRTANSANLARA AI
 
-Organization: VIRTANSAN
+Organization: VIRTANSANLARA
 
 Course: Applied Generative AI for IT Solution Development
 
