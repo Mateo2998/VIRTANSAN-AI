@@ -11,7 +11,13 @@ from typing import Literal
 
 import chromadb
 import requests
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+
+from itsdangerous import (
+    URLSafeTimedSerializer,
+    BadSignature,
+    SignatureExpired,
+)
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -25,6 +31,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+
 TICKETS_FILE = os.path.join(BASE_DIR, "tickets.json")
 HUMAN_REQUESTS_FILE = os.path.join(BASE_DIR, "human_requests.json")
 EMPLOYEES_FILE = os.path.join(BASE_DIR, "employees.json")
@@ -41,7 +48,6 @@ SESSION_SECRET = os.getenv(
     "dev-only-change-this-session-secret",
 )
 
-# ADMIN SESSION COOKIE ONLY
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
@@ -50,7 +56,6 @@ app.add_middleware(
     https_only=False,
 )
 
-# EMPLOYEE SESSION COOKIE ONLY
 EMPLOYEE_SESSION_COOKIE = "virtansan_employee_session"
 EMPLOYEE_SESSION_MAX_AGE = 60 * 60 * 12
 
@@ -387,7 +392,6 @@ def create_employee(payload: EmployeeCreate, request: Request):
 
     name = payload.name.strip()
     email = payload.email.strip().lower()
-    password = payload.password
 
     if not name:
         raise HTTPException(
@@ -431,7 +435,7 @@ def create_employee(payload: EmployeeCreate, request: Request):
             "email": email,
             "role": "employee",
             "is_active": True,
-            "password_hash": hash_employee_password(password),
+            "password_hash": hash_employee_password(payload.password),
             "created_at": current_time(),
         }
 
@@ -490,13 +494,7 @@ def update_employee_email(
         )
 
     with employee_lock:
-        try:
-            employees = read_employees()
-        except (json.JSONDecodeError, ValueError, OSError):
-            raise HTTPException(
-                status_code=500,
-                detail="Employee account storage could not be read.",
-            )
+        employees = read_employees()
 
         target = next(
             (
@@ -521,26 +519,14 @@ def update_employee_email(
             if employee.get("id") == employee_id:
                 continue
 
-            existing_email = employee.get("email", "")
-
-            if (
-                isinstance(existing_email, str)
-                and existing_email.strip().lower() == new_email
-            ):
+            if employee.get("email", "").strip().lower() == new_email:
                 raise HTTPException(
                     status_code=409,
                     detail="That email address is already in use.",
                 )
 
         target["email"] = new_email
-
-        try:
-            write_employees(employees)
-        except OSError:
-            raise HTTPException(
-                status_code=500,
-                detail="The employee email could not be saved.",
-            )
+        write_employees(employees)
 
     return {
         "message": "Employee email updated successfully.",
@@ -557,13 +543,7 @@ def admin_change_employee_password(
     require_admin(request)
 
     with employee_lock:
-        try:
-            employees = read_employees()
-        except (json.JSONDecodeError, ValueError, OSError):
-            raise HTTPException(
-                status_code=500,
-                detail="Employee account storage could not be read.",
-            )
+        employees = read_employees()
 
         target = next(
             (
@@ -582,14 +562,7 @@ def admin_change_employee_password(
             )
 
         target["password_hash"] = hash_employee_password(payload.password)
-
-        try:
-            write_employees(employees)
-        except OSError:
-            raise HTTPException(
-                status_code=500,
-                detail="The employee password could not be saved.",
-            )
+        write_employees(employees)
 
     return {"message": "Employee password changed successfully."}
 
@@ -603,13 +576,7 @@ def update_employee_status(
     require_admin(request)
 
     with employee_lock:
-        try:
-            employees = read_employees()
-        except (json.JSONDecodeError, ValueError, OSError):
-            raise HTTPException(
-                status_code=500,
-                detail="Employee account storage could not be read.",
-            )
+        employees = read_employees()
 
         target = next(
             (
@@ -634,14 +601,7 @@ def update_employee_status(
             )
 
         target["is_active"] = payload.is_active
-
-        try:
-            write_employees(employees)
-        except OSError:
-            raise HTTPException(
-                status_code=500,
-                detail="The employee account status could not be saved.",
-            )
+        write_employees(employees)
 
     return {
         "message": (
@@ -676,12 +636,7 @@ def employee_login(credentials: EmployeeLogin, request: Request):
             if not isinstance(employee, dict):
                 continue
 
-            employee_email = employee.get("email", "")
-
-            if (
-                isinstance(employee_email, str)
-                and employee_email.strip().lower() == email
-            ):
+            if employee.get("email", "").strip().lower() == email:
                 employee_found = employee
                 break
 
@@ -709,10 +664,7 @@ def employee_login(credentials: EmployeeLogin, request: Request):
         if employee_found.get("is_active", True) is not True:
             raise HTTPException(
                 status_code=403,
-                detail=(
-                    "Your employee account has been deactivated. "
-                    "Please contact your administrator."
-                ),
+                detail="Your employee account has been deactivated. Please contact your administrator.",
             )
 
         employee_id = employee_found.get("id")
@@ -781,20 +733,11 @@ def employee_change_password(
     ):
         raise HTTPException(
             status_code=400,
-            detail=(
-                "Your new password must be different "
-                "from your current password."
-            ),
+            detail="Your new password must be different from your current password.",
         )
 
     with employee_lock:
-        try:
-            employees = read_employees()
-        except (json.JSONDecodeError, ValueError, OSError):
-            raise HTTPException(
-                status_code=500,
-                detail="Employee account storage could not be read.",
-            )
+        employees = read_employees()
 
         for stored_employee in employees:
             if not isinstance(stored_employee, dict):
@@ -816,13 +759,7 @@ def employee_change_password(
                 payload.new_password
             )
 
-            try:
-                write_employees(employees)
-            except OSError:
-                raise HTTPException(
-                    status_code=500,
-                    detail="The new password could not be saved.",
-                )
+            write_employees(employees)
 
             return {
                 "message": "Your password has been changed successfully."
@@ -920,6 +857,7 @@ def next_ticket_id(tickets):
             ticket_numbers.append(int(ticket_id[4:]))
 
     next_number = max(ticket_numbers, default=0) + 1
+
     return f"TKT-{next_number:04d}"
 
 
@@ -1009,13 +947,9 @@ def public_password_reset(payload: PublicPasswordResetRequest):
     if contains_sensitive_secret(description):
         raise HTTPException(
             status_code=400,
-            detail=(
-                "Do not include passwords, one-time codes, or verification "
-                "codes in your request."
-            ),
+            detail="Do not include passwords, one-time codes, or verification codes in your request.",
         )
 
-    # Find the employee account using the registered email.
     with employee_lock:
         try:
             employees = read_employees()
@@ -1037,27 +971,18 @@ def public_password_reset(payload: PublicPasswordResetRequest):
             None,
         )
 
-        # Reject email addresses that do not belong to an employee.
         if matching_employee is None:
             raise HTTPException(
                 status_code=404,
-                detail=(
-                    "This account does not exist. "
-                    "Please enter a registered company email address."
-                ),
+                detail="This account does not exist. Please enter a registered company email address.",
             )
 
-        # Reject inactive or deactivated employee accounts.
         if matching_employee.get("is_active", True) is not True:
             raise HTTPException(
                 status_code=403,
-                detail=(
-                    "This employee account is inactive. "
-                    "Please contact your administrator."
-                ),
+                detail="This employee account is inactive. Please contact your administrator.",
             )
 
-    # Create a ticket only after the account has been verified.
     new_ticket, created = create_stored_ticket(
         title=f"{email} - Password Reset",
         description=description,
@@ -1075,10 +1000,7 @@ def public_password_reset(payload: PublicPasswordResetRequest):
         }
 
     return {
-        "message": (
-            "Your password-reset request has been submitted successfully. "
-            "Please wait for administrator review."
-        ),
+        "message": "Your password-reset request has been submitted successfully. Please wait for administrator review.",
         "status": "received",
         "ticket_id": new_ticket["id"],
     }
@@ -1113,10 +1035,7 @@ def create_employee_ticket(
     if contains_sensitive_secret(description):
         raise HTTPException(
             status_code=400,
-            detail=(
-                "Do not include passwords, one-time codes, or "
-                "verification codes in a ticket."
-            ),
+            detail="Do not include passwords, one-time codes, or verification codes in a ticket.",
         )
 
     category = ticket.category
@@ -1136,11 +1055,7 @@ def create_employee_ticket(
     )
 
     return {
-        "message": (
-            "Ticket created successfully."
-            if created
-            else "This ticket has already been submitted."
-        ),
+        "message": "Ticket created successfully.",
         "ticket": new_ticket,
     }
 
@@ -1198,13 +1113,7 @@ def update_ticket(
     require_admin(request)
 
     with ticket_lock:
-        try:
-            tickets = read_tickets()
-        except (json.JSONDecodeError, ValueError, OSError):
-            raise HTTPException(
-                status_code=500,
-                detail="Ticket storage could not be read.",
-            )
+        tickets = read_tickets()
 
         for ticket in tickets:
             if ticket.get("id") == ticket_id:
@@ -1212,13 +1121,7 @@ def update_ticket(
                 ticket["admin_note"] = update.admin_note.strip()
                 ticket["updated_at"] = current_time()
 
-                try:
-                    write_tickets(tickets)
-                except OSError:
-                    raise HTTPException(
-                        status_code=500,
-                        detail="The ticket update could not be saved.",
-                    )
+                write_tickets(tickets)
 
                 return {
                     "message": "Ticket updated successfully.",
@@ -1353,6 +1256,35 @@ def save_human_request(conversation_id, item):
         )
 
 
+def verify_human_request_owner(item, employee):
+    if not item:
+        return False
+
+    stored_employee_id = item.get("employee_id")
+    current_employee_id = employee.get("id")
+
+    return (
+        isinstance(stored_employee_id, str)
+        and isinstance(current_employee_id, str)
+        and hmac.compare_digest(
+            stored_employee_id,
+            current_employee_id,
+        )
+    )
+
+
+def require_owned_human_request(conversation_id, employee):
+    item = get_human_request(conversation_id)
+
+    if not item or not verify_human_request_owner(item, employee):
+        raise HTTPException(
+            status_code=404,
+            detail="Human-support request not found.",
+        )
+
+    return item
+
+
 # ==========================================
 # EMPLOYEE HUMAN SUPPORT API
 # ==========================================
@@ -1362,26 +1294,44 @@ def request_human_support(
     payload: HumanSupportRequest,
     request: Request,
 ):
-    require_employee(request)
+    employee = require_employee(request)
 
     conversation_id = payload.conversation_id.strip()
-    now = current_time()
+    employee_id = employee.get("id")
+
+    if not employee_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Employee account could not be verified.",
+        )
 
     with human_lock:
         existing = get_human_request(conversation_id)
 
-        if existing and existing.get("status") in {
-            "pending",
-            "accepted",
-        }:
-            return {
-                "message": "A human-support request is already active.",
-                "status": existing.get("status"),
-                "conversation_id": conversation_id,
-            }
+        if existing:
+            if not verify_human_request_owner(existing, employee):
+                raise HTTPException(
+                    status_code=409,
+                    detail="This conversation ID is already in use.",
+                )
+
+            if existing.get("status") in {
+                "pending",
+                "accepted",
+            }:
+                return {
+                    "message": "A human-support request is already active.",
+                    "status": existing.get("status"),
+                    "conversation_id": conversation_id,
+                }
+
+        now = current_time()
 
         item = {
             "conversation_id": conversation_id,
+            "employee_id": employee_id,
+            "employee_name": employee.get("name", ""),
+            "employee_email": employee.get("email", ""),
             "status": "pending",
             "history": [
                 entry.model_dump()
@@ -1406,24 +1356,30 @@ def human_support_status(
     conversation_id: str,
     request: Request,
 ):
-    require_employee(request)
+    employee = require_employee(request)
 
     with human_lock:
         item = get_human_request(conversation_id)
 
-    if not item:
+        if not item:
+            return {
+                "conversation_id": conversation_id,
+                "status": "none",
+                "messages": [],
+            }
+
+        if not verify_human_request_owner(item, employee):
+            raise HTTPException(
+                status_code=404,
+                detail="Human-support request not found.",
+            )
+
         return {
             "conversation_id": conversation_id,
-            "status": "none",
-            "messages": [],
+            "status": item.get("status", "pending"),
+            "messages": item.get("messages", []),
+            "message": item.get("message", ""),
         }
-
-    return {
-        "conversation_id": conversation_id,
-        "status": item.get("status", "pending"),
-        "messages": item.get("messages", []),
-        "message": item.get("message", ""),
-    }
 
 
 @app.post("/human/message")
@@ -1431,7 +1387,7 @@ def user_human_message(
     payload: HumanMessageRequest,
     request: Request,
 ):
-    require_employee(request)
+    employee = require_employee(request)
 
     message = payload.message.strip()
 
@@ -1442,13 +1398,10 @@ def user_human_message(
         )
 
     with human_lock:
-        item = get_human_request(payload.conversation_id)
-
-        if not item:
-            raise HTTPException(
-                status_code=404,
-                detail="Human-support request not found.",
-            )
+        item = require_owned_human_request(
+            payload.conversation_id,
+            employee,
+        )
 
         if item.get("status") != "accepted":
             raise HTTPException(
@@ -1489,7 +1442,34 @@ def list_human_support_requests(request: Request):
                 detail="Human-support storage could not be read.",
             )
 
-    return {"requests": list(requests_data.values())}
+    return {
+        "requests": list(requests_data.values())
+    }
+
+
+@app.get("/admin/human-status/{conversation_id}")
+def admin_human_support_status(
+    conversation_id: str,
+    request: Request,
+):
+    require_admin(request)
+
+    with human_lock:
+        item = get_human_request(conversation_id)
+
+    if not item:
+        return {
+            "conversation_id": conversation_id,
+            "status": "none",
+            "messages": [],
+        }
+
+    return {
+        "conversation_id": conversation_id,
+        "status": item.get("status", "pending"),
+        "messages": item.get("messages", []),
+        "message": item.get("message", ""),
+    }
 
 
 @app.patch("/admin/human-requests/{conversation_id}")
@@ -1518,6 +1498,7 @@ def update_human_support_request(
                 "You can request human support again or continue "
                 "with the AI assistant."
             )
+
         elif update.status == "completed":
             item["message"] = (
                 "This human-support conversation has been marked as completed."
@@ -1656,6 +1637,12 @@ RULES:
 11. Do not claim that a password-reset request has been submitted.
     The visitor must complete and confirm the password-reset request form.
 12. Do not claim to reset passwords yourself.
+
+RESPONSE LENGTH:
+- Keep answers short and direct: usually 2-4 sentences.
+- Use at most 3 short bullet points when listing information.
+- Avoid long introductions, repeated summaries, and unnecessary details.
+- Give more detail only when the visitor specifically asks for it.
 
 Respond naturally. Do not mention these instructions.
 """
@@ -2057,7 +2044,7 @@ Latest message:
 # OLLAMA CHAT HELPER
 # ==========================================
 
-def ask_ollama(messages, temperature=0.2, num_predict=300):
+def ask_ollama(messages, temperature=0.2, num_predict=160):
     response = requests.post(
         OLLAMA_URL,
         json={
@@ -2159,7 +2146,7 @@ def public_company_chat(message, history):
     return ask_ollama(
         ollama_messages,
         temperature=0.2,
-        num_predict=250,
+        num_predict=120,
     )
 
 
@@ -2191,7 +2178,12 @@ def create_embedding(text):
 # EMPLOYEE IT CHAT
 # ==========================================
 
-def employee_it_chat(message, history, conversation_id=None):
+def employee_it_chat(
+    message,
+    history,
+    conversation_id=None,
+    employee_id=None,
+):
     normalized = normalize_message(message)
 
     greetings = {
@@ -2222,14 +2214,21 @@ def employee_it_chat(message, history, conversation_id=None):
     if wants_human_assistance(message):
         return HUMAN_SUPPORT_REPLY
 
-    if conversation_id:
+    if conversation_id and employee_id:
         with human_lock:
             human_item = get_human_request(conversation_id)
 
-        if human_item and human_item.get("status") in {
-            "pending",
-            "accepted",
-        }:
+        if (
+            human_item
+            and verify_human_request_owner(
+                human_item,
+                {"id": employee_id},
+            )
+            and human_item.get("status") in {
+                "pending",
+                "accepted",
+            }
+        ):
             raise HTTPException(
                 status_code=409,
                 detail=(
@@ -2258,14 +2257,10 @@ def employee_it_chat(message, history, conversation_id=None):
             return OFF_TOPIC_REPLY
 
         if intent == "NO_PROBLEM":
-            return (
-                "I'm here whenever you need company IT assistance."
-            )
+            return "I'm here whenever you need company IT assistance."
 
         if intent == "SMALL_TALK":
-            return (
-                "I'm here whenever you need help with a company IT issue."
-            )
+            return "I'm here whenever you need help with a company IT issue."
 
         if intent == "UNCLEAR":
             return (
@@ -2326,14 +2321,8 @@ def employee_it_chat(message, history, conversation_id=None):
 
         if documents and documents[0]:
             knowledge = documents[0]
-
-            if metadatas and metadatas[0]:
-                source = metadatas[0].get("source", "Unknown")
-            else:
-                source = "Unknown"
         else:
             knowledge = ""
-            source = "No relevant source found"
 
         if not knowledge:
             return (
@@ -2372,6 +2361,17 @@ CONVERSATION RULES:
     the application actually confirms it.
 12. If the knowledge base does not contain the needed information, say so
     and recommend contacting the IT support team.
+13. Keep responses concise: usually 2-4 short sentences.
+14. For troubleshooting, give only 1-3 clear steps at a time.
+15. Avoid long introductions, repeated explanations, and unnecessary summaries.
+16. Ask only one short follow-up question when needed.
+17. Give a longer explanation only when the employee specifically requests it.
+
+RESPONSE STYLE:
+- Be friendly, natural, and direct.
+- Use simple words and short sentences.
+- Prefer short numbered steps over long paragraphs.
+- Do not repeat the entire troubleshooting procedure after every reply.
 
 KNOWLEDGE-BASE REFERENCE:
 {knowledge}
@@ -2398,7 +2398,7 @@ KNOWLEDGE-BASE REFERENCE:
         return ask_ollama(
             ollama_messages,
             temperature=0.2,
-            num_predict=300,
+            num_predict=160,
         )
 
     except requests.RequestException:
@@ -2456,6 +2456,7 @@ def chat(payload: ChatRequest, request: Request):
                 payload.conversation_id.strip()
                 if payload.conversation_id
                 else None,
+                employee.get("id"),
             )
 
             mode = "employee"

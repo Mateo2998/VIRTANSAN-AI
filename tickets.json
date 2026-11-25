@@ -32,5 +32,50 @@
     "admin_note": "",
     "created_at": "2026-11-15T14:42:28.043690+00:00",
     "updated_at": "2026-11-15T14:42:52.197442+00:00"
+  },
+  {
+    "id": "TKT-0004",
+    "title": "matthew@work.com - Password Reset",
+    "description": "testing2",
+    "email": "matthew@work.com",
+    "category": "Password Reset",
+    "status": "Pending Approval",
+    "admin_note": "",
+    "created_at": "2026-11-18T08:53:49.035618+00:00",
+    "updated_at": "2026-11-18T08:53:49.035618+00:00",
+    "request_id": "cbb1ef92-ce39-4e38-8583-77be574eb7f3"
+  },
+  {
+    "id": "TKT-0005",
+    "title": "Testing",
+    "description": "testing",
+    "email": "matthew@work.com",
+    "category": "IT Support",
+    "status": "In Progress",
+    "admin_note": "",
+    "created_at": "2026-11-18T08:55:53.993062+00:00",
+    "updated_at": "2026-11-18T08:56:46.186602+00:00"
+  },
+  {
+    "id": "TKT-0006",
+    "title": "testing123",
+    "description": "testing123",
+    "email": "matthew@work.com",
+    "category": "IT Support",
+    "status": "Fixed",
+    "admin_note": "",
+    "created_at": "2026-11-18T08:56:16.215240+00:00",
+    "updated_at": "2026-11-18T08:56:45.008020+00:00"
+  },
+  {
+    "id": "TKT-0007",
+    "title": "testing123",
+    "description": "testing123 gta 6",
+    "email": "matthew@work.com",
+    "category": "IT Support",
+    "status": "Pending Review",
+    "admin_note": "",
+    "created_at": "2026-11-25T04:36:31.637324+00:00",
+    "updated_at": "2026-11-25T04:36:31.637324+00:00"
   }
 ]

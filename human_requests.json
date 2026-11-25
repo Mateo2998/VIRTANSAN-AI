@@ -1,3 +1,243 @@
 {
- 
+  "conv-08047292-b1e7-473a-8d66-6e42c35f2299": {
+    "conversation_id": "conv-08047292-b1e7-473a-8d66-6e42c35f2299",
+    "status": "completed",
+    "history": [
+      {
+        "role": "user",
+        "content": "hello i need help with my vpn. I cant connect to it"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello! I'm here to help. Let's go through some steps to troubleshoot your VPN connection issue.\n\n### Step 1: Identify the Problem\nFirst, could you tell me which VPN service you are trying to connect to?\n\n### Step 2: Check the Connection Status\nWhen you try to connect, do you see any error messages or specific prompts?\n\n### Step 3: Check Your Network\nAre you connected to the internet? You can try opening a web page in your browser to check your internet connection.\n\n### Step 4: Check the Date and Time\nEnsure that your device's date and time are correct. An incorrect date and time can sometimes cause connection issues.\n\n### Step 5: Try a Different Device\nIf possible, try connecting to the VPN from a different device to see if the issue is specific to your current device.\n\n### Step 6: Restart the Application\nSometimes simply restarting the VPN application can resolve the issue. Can you try that?\n\n### Step 7: Escalate if Necessary\nIf the problem persists, we may need to escalate this to IT support. They can check the server status and provide further assistance.\n\nLet's start with the first step. Which VPN service are you trying to connect to?"
+      },
+      {
+        "role": "user",
+        "content": "i need human assistant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [
+      {
+        "id": "68bbdcdc66d47e65",
+        "message": "Testing conversation",
+        "sender": "admin",
+        "created_at": "2026-11-18T10:11:48.526268+00:00"
+      },
+      {
+        "id": "d8ad92a40f8e57d9",
+        "message": "hello",
+        "sender": "user",
+        "created_at": "2026-11-18T10:11:52.594649+00:00"
+      },
+      {
+        "id": "ba83dce25a201c71",
+        "message": "testing",
+        "sender": "user",
+        "created_at": "2026-11-18T10:11:54.035673+00:00"
+      }
+    ],
+    "created_at": "2026-11-18T10:11:40.800325+00:00",
+    "updated_at": "2026-11-18T10:12:11.720613+00:00",
+    "message": "This human-support conversation has been marked as completed."
+  },
+  "conv-1794744863186-pd2mt7c2": {
+    "conversation_id": "conv-1794744863186-pd2mt7c2",
+    "status": "completed",
+    "history": [
+      {
+        "role": "user",
+        "content": "i request human request"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [
+      {
+        "id": "a775eabb4e24d8fd",
+        "message": "hi",
+        "sender": "user",
+        "created_at": "2026-11-25T04:29:40.082250+00:00"
+      },
+      {
+        "id": "07256f5e0fc0e595",
+        "message": "hello",
+        "sender": "admin",
+        "created_at": "2026-11-25T04:29:44.590765+00:00"
+      },
+      {
+        "id": "bdfa8d23f1c88230",
+        "message": "are you there?",
+        "sender": "admin",
+        "created_at": "2026-11-25T04:29:55.231614+00:00"
+      },
+      {
+        "id": "8cf6fe1d5b87d22e",
+        "message": "hello",
+        "sender": "user",
+        "created_at": "2026-11-25T04:29:59.625581+00:00"
+      },
+      {
+        "id": "9b7329671e3d3bc1",
+        "message": "yes",
+        "sender": "admin",
+        "created_at": "2026-11-25T04:30:03.642731+00:00"
+      },
+      {
+        "id": "8d6185c9d88e906c",
+        "message": "h",
+        "sender": "user",
+        "created_at": "2026-11-25T04:30:06.086865+00:00"
+      },
+      {
+        "id": "cf4315e1be0144cd",
+        "message": "hello",
+        "sender": "user",
+        "created_at": "2026-11-25T04:34:34.827170+00:00"
+      },
+      {
+        "id": "3bbe3871be53ca20",
+        "message": "hi",
+        "sender": "admin",
+        "created_at": "2026-11-25T04:34:36.961911+00:00"
+      },
+      {
+        "id": "9334bb6e0c3932e4",
+        "message": "hello",
+        "sender": "user",
+        "created_at": "2026-11-25T04:34:59.301413+00:00"
+      },
+      {
+        "id": "4162b2bacff2c27a",
+        "message": "hey",
+        "sender": "admin",
+        "created_at": "2026-11-25T04:35:03.304968+00:00"
+      },
+      {
+        "id": "5ae36d60c8ae3641",
+        "message": "sup",
+        "sender": "user",
+        "created_at": "2026-11-25T04:35:09.080316+00:00"
+      },
+      {
+        "id": "4d71d0c4ada31ebb",
+        "message": "hello",
+        "sender": "admin",
+        "created_at": "2026-11-25T04:35:11.836414+00:00"
+      }
+    ],
+    "created_at": "2026-11-25T04:26:06.570789+00:00",
+    "updated_at": "2026-11-25T04:35:16.758765+00:00",
+    "message": "This human-support conversation has been marked as completed."
+  },
+  "conv-1795582188538-pa7ba2rs": {
+    "conversation_id": "conv-1795582188538-pa7ba2rs",
+    "employee_id": "d36170da2ed08bf5c9891a50ae948524",
+    "employee_name": "Sean Paul Lara",
+    "employee_email": "sean@work.com",
+    "status": "completed",
+    "history": [
+      {
+        "role": "user",
+        "content": "i request human assisstant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [
+      {
+        "id": "e48fae833ba8ab7f",
+        "message": "sup",
+        "sender": "admin",
+        "created_at": "2026-11-25T04:50:04.259678+00:00"
+      },
+      {
+        "id": "cdb01c1f72d9c664",
+        "message": "hello",
+        "sender": "user",
+        "created_at": "2026-11-25T04:50:09.350638+00:00"
+      }
+    ],
+    "created_at": "2026-11-25T04:49:57.561402+00:00",
+    "updated_at": "2026-11-25T04:50:12.518189+00:00",
+    "message": "This human-support conversation has been marked as completed."
+  },
+  "conv-1795582241703-lujq5oy8": {
+    "conversation_id": "conv-1795582241703-lujq5oy8",
+    "employee_id": "27bdd76466a2eae7698082c8dabcbeaa",
+    "employee_name": "Matthew",
+    "employee_email": "matthew@work.com",
+    "status": "completed",
+    "history": [
+      {
+        "role": "user",
+        "content": "i request human assisstant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      },
+      {
+        "role": "user",
+        "content": "i request human assisstant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [
+      {
+        "id": "ba61f143ce7d8346",
+        "message": "hello",
+        "sender": "admin",
+        "created_at": "2026-11-25T04:59:43.226757+00:00"
+      },
+      {
+        "id": "f66dd323b8c20eb0",
+        "message": "suppp",
+        "sender": "admin",
+        "created_at": "2026-11-25T04:59:49.532883+00:00"
+      }
+    ],
+    "created_at": "2026-11-25T04:59:37.607924+00:00",
+    "updated_at": "2026-11-25T04:59:56.033508+00:00",
+    "message": "This human-support conversation has been marked as completed."
+  },
+  "conv-1795582806702-4lxiyct7": {
+    "conversation_id": "conv-1795582806702-4lxiyct7",
+    "employee_id": "4ac486bb2ebc67f0a53fbb80773fd004",
+    "employee_name": "Jan Rhodes Tan",
+    "employee_email": "jan@work.com",
+    "status": "declined",
+    "history": [
+      {
+        "role": "user",
+        "content": "i request human assisstant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      },
+      {
+        "role": "user",
+        "content": "i request human assisstant"
+      },
+      {
+        "role": "assistant",
+        "content": "Of course! 😊 Click the 'Request Human Support' button below to request assistance from a human support representative. Your request will only be submitted when you click the button."
+      }
+    ],
+    "messages": [],
+    "created_at": "2026-11-25T05:00:36.001061+00:00",
+    "updated_at": "2026-11-25T05:00:37.876468+00:00",
+    "message": "Sorry, no human agent is available right now. You can request human support again or continue with the AI assistant."
+  }
 }

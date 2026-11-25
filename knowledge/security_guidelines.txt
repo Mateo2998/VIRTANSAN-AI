@@ -1,4 +1,4 @@
-# Document Title: VIRTANSAN AI System Instructions and Security Guidelines
+# Document Title: VIRTANSANLARA AI System Instructions and Security Guidelines
 **Document ID:** AI-SystemPolicy-001  
 **Category:** AI Governance and Security
 

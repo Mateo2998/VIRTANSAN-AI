@@ -25,5 +25,23 @@
     "is_active": true,
     "password_hash": "pbkdf2_sha256$600000$816070ab689d09424bdf7423c9bf28c6$fb1c7e367691242c460296afaa556d74e13d6ea1aff09dc615e6731143e3425d",
     "created_at": "2026-11-15T14:41:16.754840+00:00"
+  },
+  {
+    "id": "d36170da2ed08bf5c9891a50ae948524",
+    "name": "Sean Paul Lara",
+    "email": "sean@work.com",
+    "role": "employee",
+    "is_active": true,
+    "password_hash": "pbkdf2_sha256$600000$7719637131b53ae3ebcc05bf00ebbc01$5ac930df01dcce27deb10fa119c42c355c67e712e4b831c9bb982ab725eb2136",
+    "created_at": "2026-11-25T04:37:30.506891+00:00"
+  },
+  {
+    "id": "4ac486bb2ebc67f0a53fbb80773fd004",
+    "name": "Jan Rhodes Tan",
+    "email": "jan@work.com",
+    "role": "employee",
+    "is_active": true,
+    "password_hash": "pbkdf2_sha256$600000$8143d3195d08669a92fa121b9f8b5e36$c753c97214d2a6d3aa2bde2bd69e6699ed9c901ee9c7668f859333231371dd39",
+    "created_at": "2026-11-25T04:37:54.542054+00:00"
   }
 ]

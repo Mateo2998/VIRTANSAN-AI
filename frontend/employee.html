@@ -260,8 +260,6 @@
             padding-bottom: 20px;
         }
 
-        /* CHATBOT */
-
         .chat-toggle {
             position: fixed;
             right: 25px;
@@ -383,8 +381,6 @@
             white-space: pre-wrap;
         }
 
-        /* TICKET CREATION */
-
         .ticket-support-area {
             display: none;
             padding: 10px 12px;
@@ -421,10 +417,7 @@
 
         .ticket-form.visible { display: block; }
 
-        .ticket-form h4 {
-            font-size: 14px;
-            margin-bottom: 6px;
-        }
+        .ticket-form h4 { font-size: 14px; margin-bottom: 6px; }
 
         .ticket-form p {
             font-size: 11px;
@@ -434,11 +427,7 @@
         }
 
         .ticket-form .form-group { margin-bottom: 10px; }
-
-        .ticket-form label {
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
+        .ticket-form label { font-size: 12px; margin-bottom: 5px; }
 
         .ticket-form input,
         .ticket-form textarea {
@@ -451,10 +440,7 @@
             resize: vertical;
         }
 
-        .ticket-form-actions {
-            display: flex;
-            gap: 8px;
-        }
+        .ticket-form-actions { display: flex; gap: 8px; }
 
         .ticket-form-actions button {
             flex: 1;
@@ -484,15 +470,8 @@
         .ticket-form-message.error,
         .ticket-form-message.success { display: block; }
 
-        .ticket-form-message.error {
-            color: #a12828;
-            background: #fff0f0;
-        }
-
-        .ticket-form-message.success {
-            color: #176b42;
-            background: #e9f8ef;
-        }
+        .ticket-form-message.error { color: #a12828; background: #fff0f0; }
+        .ticket-form-message.success { color: #176b42; background: #e9f8ef; }
 
         .chat-form {
             padding: 12px;
@@ -591,9 +570,7 @@
 
                 <div class="topbar-actions">
                     <div class="profile-chip">● Employee Account</div>
-                    <button type="button" class="logout-button" id="logoutButton">
-                        Logout
-                    </button>
+                    <button type="button" class="logout-button" id="logoutButton">Logout</button>
                 </div>
             </header>
 
@@ -838,9 +815,7 @@
                             <div id="passwordMessage" class="message"
                                  role="status" aria-live="polite"></div>
 
-                            <button type="submit" class="primary-button">
-                                Update Password
-                            </button>
+                            <button type="submit" class="primary-button">Update Password</button>
                         </form>
                     </div>
                 </section>
@@ -850,12 +825,10 @@
         </main>
     </div>
 
-    <!-- CHAT BUTTON -->
     <button type="button" class="chat-toggle" id="chatToggle"
             aria-label="Open Support AI chat" aria-expanded="false"
             title="Chat with Support AI">✦</button>
 
-    <!-- CHAT WINDOW -->
     <section class="chat-panel" id="chatPanel"
              aria-label="VIRTANSAN Support AI chat" aria-hidden="true">
 
@@ -875,7 +848,6 @@
 Ask me about VPN troubleshooting, software access, or other IT problems. How can I help you?</div>
         </div>
 
-        <!-- HUMAN SUPPORT -->
         <div class="human-support-area" id="humanSupportArea">
             <button type="button" class="human-support-button"
                     id="humanSupportButton">
@@ -886,14 +858,12 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
                  role="status" aria-live="polite"></div>
         </div>
 
-        <!-- TICKET CREATION BUTTON -->
         <div class="ticket-support-area" id="ticketSupportArea">
             <button type="button" class="ticket-button" id="showTicketFormButton">
                 Create Support Ticket
             </button>
         </div>
 
-        <!-- TICKET FORM -->
         <form class="ticket-form" id="ticketForm">
             <h4>Create Support Ticket</h4>
             <p>
@@ -922,7 +892,6 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
                 <button type="button" class="ticket-cancel-button" id="cancelTicketButton">
                     Cancel
                 </button>
-
                 <button type="submit" class="primary-button" id="submitTicketButton">
                     Submit Ticket
                 </button>
@@ -943,782 +912,861 @@ Ask me about VPN troubleshooting, software access, or other IT problems. How can
         </div>
     </section>
 
-    <script>
-        // LOAD EMPLOYEE PROFILE
+<script>
+// ==========================================
+// EMPLOYEE ACCOUNT AND CONVERSATION
+// ==========================================
 
-        async function loadEmployeeProfile() {
-            try {
-                const response = await fetch("/employee/me", {
-                    credentials: "same-origin"
-                });
+let conversationId = null;
+let employeeStorageKey = null;
+let employeeLoaded = false;
 
-                if (response.status === 401 || response.status === 403) {
-                    window.location.href = "/";
-                    return;
-                }
+let humanRequestStatus = null;
+let humanPollTimer = null;
+let humanMessagesShown = new Set();
+let humanStatusCheckRunning = false;
 
-                if (!response.ok) {
-                    throw new Error("Could not load employee information.");
-                }
+let chatIsBusy = false;
+let ticketIsSubmitting = false;
+let conversationHistory = [];
 
-                const employee = await response.json();
-                const name = employee.full_name || employee.name || "Employee";
+function initializeEmployeeConversation(employee) {
+    const employeeIdentity =
+        employee.id ||
+        employee.employee_id ||
+        employee.email ||
+        employee.username;
 
-                document.getElementById("employeeName").textContent = name;
-                document.getElementById("employeeEmail").textContent =
-                    employee.email || "Not available";
+    if (!employeeIdentity) {
+        throw new Error("Unable to identify the logged-in employee.");
+    }
 
-                document.getElementById("welcomeHeading").textContent =
-                    "Good day, " + name + "!";
+    employeeStorageKey =
+        "aihas_conversation_id_employee_" + String(employeeIdentity);
 
-            } catch (error) {
-                document.getElementById("employeeName").textContent = "Unable to load";
-                document.getElementById("employeeEmail").textContent = "Unable to load";
-            }
-        }
+    conversationId = localStorage.getItem(employeeStorageKey);
 
-        loadEmployeeProfile();
+    if (!conversationId) {
+        conversationId =
+            "conv-" + Date.now() + "-" +
+            Math.random().toString(36).slice(2, 10);
 
+        localStorage.setItem(employeeStorageKey, conversationId);
+    }
 
-        // LOGOUT
+    localStorage.removeItem("aihas_conversation_id");
+    employeeLoaded = true;
+}
 
-        document.getElementById("logoutButton").addEventListener("click", async function () {
-            if (!confirm("Are you sure you want to log out?")) {
-                return;
-            }
+// ==========================================
+// LOAD EMPLOYEE PROFILE
+// ==========================================
 
-            const button = document.getElementById("logoutButton");
-            button.disabled = true;
-            button.textContent = "Logging out...";
-
-            try {
-                const response = await fetch("/employee/logout", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "same-origin"
-                });
-
-                if (response.ok) {
-                    window.location.replace("/");
-                    return;
-                }
-
-                const result = await response.json().catch(() => ({}));
-                throw new Error(result.detail || "Unable to log out.");
-
-            } catch (error) {
-                alert(error.message || "Could not connect to the server.");
-                button.disabled = false;
-                button.textContent = "Logout";
-            }
+async function loadEmployeeProfile() {
+    try {
+        const response = await fetch("/employee/me", {
+            credentials: "same-origin",
+            cache: "no-store"
         });
 
-
-        // CHANGE PASSWORD
-
-        const passwordForm = document.getElementById("passwordForm");
-        const passwordMessage = document.getElementById("passwordMessage");
-
-        function showPasswordMessage(text, type) {
-            passwordMessage.textContent = text;
-            passwordMessage.className = "message " + type;
+        if (response.status === 401 || response.status === 403) {
+            window.location.replace("/");
+            return;
         }
 
-        passwordForm.addEventListener("submit", async function (event) {
-            event.preventDefault();
+        if (!response.ok) {
+            throw new Error("Could not load employee information.");
+        }
 
-            const currentPassword = document.getElementById("currentPassword").value;
-            const newPassword = document.getElementById("newPassword").value;
-            const confirmPassword = document.getElementById("confirmPassword").value;
+        const employee = await response.json();
 
-            if (newPassword.length < 8) {
-                showPasswordMessage("Your new password must be at least 8 characters.", "error");
-                return;
-            }
+        initializeEmployeeConversation(employee);
 
-            if (newPassword !== confirmPassword) {
-                showPasswordMessage("The new passwords do not match.", "error");
-                return;
-            }
+        const name = employee.full_name || employee.name || "Employee";
 
-            if (currentPassword === newPassword) {
-                showPasswordMessage(
-                    "Your new password must be different from your current password.",
-                    "error"
-                );
-                return;
-            }
+        document.getElementById("employeeName").textContent = name;
+        document.getElementById("employeeEmail").textContent =
+            employee.email || "Not available";
 
-            const button = passwordForm.querySelector("button");
-            button.disabled = true;
-            button.textContent = "Updating...";
+        document.getElementById("welcomeHeading").textContent =
+            "Good day, " + name + "!";
 
-            try {
-                const response = await fetch("/employee/change-password", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "same-origin",
-                    body: JSON.stringify({
-                        current_password: currentPassword,
-                        new_password: newPassword
-                    })
-                });
+    } catch (error) {
+        document.getElementById("employeeName").textContent = "Unable to load";
+        document.getElementById("employeeEmail").textContent = "Unable to load";
+        console.error("Employee profile error:", error);
+    }
+}
 
-                const result = await response.json();
+loadEmployeeProfile();
 
-                if (!response.ok) {
-                    throw new Error(result.detail || "Unable to change your password.");
-                }
+// ==========================================
+// LOGOUT
+// ==========================================
 
-                showPasswordMessage(
-                    result.message || "Your password has been changed successfully.",
-                    "success"
-                );
+document.getElementById("logoutButton").addEventListener("click", async function() {
+    if (!confirm("Are you sure you want to log out?")) return;
 
-                passwordForm.reset();
+    const button = document.getElementById("logoutButton");
+    button.disabled = true;
+    button.textContent = "Logging out...";
 
-            } catch (error) {
-                showPasswordMessage(
-                    error.message || "Could not connect to the server. Please try again.",
-                    "error"
-                );
-            } finally {
-                button.disabled = false;
-                button.textContent = "Update Password";
-            }
+    try {
+        const response = await fetch("/employee/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin"
         });
 
-
-        // CHATBOT ELEMENTS
-
-        const chatToggle = document.getElementById("chatToggle");
-        const chatPanel = document.getElementById("chatPanel");
-        const chatClose = document.getElementById("chatClose");
-        const chatForm = document.getElementById("chatForm");
-        const chatInput = document.getElementById("chatInput");
-        const chatMessages = document.getElementById("chatMessages");
-        const chatStatus = document.getElementById("chatStatus");
-        const sendButton = document.getElementById("sendButton");
-
-        const humanSupportArea = document.getElementById("humanSupportArea");
-        const humanSupportButton = document.getElementById("humanSupportButton");
-        const humanSupportStatus = document.getElementById("humanSupportStatus");
-
-        const ticketSupportArea = document.getElementById("ticketSupportArea");
-        const showTicketFormButton = document.getElementById("showTicketFormButton");
-        const ticketForm = document.getElementById("ticketForm");
-        const ticketTitle = document.getElementById("ticketTitle");
-        const ticketDescription = document.getElementById("ticketDescription");
-        const ticketFormMessage = document.getElementById("ticketFormMessage");
-        const submitTicketButton = document.getElementById("submitTicketButton");
-        const cancelTicketButton = document.getElementById("cancelTicketButton");
-
-        let chatIsBusy = false;
-        let ticketIsSubmitting = false;
-        let conversationHistory = [];
-
-        let conversationId = localStorage.getItem("aihas_conversation_id");
-
-        if (!conversationId) {
-            conversationId =
-                "conv-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
-
-            localStorage.setItem("aihas_conversation_id", conversationId);
+        if (response.ok) {
+            window.location.replace("/");
+            return;
         }
 
-        let humanRequestStatus = null;
-        let humanPollTimer = null;
-        let humanMessagesShown = new Set();
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.detail || "Unable to log out.");
 
+    } catch (error) {
+        alert(error.message || "Could not connect to the server.");
+        button.disabled = false;
+        button.textContent = "Logout";
+    }
+});
 
-        // DETECT HUMAN-SUPPORT REQUESTS
+// ==========================================
+// CHANGE PASSWORD
+// ==========================================
 
-        function wantsHumanSupport(message) {
-            return /\b(human|real person|live agent|human agent|human assistant|human support|talk to someone|speak to someone|talk to a person|speak to a person|customer service|support agent|real agent|talk to human|speak to human|contact a human|request human|person to help me|speak with someone|talk with someone)\b/i.test(message);
-        }
+const passwordForm = document.getElementById("passwordForm");
+const passwordMessage = document.getElementById("passwordMessage");
 
+function showPasswordMessage(text, type) {
+    passwordMessage.textContent = text;
+    passwordMessage.className = "message " + type;
+}
 
-        // DETECT TICKET REQUESTS
+passwordForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
 
-        function wantsTicket(message) {
-            return /\b(create|make|open|submit|raise|file|request)\b.{0,35}\b(ticket|support ticket|it ticket)\b|\b(ticket|support ticket|it ticket)\b.{0,35}\b(create|make|open|submit|raise|file)\b|\b(i need|i want|can i get|could i get)\b.{0,25}\b(ticket|support)\b/i.test(message);
-        }
+    const currentPassword = document.getElementById("currentPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
 
-        function showTicketOption() {
-            ticketSupportArea.classList.add("visible");
-        }
+    if (newPassword.length < 8) {
+        showPasswordMessage("Your new password must be at least 8 characters.", "error");
+        return;
+    }
 
-        function hideTicketOption() {
-            ticketSupportArea.classList.remove("visible");
-        }
+    if (newPassword !== confirmPassword) {
+        showPasswordMessage("The new passwords do not match.", "error");
+        return;
+    }
 
-        function showTicketForm() {
-            ticketForm.classList.add("visible");
-            showTicketOption();
+    if (currentPassword === newPassword) {
+        showPasswordMessage(
+            "Your new password must be different from your current password.",
+            "error"
+        );
+        return;
+    }
 
-            ticketForm.scrollIntoView({
-                behavior: "smooth",
-                block: "nearest"
-            });
+    const button = passwordForm.querySelector("button");
+    button.disabled = true;
+    button.textContent = "Updating...";
 
-            ticketTitle.focus();
-        }
-
-        function closeTicketForm() {
-            ticketForm.classList.remove("visible");
-            ticketForm.reset();
-            ticketFormMessage.textContent = "";
-            ticketFormMessage.className = "ticket-form-message";
-        }
-
-        function showTicketMessage(text, type) {
-            ticketFormMessage.textContent = text;
-            ticketFormMessage.className = "ticket-form-message " + type;
-        }
-
-        showTicketFormButton.addEventListener("click", showTicketForm);
-
-        cancelTicketButton.addEventListener("click", function () {
-            closeTicketForm();
+    try {
+        const response = await fetch("/employee/change-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword
+            })
         });
 
+        const result = await response.json();
 
-        // OPEN AND CLOSE CHAT
-
-        function openChat() {
-            chatPanel.classList.add("open");
-            chatPanel.setAttribute("aria-hidden", "false");
-            chatToggle.setAttribute("aria-expanded", "true");
-            chatToggle.textContent = "×";
-            chatInput.focus();
-
-            if (humanRequestStatus && humanRequestStatus !== "none") {
-                checkHumanSupportStatus();
-            }
+        if (!response.ok) {
+            throw new Error(result.detail || "Unable to change your password.");
         }
 
-        function closeChat() {
-            chatPanel.classList.remove("open");
-            chatPanel.setAttribute("aria-hidden", "true");
-            chatToggle.setAttribute("aria-expanded", "false");
-            chatToggle.textContent = "✦";
+        showPasswordMessage(
+            result.message || "Your password has been changed successfully.",
+            "success"
+        );
+
+        passwordForm.reset();
+
+    } catch (error) {
+        showPasswordMessage(error.message || "Could not connect to the server.", "error");
+    } finally {
+        button.disabled = false;
+        button.textContent = "Update Password";
+    }
+});
+
+// ==========================================
+// CHATBOT ELEMENTS
+// ==========================================
+
+const chatToggle = document.getElementById("chatToggle");
+const chatPanel = document.getElementById("chatPanel");
+const chatClose = document.getElementById("chatClose");
+const chatForm = document.getElementById("chatForm");
+const chatInput = document.getElementById("chatInput");
+const chatMessages = document.getElementById("chatMessages");
+const chatStatus = document.getElementById("chatStatus");
+const sendButton = document.getElementById("sendButton");
+
+const humanSupportArea = document.getElementById("humanSupportArea");
+const humanSupportButton = document.getElementById("humanSupportButton");
+const humanSupportStatus = document.getElementById("humanSupportStatus");
+
+const ticketSupportArea = document.getElementById("ticketSupportArea");
+const showTicketFormButton = document.getElementById("showTicketFormButton");
+const ticketForm = document.getElementById("ticketForm");
+const ticketTitle = document.getElementById("ticketTitle");
+const ticketDescription = document.getElementById("ticketDescription");
+const ticketFormMessage = document.getElementById("ticketFormMessage");
+const submitTicketButton = document.getElementById("submitTicketButton");
+const cancelTicketButton = document.getElementById("cancelTicketButton");
+
+// ==========================================
+// INITIAL CHAT STATE
+// ==========================================
+
+humanSupportArea.classList.remove("visible");
+ticketSupportArea.classList.remove("visible");
+ticketForm.classList.remove("visible");
+
+humanSupportStatus.textContent = "";
+humanSupportButton.disabled = false;
+humanSupportButton.textContent = "Request Human Support";
+
+// ==========================================
+// API RESPONSE HANDLER
+// ==========================================
+
+async function readApiResponse(response) {
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            window.location.replace("/");
+            throw new Error("Your session has expired.");
         }
 
-        chatToggle.addEventListener("click", function () {
-            if (chatPanel.classList.contains("open")) {
-                closeChat();
-            } else {
-                openChat();
-            }
+        throw new Error(
+            result.detail ||
+            result.message ||
+            "The request could not be completed."
+        );
+    }
+
+    return result;
+}
+
+// ==========================================
+// CHAT MESSAGE DISPLAY
+// ==========================================
+
+function addChatMessage(text, sender) {
+    const message = document.createElement("div");
+
+    message.className =
+        "chat-message " +
+        (sender === "user" ? "user-message" : "bot-message");
+
+    message.textContent = text;
+
+    chatMessages.appendChild(message);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showHumanSupportArea() {
+    humanSupportArea.classList.add("visible");
+}
+
+function hideHumanSupportArea() {
+    humanSupportArea.classList.remove("visible");
+}
+
+function setHumanStatus(text) {
+    humanSupportStatus.textContent = text;
+}
+
+// ==========================================
+// DETECT HUMAN-SUPPORT REQUESTS
+// ==========================================
+
+function wantsHumanSupport(message) {
+    return /\b(human|real person|live agent|human agent|human assistant|human support|talk to someone|speak to someone|talk to a person|speak to a person|customer service|support agent|real agent|talk to human|speak to human|contact a human|request human|person to help me|speak with someone|talk with someone)\b/i.test(message);
+}
+
+// ==========================================
+// DETECT TICKET REQUESTS
+// ==========================================
+
+function wantsTicket(message) {
+    return /\b(create|make|open|submit|raise|file|request)\b.{0,35}\b(ticket|support ticket|it ticket)\b|\b(ticket|support ticket|it ticket)\b.{0,35}\b(create|make|open|submit|raise|file)\b|\b(i need|i want|can i get|could i get)\b.{0,25}\b(ticket|support)\b/i.test(message);
+}
+
+function showTicketOption() {
+    ticketSupportArea.classList.add("visible");
+}
+
+function hideTicketOption() {
+    ticketSupportArea.classList.remove("visible");
+}
+
+function showTicketForm() {
+    ticketForm.classList.add("visible");
+    showTicketOption();
+
+    ticketForm.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
+
+    ticketTitle.focus();
+}
+
+function closeTicketForm() {
+    ticketForm.classList.remove("visible");
+    ticketForm.reset();
+
+    ticketFormMessage.textContent = "";
+    ticketFormMessage.className = "ticket-form-message";
+}
+
+function showTicketMessage(text, type) {
+    ticketFormMessage.textContent = text;
+    ticketFormMessage.className = "ticket-form-message " + type;
+}
+
+showTicketFormButton.addEventListener("click", showTicketForm);
+
+cancelTicketButton.addEventListener("click", function() {
+    closeTicketForm();
+});
+
+// ==========================================
+// OPEN AND CLOSE CHAT
+// ==========================================
+
+function openChat() {
+    chatPanel.classList.add("open");
+    chatPanel.setAttribute("aria-hidden", "false");
+
+    chatToggle.setAttribute("aria-expanded", "true");
+    chatToggle.textContent = "×";
+
+    chatInput.focus();
+
+    if (employeeLoaded) {
+        checkHumanSupportStatus();
+    }
+}
+
+function closeChat() {
+    chatPanel.classList.remove("open");
+    chatPanel.setAttribute("aria-hidden", "true");
+
+    chatToggle.setAttribute("aria-expanded", "false");
+    chatToggle.textContent = "✦";
+}
+
+chatToggle.addEventListener("click", function() {
+    if (chatPanel.classList.contains("open")) {
+        closeChat();
+    } else {
+        openChat();
+    }
+});
+
+chatClose.addEventListener("click", closeChat);
+
+// ==========================================
+// CREATE SUPPORT TICKET
+// ==========================================
+
+ticketForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    if (ticketIsSubmitting) return;
+
+    const title = ticketTitle.value.trim();
+    const description = ticketDescription.value.trim();
+
+    if (title.length < 3) {
+        showTicketMessage("Please enter a title with at least 3 characters.", "error");
+        return;
+    }
+
+    if (description.length < 5) {
+        showTicketMessage("Please provide more details about your IT issue.", "error");
+        return;
+    }
+
+    ticketIsSubmitting = true;
+
+    submitTicketButton.disabled = true;
+    cancelTicketButton.disabled = true;
+    submitTicketButton.textContent = "Submitting...";
+
+    showTicketMessage("Submitting your support ticket...", "success");
+
+    try {
+        const response = await fetch("/tickets", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                title: title,
+                description: description,
+                category: "IT Support"
+            })
         });
 
-        chatClose.addEventListener("click", closeChat);
+        const result = await readApiResponse(response);
+        const ticket = result.ticket || {};
 
+        const ticketId =
+            ticket.ticket_id ||
+            ticket.ticket_number ||
+            ticket.id ||
+            result.ticket_id ||
+            result.ticket_number ||
+            "";
 
-        // CHAT MESSAGE DISPLAY
+        const status = ticket.status || "Pending Review";
 
-        function addChatMessage(text, sender) {
-            const message = document.createElement("div");
+        closeTicketForm();
+        hideTicketOption();
 
-            message.className = "chat-message " +
-                (sender === "user" ? "user-message" : "bot-message");
+        let confirmation =
+            "Your support ticket has been successfully submitted.\n\n";
 
-            message.textContent = text;
-            chatMessages.appendChild(message);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+        if (ticketId) {
+            confirmation += "Ticket ID: " + ticketId + "\n";
         }
 
-        function showHumanSupportArea() {
-            humanSupportArea.classList.add("visible");
-        }
+        confirmation +=
+            "Status: " + status +
+            "\n\nYour IT support team can now review your request.";
 
-        function setHumanStatus(text) {
-            humanSupportStatus.textContent = text;
-        }
+        addChatMessage(confirmation, "bot");
 
-        async function readApiResponse(response) {
-            const result = await response.json().catch(() => ({}));
+    } catch (error) {
+        showTicketMessage(error.message || "Unable to submit your ticket.", "error");
+    } finally {
+        ticketIsSubmitting = false;
 
-            if (!response.ok) {
-                if (response.status === 401 || response.status === 403) {
-                    window.location.href = "/";
-                    throw new Error("Your session has expired.");
-                }
+        submitTicketButton.disabled = false;
+        cancelTicketButton.disabled = false;
+        submitTicketButton.textContent = "Submit Ticket";
+    }
+});
 
-                throw new Error(
-                    result.detail || result.message || "The request could not be completed."
-                );
-            }
+// ==========================================
+// REQUEST HUMAN ASSISTANCE
+// ==========================================
 
-            return result;
-        }
+humanSupportButton.addEventListener("click", async function() {
+    if (!employeeLoaded || !conversationId) {
+        setHumanStatus("Your employee account is still loading. Please try again.");
+        return;
+    }
 
+    if (humanSupportButton.disabled) return;
 
-        // CREATE SUPPORT TICKET
+    if (["pending", "accepted", "in_progress"].includes(humanRequestStatus)) {
+        setHumanStatus("You already have an active human support request.");
+        return;
+    }
 
-        ticketForm.addEventListener("submit", async function (event) {
-            event.preventDefault();
+    humanSupportButton.disabled = true;
+    humanSupportButton.textContent = "Requesting...";
 
-            if (ticketIsSubmitting) {
-                return;
-            }
+    setHumanStatus("Sending your request to the IT administrator...");
 
-            const title = ticketTitle.value.trim();
-            const description = ticketDescription.value.trim();
-
-            if (title.length < 3) {
-                showTicketMessage("Please enter a title with at least 3 characters.", "error");
-                return;
-            }
-
-            if (description.length < 5) {
-                showTicketMessage("Please provide more details about your IT issue.", "error");
-                return;
-            }
-
-            ticketIsSubmitting = true;
-            submitTicketButton.disabled = true;
-            cancelTicketButton.disabled = true;
-            submitTicketButton.textContent = "Submitting...";
-
-            showTicketMessage("Submitting your support ticket...", "success");
-
-            try {
-                const response = await fetch("/tickets", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    credentials: "same-origin",
-                    body: JSON.stringify({
-                        title: title,
-                        description: description,
-                        category: "IT Support"
-                    })
-                });
-
-                const result = await readApiResponse(response);
-
-                const ticket = result.ticket || {};
-                const ticketId =
-                    ticket.ticket_id ||
-                    ticket.ticket_number ||
-                    ticket.id ||
-                    result.ticket_id ||
-                    result.ticket_number ||
-                    "";
-
-                const status = ticket.status || "Pending Review";
-
-                closeTicketForm();
-                hideTicketOption();
-
-                if (ticketId) {
-                    addChatMessage(
-                        "Your support ticket has been successfully submitted.\n\n" +
-                        "Ticket ID: " + ticketId + "\n" +
-                        "Status: " + status + "\n\n" +
-                        "Your IT support team can now review your request.",
-                        "bot"
-                    );
-                } else {
-                    addChatMessage(
-                        "Your support ticket has been successfully submitted.\n\n" +
-                        "Status: " + status + "\n\n" +
-                        "Your IT support team can now review your request.",
-                        "bot"
-                    );
-                }
-
-            } catch (error) {
-                showTicketMessage(
-                    error.message || "Unable to submit your ticket. Please try again.",
-                    "error"
-                );
-            } finally {
-                ticketIsSubmitting = false;
-                submitTicketButton.disabled = false;
-                cancelTicketButton.disabled = false;
-                submitTicketButton.textContent = "Submit Ticket";
-            }
+    try {
+        const response = await fetch("/human/request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                conversation_id: conversationId,
+                history: conversationHistory
+            })
         });
 
+        const result = await readApiResponse(response);
 
-        // REQUEST HUMAN ASSISTANCE
+        humanRequestStatus = String(result.status || "pending").toLowerCase();
 
-        humanSupportButton.addEventListener("click", async function () {
-            if (
-                humanRequestStatus === "pending" ||
-                humanRequestStatus === "accepted" ||
-                humanRequestStatus === "in_progress"
-            ) {
-                setHumanStatus("You already have an active human support request.");
-                return;
+        showHumanSupportArea();
+        updateHumanSupportDisplay(result);
+
+        if (["pending", "accepted", "in_progress"].includes(humanRequestStatus)) {
+            startHumanStatusPolling();
+        }
+
+        addChatMessage(
+            "Your request for human assistance has been submitted.",
+            "bot"
+        );
+
+    } catch (error) {
+        setHumanStatus(error.message || "Could not submit the support request.");
+
+        humanSupportButton.disabled = false;
+        humanSupportButton.textContent = "Request Human Support";
+    }
+});
+
+// ==========================================
+// DISPLAY HUMAN SUPPORT STATUS AND MESSAGES
+// ==========================================
+
+function updateHumanSupportDisplay(result) {
+    const status = String(
+        result.status || humanRequestStatus || "pending"
+    ).toLowerCase();
+
+    humanRequestStatus = status;
+
+    const statusText = {
+        none: "No human support request is active.",
+        pending: "Status: Waiting for an IT administrator to respond.",
+        accepted: "Status: Your request has been accepted. You can message the administrator.",
+        in_progress: "Status: IT support is working on your request.",
+        declined: "Status: Your request was declined. You may request assistance again.",
+        completed: "Status: Your support request has been completed. You may request assistance again.",
+        closed: "Status: Your support request is closed. You may request assistance again."
+    };
+
+    setHumanStatus(
+        statusText[status] ||
+        ("Status: " + status.replace(/_/g, " "))
+    );
+
+    const activeStatuses = ["pending", "accepted", "in_progress"];
+
+    if (activeStatuses.includes(status)) {
+        humanSupportButton.textContent = "Human Support Requested";
+        humanSupportButton.disabled = true;
+    } else {
+        humanSupportButton.textContent = "Request Human Support";
+        humanSupportButton.disabled = false;
+    }
+
+    const messages = Array.isArray(result.messages) ? result.messages : [];
+
+    messages.forEach(function(item, index) {
+        if (!item || typeof item !== "object") return;
+
+        const sender = String(
+            item.sender || item.role || item.from || ""
+        ).toLowerCase();
+
+        if (!["admin", "administrator"].includes(sender)) return;
+
+        const messageText = item.message || item.content || item.text || "";
+
+        if (!messageText) return;
+
+        const key = String(
+            item.id ||
+            item.message_id ||
+            "admin:" + index + ":" + messageText
+        );
+
+        if (humanMessagesShown.has(key)) return;
+
+        humanMessagesShown.add(key);
+        addChatMessage("IT Staff: " + messageText, "bot");
+    });
+}
+
+// ==========================================
+// CHECK HUMAN SUPPORT STATUS
+// ==========================================
+
+async function checkHumanSupportStatus() {
+    if (
+        !employeeLoaded ||
+        !conversationId ||
+        humanStatusCheckRunning
+    ) {
+        return;
+    }
+
+    humanStatusCheckRunning = true;
+
+    try {
+        const response = await fetch(
+            "/human/status/" + encodeURIComponent(conversationId),
+            {
+                method: "GET",
+                credentials: "same-origin",
+                cache: "no-store"
             }
+        );
 
-            humanSupportButton.disabled = true;
-            humanSupportButton.textContent = "Requesting...";
-            setHumanStatus("Sending your request to the IT administrator...");
+        const result = await readApiResponse(response);
+        const status = String(result.status || "none").toLowerCase();
 
-            try {
-                const response = await fetch("/human/request", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "same-origin",
-                    body: JSON.stringify({
-                        conversation_id: conversationId,
-                        history: conversationHistory
-                    })
-                });
+        if (["pending", "accepted", "in_progress"].includes(status)) {
+            showHumanSupportArea();
+            updateHumanSupportDisplay(result);
 
-                const result = await readApiResponse(response);
-
-                humanRequestStatus = String(result.status || "pending").toLowerCase();
-
-                showHumanSupportArea();
-                updateHumanSupportDisplay(result);
+            if (!humanPollTimer) {
                 startHumanStatusPolling();
-
-                addChatMessage(
-                    "Your request for human assistance has been submitted.",
-                    "bot"
-                );
-
-            } catch (error) {
-                setHumanStatus(error.message || "Could not submit the support request.");
-                humanSupportButton.disabled = false;
-                humanSupportButton.textContent = "Request Human Support";
             }
-        });
 
-
-        // DISPLAY HUMAN SUPPORT STATUS AND MESSAGES
-
-        function updateHumanSupportDisplay(result) {
-            const status = String(
-                result.status || humanRequestStatus || "pending"
-            ).toLowerCase();
-
+        } else {
+            // FIX: Reset the button when the previous request is no longer active.
             humanRequestStatus = status;
 
-            const statusText = {
-                none: "No human support request is active.",
-                pending: "Status: Waiting for an IT administrator to respond.",
-                accepted: "Status: Your request has been accepted. You can message the administrator.",
-                in_progress: "Status: IT support is working on your request.",
-                declined: "Status: Your request was declined.",
-                completed: "Status: Your support request has been completed.",
-                closed: "Status: Your support request is closed."
-            };
+            humanSupportButton.disabled = false;
+            humanSupportButton.textContent = "Request Human Support";
 
+            if (status === "declined") {
+                setHumanStatus(
+                    "Your previous request was declined. You may request assistance again."
+                );
+            } else if (status === "completed") {
+                setHumanStatus(
+                    "Your previous support request was completed. You may request assistance again."
+                );
+            } else if (status === "closed") {
+                setHumanStatus(
+                    "Your previous support request is closed. You may request assistance again."
+                );
+            } else {
+                setHumanStatus("");
+            }
+
+            hideHumanSupportArea();
+            stopHumanStatusPolling();
+            humanMessagesShown.clear();
+        }
+
+    } catch (error) {
+        console.error("Human support status error:", error);
+
+        if (humanSupportArea.classList.contains("visible")) {
             setHumanStatus(
-                statusText[status] ||
-                ("Status: " + status.replace(/_/g, " "))
+                "Unable to refresh request status. Please try again."
+            );
+        }
+    } finally {
+        humanStatusCheckRunning = false;
+    }
+}
+
+// ==========================================
+// START AND STOP HUMAN SUPPORT POLLING
+// ==========================================
+
+function startHumanStatusPolling() {
+    if (humanPollTimer) return;
+
+    humanPollTimer = setInterval(function() {
+        checkHumanSupportStatus();
+    }, 2000);
+}
+
+function stopHumanStatusPolling() {
+    if (humanPollTimer) {
+        clearInterval(humanPollTimer);
+        humanPollTimer = null;
+    }
+}
+
+// ==========================================
+// SEND MESSAGE TO HUMAN ADMINISTRATOR
+// ==========================================
+
+async function sendHumanMessage(message) {
+    const response = await fetch("/human/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+            conversation_id: conversationId,
+            message: message
+        })
+    });
+
+    return await readApiResponse(response);
+}
+
+// ==========================================
+// SEND CHAT MESSAGE
+// ==========================================
+
+chatForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const message = chatInput.value.trim();
+
+    if (!message || chatIsBusy) return;
+
+    if (!employeeLoaded || !conversationId) {
+        chatStatus.textContent = "Your employee account is still loading.";
+        return;
+    }
+
+    chatIsBusy = true;
+
+    addChatMessage(message, "user");
+    chatInput.value = "";
+
+    chatInput.disabled = true;
+    sendButton.disabled = true;
+    sendButton.textContent = "...";
+
+    chatStatus.textContent = "";
+
+    if (wantsHumanSupport(message)) {
+        showHumanSupportArea();
+        setHumanStatus("You can request an IT administrator using the button below.");
+    }
+
+    if (wantsTicket(message)) {
+        showTicketOption();
+
+        addChatMessage(
+            "Of course. You can create an IT support ticket using the button below. " +
+            "Fill in the issue title and description, then submit it.",
+            "bot"
+        );
+
+        conversationHistory.push(
+            { role: "user", content: message },
+            {
+                role: "assistant",
+                content: "The employee requested a support ticket. The ticket form was offered."
+            }
+        );
+
+        conversationHistory = conversationHistory.slice(-12);
+
+        chatIsBusy = false;
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+        sendButton.textContent = "Send";
+        chatInput.focus();
+
+        return;
+    }
+
+    conversationHistory.push({
+        role: "user",
+        content: message
+    });
+
+    try {
+        if (
+            humanSupportArea.classList.contains("visible") &&
+            ["accepted", "in_progress"].includes(humanRequestStatus)
+        ) {
+            chatStatus.textContent = "Sending message to IT support...";
+
+            await sendHumanMessage(message);
+
+            chatStatus.textContent = "";
+            setHumanStatus("Your message was sent to the IT administrator.");
+
+            await checkHumanSupportStatus();
+            return;
+        }
+
+        if (
+            humanSupportArea.classList.contains("visible") &&
+            humanRequestStatus === "pending"
+        ) {
+            addChatMessage(
+                "Your human-support request is still waiting for an IT administrator. " +
+                "You can continue asking the AI for help while you wait.",
+                "bot"
             );
 
-            if (
-                status === "pending" ||
-                status === "accepted" ||
-                status === "in_progress"
-            ) {
-                humanSupportButton.textContent = "Human Support Requested";
-                humanSupportButton.disabled = true;
-            } else {
-                humanSupportButton.textContent = "Request Human Support";
-                humanSupportButton.disabled = false;
-            }
-
-            const messages = Array.isArray(result.messages) ? result.messages : [];
-
-            messages.forEach(function (item, index) {
-                const text = typeof item === "string"
-                    ? item
-                    : item.message || item.content || item.text || "";
-
-                if (!text) {
-                    return;
-                }
-
-                const key = String(
-                    item.id || item.message_id ||
-                    (item.sender || item.role || "message") + ":" + index + ":" + text
-                );
-
-                if (humanMessagesShown.has(key)) {
-                    return;
-                }
-
-                humanMessagesShown.add(key);
-
-                const sender = String(
-                    item.sender || item.role || item.from || ""
-                ).toLowerCase();
-
-                if (
-                    sender === "employee" ||
-                    sender === "user"
-                ) {
-                    return;
-                }
-
-                addChatMessage("IT Administrator: " + text, "bot");
-            });
-        }
-
-
-        // CHECK HUMAN SUPPORT STATUS
-
-        async function checkHumanSupportStatus() {
-            try {
-                const response = await fetch(
-                    "/human/status/" + encodeURIComponent(conversationId),
-                    {
-                        method: "GET",
-                        credentials: "same-origin"
-                    }
-                );
-
-                const result = await readApiResponse(response);
-
-                if (humanSupportArea.classList.contains("visible")) {
-                    updateHumanSupportDisplay(result);
-                }
-
-                if (
-                    humanRequestStatus === "completed" ||
-                    humanRequestStatus === "declined" ||
-                    humanRequestStatus === "closed" ||
-                    humanRequestStatus === "none"
-                ) {
-                    stopHumanStatusPolling();
-                }
-
-            } catch (error) {
-                if (humanSupportArea.classList.contains("visible")) {
-                    setHumanStatus(
-                        "Unable to refresh request status. " +
-                        (error.message || "Please try again.")
-                    );
-                }
-            }
-        }
-
-        function startHumanStatusPolling() {
-            stopHumanStatusPolling();
-            checkHumanSupportStatus();
-
-            humanPollTimer = setInterval(function () {
-                checkHumanSupportStatus();
-            }, 4000);
-        }
-
-        function stopHumanStatusPolling() {
-            if (humanPollTimer) {
-                clearInterval(humanPollTimer);
-                humanPollTimer = null;
-            }
-        }
-
-
-        // SEND MESSAGE TO HUMAN ADMINISTRATOR
-
-        async function sendHumanMessage(message) {
-            const response = await fetch("/human/message", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "same-origin",
-                body: JSON.stringify({
-                    conversation_id: conversationId,
-                    message: message
-                })
-            });
-
-            return await readApiResponse(response);
-        }
-
-
-        // SEND CHAT MESSAGE
-
-        chatForm.addEventListener("submit", async function (event) {
-            event.preventDefault();
-
-            const message = chatInput.value.trim();
-
-            if (!message || chatIsBusy) {
-                return;
-            }
-
-            chatIsBusy = true;
-            addChatMessage(message, "user");
-            chatInput.value = "";
-
-            chatInput.disabled = true;
-            sendButton.disabled = true;
-            sendButton.textContent = "...";
             chatStatus.textContent = "";
+            return;
+        }
 
-            if (wantsHumanSupport(message)) {
-                showHumanSupportArea();
-                setHumanStatus(
-                    "You can request an IT administrator using the button below."
-                );
-            }
+        chatStatus.textContent = "Support AI is preparing a response...";
 
-            // If the employee explicitly asks to create a ticket,
-            // display the ticket form button without creating anything yet.
-            if (wantsTicket(message)) {
-                showTicketOption();
-
-                addChatMessage(
-                    "Of course. You can create an IT support ticket using the button below. " +
-                    "Fill in the issue title and description, then submit it.",
-                    "bot"
-                );
-
-                conversationHistory.push({
-                    role: "user",
-                    content: message
-                });
-
-                conversationHistory.push({
-                    role: "assistant",
-                    content: "The employee requested a support ticket. The ticket form was offered."
-                });
-
-                conversationHistory = conversationHistory.slice(-12);
-
-                chatIsBusy = false;
-                chatInput.disabled = false;
-                sendButton.disabled = false;
-                sendButton.textContent = "Send";
-                chatInput.focus();
-                return;
-            }
-
-            conversationHistory.push({
-                role: "user",
-                content: message
-            });
-
-            try {
-                if (humanSupportArea.classList.contains("visible")) {
-                    try {
-                        const statusResponse = await fetch(
-                            "/human/status/" + encodeURIComponent(conversationId),
-                            {
-                                method: "GET",
-                                credentials: "same-origin"
-                            }
-                        );
-
-                        if (statusResponse.ok) {
-                            const statusResult = await statusResponse.json();
-                            updateHumanSupportDisplay(statusResult);
-                        }
-                    } catch (statusError) {
-                        // Continue with the last known status.
-                    }
-                }
-
-                if (
-                    humanSupportArea.classList.contains("visible") &&
-                    (
-                        humanRequestStatus === "accepted" ||
-                        humanRequestStatus === "in_progress"
-                    )
-                ) {
-                    chatStatus.textContent = "Sending message to IT support...";
-
-                    await sendHumanMessage(message);
-
-                    chatStatus.textContent = "";
-                    setHumanStatus("Your message was sent to the IT administrator.");
-
-                    await checkHumanSupportStatus();
-                    return;
-                }
-
-                if (
-                    humanSupportArea.classList.contains("visible") &&
-                    humanRequestStatus === "pending"
-                ) {
-                    addChatMessage(
-                        "Your human-support request is still waiting for an IT administrator. " +
-                        "You can continue asking the AI for help while you wait.",
-                        "bot"
-                    );
-
-                    chatStatus.textContent = "";
-                    return;
-                }
-
-                chatStatus.textContent = "Support AI is preparing a response...";
-
-                const response = await fetch("/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "same-origin",
-                    body: JSON.stringify({
-                        message: message,
-                        history: conversationHistory.slice(-12),
-                        conversation_id: conversationId
-                    })
-                });
-
-                const result = await readApiResponse(response);
-
-                const reply = result.reply || result.response ||
-                    "The AI returned an empty response.";
-
-                // Do not display result.source or any source filename.
-                addChatMessage(reply, "bot");
-
-                conversationHistory.push({
-                    role: "assistant",
-                    content: reply
-                });
-
-                // If the AI cannot confidently answer, make ticket creation
-                // available as another way to get help.
-                if (
-                    /\b(couldn't find enough information|could not find enough information|unable to resolve|cannot resolve|can't resolve|contact your it support|contact the it team|it support team may need|not enough information|unable to help|cannot help with this issue|can't help with this issue)\b/i.test(reply)
-                ) {
-                    showTicketOption();
-                }
-
-                conversationHistory = conversationHistory.slice(-12);
-                chatStatus.textContent = "";
-
-            } catch (error) {
-                addChatMessage(
-                    "Sorry, I could not complete that request. Please try again.",
-                    "bot"
-                );
-
-                chatStatus.textContent = error.message || "Message failed.";
-
-            } finally {
-                chatIsBusy = false;
-                chatInput.disabled = false;
-                sendButton.disabled = false;
-                sendButton.textContent = "Send";
-                chatInput.focus();
-            }
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                message: message,
+                history: conversationHistory.slice(-12),
+                conversation_id: conversationId
+            })
         });
 
+        const result = await readApiResponse(response);
 
-        // ENTER TO SEND; SHIFT+ENTER FOR A NEW LINE
+        const reply =
+            result.reply ||
+            result.response ||
+            "The AI returned an empty response.";
 
-        chatInput.addEventListener("keydown", function (event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
+        addChatMessage(reply, "bot");
 
-                if (!sendButton.disabled) {
-                    chatForm.requestSubmit();
-                }
-            }
+        conversationHistory.push({
+            role: "assistant",
+            content: reply
         });
 
-    </script>
+        if (
+            /\b(couldn't find enough information|could not find enough information|unable to resolve|cannot resolve|can't resolve|contact your it support|contact the it team|it support team may need|not enough information|unable to help|cannot help with this issue|can't help with this issue)\b/i.test(reply)
+        ) {
+            showTicketOption();
+        }
+
+        conversationHistory = conversationHistory.slice(-12);
+        chatStatus.textContent = "";
+
+    } catch (error) {
+        addChatMessage(
+            "Sorry, I could not complete that request. Please try again.",
+            "bot"
+        );
+
+        chatStatus.textContent = error.message || "Message failed.";
+
+    } finally {
+        chatIsBusy = false;
+
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+        sendButton.textContent = "Send";
+
+        chatInput.focus();
+    }
+});
+
+// ==========================================
+// ENTER TO SEND; SHIFT+ENTER FOR NEW LINE
+// ==========================================
+
+chatInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+
+        if (!sendButton.disabled) {
+            chatForm.requestSubmit();
+        }
+    }
+});
+</script>
 </body>
 </html>

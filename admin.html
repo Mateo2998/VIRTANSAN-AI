@@ -745,7 +745,7 @@
 
         try {
             const result = await apiRequest(
-                "/human/status/" + encodeURIComponent(selectedHumanId)
+                "/admin/human-status/" + encodeURIComponent(selectedHumanId)
             );
 
             $("humanChatTitle").textContent =
