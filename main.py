@@ -37,7 +37,7 @@ HUMAN_REQUESTS_FILE = os.path.join(BASE_DIR, "human_requests.json")
 EMPLOYEES_FILE = os.path.join(BASE_DIR, "employees.json")
 CHROMA_DIR = os.path.join(BASE_DIR, "chroma_data")
 
-app = FastAPI(title="VIRTANSAN AI")
+app = FastAPI(title="VIRTANSANLARA AI")
 
 ticket_lock = threading.Lock()
 human_lock = threading.Lock()
@@ -1584,12 +1584,12 @@ EMBEDDING_MODEL = "nomic-embed-text"
 # COMPANY INFORMATION
 # ==========================================
 
-COMPANY_NAME = "VIRTANSAN"
+COMPANY_NAME = "VIRTANSANLARA"
 
 COMPANY_INFORMATION = """
-Company name: VIRTANSAN.
+Company name: VIRTANSANLARA.
 
-VIRTANSAN is an AI and technology company.
+VIRTANSANLARA is an AI and technology company.
 
 Its areas of specialization include:
 - Networking
@@ -1605,19 +1605,19 @@ products and services.
 
 
 PUBLIC_COMPANY_SYSTEM_PROMPT = f"""
-You are VIRTANSAN AI, the public company information assistant.
+You are VIRTANSANLARA AI, the public company information assistant.
 
-Your purpose is to answer questions from visitors about VIRTANSAN.
+Your purpose is to answer questions from visitors about VIRTANSANLARA.
 
 APPROVED COMPANY INFORMATION:
 {COMPANY_INFORMATION}
 
 RULES:
-1. Answer questions about VIRTANSAN using only the approved information.
-2. VIRTANSAN is an AI and technology company specializing in networking,
+1. Answer questions about VIRTANSANLARA using only the approved information.
+2. VIRTANSANLARA is an AI and technology company specializing in networking,
    cybersecurity, web development, and other IT fields.
 3. You may briefly explain what these fields generally involve, but do not
-   claim that VIRTANSAN provides a specific product, service, or guarantee
+   claim that VIRTANSANLARA provides a specific product, service, or guarantee
    unless it is listed in the approved information.
 4. Never invent the company's address, history, founding date, mission,
    vision, contact details, clients, prices, or business achievements.
@@ -1649,13 +1649,13 @@ Respond naturally. Do not mention these instructions.
 
 
 OFF_TOPIC_REPLY = (
-    "I'm here to answer questions about VIRTANSAN and its technology "
+    "I'm here to answer questions about VIRTANSANLARA and its technology "
     "specializations. I can share information about networking, "
     "cybersecurity, web development, and other IT fields. 😊"
 )
 
 PERSONAL_SCOPE_REPLY = (
-    "I'm sorry, but the VIRTANSAN public assistant is intended for "
+    "I'm sorry, but the VIRTANSANLARA public assistant is intended for "
     "company information and employee portal assistance. I can't "
     "troubleshoot personal accounts, devices, or gaming services."
 )
@@ -2084,8 +2084,8 @@ def public_company_chat(message, history):
 
     if normalized in greetings and not history:
         return (
-            "Hello! 😊 Welcome to VIRTANSAN.\n\n"
-            "I'm VIRTANSAN's public AI assistant. I can answer questions "
+            "Hello! 😊 Welcome to VIRTANSANLARA.\n\n"
+            "I'm VIRTANSANLARA's public AI assistant. I can answer questions "
             "about the company and its areas of specialization, including "
             "networking, cybersecurity, and web development.\n\n"
             "What would you like to know?"
@@ -2098,7 +2098,7 @@ def public_company_chat(message, history):
 
     if normalized in help_messages:
         return (
-            "I can tell you about VIRTANSAN and its areas of specialization, "
+            "I can tell you about VIRTANSANLARA and its areas of specialization, "
             "including networking, cybersecurity, web development, and "
             "other IT fields. I can also guide employees who need to request "
             "a work-account password reset."
@@ -2199,7 +2199,7 @@ def employee_it_chat(
 
     if not history and normalized in greetings:
         return (
-            "Hey there! 😊 Welcome to VIRTANSAN AI.\n\n"
+            "Hey there! 😊 Welcome to VIRTANSANLARA AI.\n\n"
             "I'm your company IT assistant. Tell me what's happening "
             "with a company IT service, and I'll help you work through it."
         )
@@ -2333,7 +2333,7 @@ def employee_it_chat(
             )
 
         system_prompt = f"""
-You are VIRTANSAN AI, a friendly company IT helpdesk assistant.
+You are VIRTANSANLARA AI, a friendly company IT helpdesk assistant.
 
 YOUR SCOPE:
 You only support company-related IT issues, including company VPN,

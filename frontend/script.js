@@ -309,7 +309,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (greeting) {
                     greeting.textContent =
-                        "Hello! I'm your VIRTANSAN IT Helpdesk Assistant. " +
+                        "Hello! I'm your VIRTANSANLARA IT Helpdesk Assistant. " +
                         "You can ask me about company IT issues, network access, " +
                         "VPN troubleshooting, software access, and account assistance.";
                 }
@@ -330,7 +330,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             if (chatInput) {
-                chatInput.placeholder = "Ask about VIRTANSAN...";
+                chatInput.placeholder = "Ask about VIRTANSANLARA...";
             }
 
             hideHumanSupportButton();
@@ -345,8 +345,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (greeting) {
                     greeting.textContent =
-                        "Hello! I'm VIRTANSAN AI. You can ask me about " +
-                        "VIRTANSAN and its specializations in networking, " +
+                        "Hello! I'm VIRTANSANLARA AI. You can ask me about " +
+                        "VIRTANSANLARA and its specializations in networking, " +
                         "cybersecurity, web development, and other IT fields.";
                 }
             }
@@ -796,7 +796,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (loadingMessage) {
                     loadingMessage.textContent =
                         error.message ||
-                        "Unable to connect to VIRTANSAN AI. Please try again.";
+                        "Unable to connect to VIRTANSANLARA AI. Please try again.";
 
                     loadingMessage.classList.add("error");
                 }
